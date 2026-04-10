@@ -50,10 +50,14 @@ Sajikan dalam format numbered list agar user bisa jawab cepat:
 ### Setelah User Jawab
 
 1. **Parse jawaban** — user mungkin jawab singkat, pakai nomor, atau narasi bebas. Tangkap semua info yang diberikan.
-2. **Isi personality.md** — update semua field yang relevan berdasarkan jawaban user.
-3. **Ubah status** menjadi `configured` di frontmatter personality.md.
-4. **Generate persona singkat** — dari jawaban user, buat satu kalimat yang menggambarkan karakter agent. E.g.: "Kai — asisten blak-blakan yang ngomong santai tapi tajam analisisnya, fokus bantu Dodi di product development."
-5. **Konfirmasi ke user** — tampilkan ringkasan personality yang sudah di-set, tanya apakah ada yang mau diubah.
+2. **Request write access** — sebelum menulis ke personality.md, pastikan kamu punya akses tulis:
+   - Coba tulis langsung dengan Write/Edit tool.
+   - Jika gagal karena read-only/permission denied: gunakan `request_cowork_directory` tool untuk meminta user approve akses ke folder skill ini. Jika tool itu tidak tersedia, coba `chmod u+w` via Bash dan minta user approve.
+   - Jika semua cara gagal: beritahu user bahwa personality tidak bisa disimpan secara permanen, jelaskan opsinya (re-install dengan `--project`, atau simpan manual), dan tetap gunakan personality settings untuk sesi ini.
+3. **Isi personality.md** — update semua field yang relevan berdasarkan jawaban user.
+4. **Ubah status** menjadi `configured` di frontmatter personality.md.
+5. **Generate persona singkat** — dari jawaban user, buat satu kalimat yang menggambarkan karakter agent. E.g.: "Kai — asisten blak-blakan yang ngomong santai tapi tajam analisisnya, fokus bantu Dodi di product development."
+6. **Konfirmasi ke user** — tampilkan ringkasan personality yang sudah di-set, tanya apakah ada yang mau diubah. Jika write berhasil, konfirmasi bahwa settings sudah tersimpan permanen. Jika write gagal, jelaskan bahwa settings hanya berlaku untuk sesi ini.
 
 ### Contoh Konfirmasi
 
@@ -74,3 +78,18 @@ Ada yang mau diubah?
 Jika user minta ubah sebagian personality (e.g. "ganti nama agent jadi Riku"), cukup update field yang relevan di personality.md — tidak perlu jalankan full onboarding lagi.
 
 Jika user minta "reset personality" atau "setup ulang", jalankan full onboarding dari awal.
+
+## Troubleshooting: Write Access
+
+Jika personality.md tidak bisa ditulis, penyebab umum:
+
+1. **Global install (read-only)** — folder `~/.claude/skills/` mungkin read-only di environment tertentu (Cowork, sandboxed). Solusi:
+   - Request directory access via `request_cowork_directory` jika available
+   - Sarankan user re-install dengan `npx @verzth/skills install humanoid-thinking --project`
+   - Atau minta user manually `chmod -R u+w ~/.claude/skills/humanoid-thinking/`
+
+2. **Sandboxed environment** — beberapa environment membatasi write ke folder di luar workspace. Solusi:
+   - Gunakan project-level install agar file ada di workspace yang writable
+   - Jika tidak bisa, gunakan personality settings in-memory untuk sesi ini dan beritahu user
+
+Yang paling penting: **jangan gagal diam-diam**. Selalu informasikan user jika personality tidak bisa di-persist.

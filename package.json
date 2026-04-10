@@ -1,6 +1,6 @@
 {
   "name": "@verzth/skills",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Custom Claude skills by verzth — install via npx",
   "bin": {
     "verzth-skills": "./bin/cli.js"
