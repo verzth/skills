@@ -1,0 +1,12 @@
+# golang-developer — file list for curl installer
+SKILL.md
+references/entity-patterns.md
+references/repository-patterns.md
+references/service-patterns.md
+references/grpc-patterns.md
+references/rest-gateway.md
+references/infrastructure.md
+references/scheduler-patterns.md
+references/provider-integration-patterns.md
+references/testing.md
+evals/evals.json

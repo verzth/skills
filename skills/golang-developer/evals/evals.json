@@ -1,0 +1,63 @@
+{
+  "skill_name": "golang-developer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a new entity called Redemption for the nav-engine-v2 project. It should track fund redemption requests from investors, support processing, completion, cancellation, failure states, and require HMAC signature validation. Include the repository interface with fluent query builders, the service with proper params validation, and the Wire injection setup.",
+      "expected_output": "Complete scaffolding with: 1) Entity composing BaseEntitySF + Processable + Completable + Cancelable + Failable + Signable traits, 2) Repository with fluent For* methods and defer clean(), 3) Service with triple return (result, error, []ParamError), 4) Params struct implementing IsMandatoryFilled/MandatorySchema/MandatoryErrors, 5) Wire injection function",
+      "files": [],
+      "assertions": [
+        {"text": "Entity embeds BaseEntitySF (snowflake ID)", "type": "content_check"},
+        {"text": "Entity embeds Processable trait", "type": "content_check"},
+        {"text": "Entity embeds Completable trait", "type": "content_check"},
+        {"text": "Entity embeds Cancelable trait", "type": "content_check"},
+        {"text": "Entity embeds Failable trait", "type": "content_check"},
+        {"text": "Entity embeds Signable trait", "type": "content_check"},
+        {"text": "Entity does NOT define TableName() method (GORM auto-derives)", "type": "content_check"},
+        {"text": "Repository interface has fluent For* methods returning self", "type": "content_check"},
+        {"text": "Repository execution methods have defer r.clean()", "type": "content_check"},
+        {"text": "Repository has buildQuery() helper", "type": "content_check"},
+        {"text": "Service methods return (result, error, []ParamError) triple", "type": "content_check"},
+        {"text": "Service has defer helpers.LogAndCatchPanic()", "type": "content_check"},
+        {"text": "Params struct implements IsMandatoryFilled() bool", "type": "content_check"},
+        {"text": "Params struct implements MandatoryErrors() []ParamError", "type": "content_check"},
+        {"text": "Wire function uses wire.Build with correct dependency chain", "type": "content_check"},
+        {"text": "Boolean fields use int type in Go with tinyint(1) GORM tag, not bool", "type": "content_check"},
+        {"text": "Sign GetSignData uses StringFixed(4) for decimals and Unix() for timestamps", "type": "content_check"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review this Go code for issues:\n\n```go\ntype PaymentService struct {\n    paymentRepo repository.PaymentRepository\n}\n\nfunc (s PaymentService) ProcessPayment(ctx context.Context, id uint64, fee float64) (*entity.Payment, error) {\n    payment, err := s.paymentRepo.ForID(id).ForStatus(\"pending\").Get(ctx)\n    if err != nil {\n        return nil, err\n    }\n    payment.Fee = fee\n    payment.Status = \"processing\"\n    result, err := s.paymentRepo.Update(ctx, payment)\n    return result, err\n}\n```",
+      "expected_output": "Review identifying: 1) Wrong return signature — should be triple return, 2) float64 for money — must use decimal.Decimal, 3) Missing Params interface — no input validation, 4) Missing defer helpers.LogAndCatchPanic(), 5) Fee should be negative (sign convention), 6) Missing SyncProcessedDate() call, 7) No transaction management for state change, 8) Missing defer r.clean() concern",
+      "files": [],
+      "assertions": [
+        {"text": "Flags missing triple return (result, error, []ParamError)", "type": "content_check"},
+        {"text": "Flags float64 for monetary value — must use decimal.Decimal", "type": "content_check"},
+        {"text": "Flags missing Params interface for input validation", "type": "content_check"},
+        {"text": "Flags missing defer helpers.LogAndCatchPanic()", "type": "content_check"},
+        {"text": "Flags fee sign convention — must be stored as negative", "type": "content_check"},
+        {"text": "Flags missing SyncProcessedDate() trait call", "type": "content_check"},
+        {"text": "Flags missing transaction for state transition", "type": "content_check"},
+        {"text": "Provides corrected code example", "type": "content_check"}
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I'm adding a new scheduled job to nav-engine-v2 that runs every hour to check for stale transactions that have been in 'processing' status for more than 24 hours and mark them as failed. Walk me through the full implementation.",
+      "expected_output": "Implementation covering: 1) Add Scheduler record to DB, 2) Create job handler function, 3) Register in job registry, 4) Service method with triple return, 5) CronLocker usage, 6) Repository query with ForStatus + date filter, 7) State transition via Fail() with SyncFailedDate()",
+      "files": [],
+      "assertions": [
+        {"text": "Creates Scheduler database record with cron expression", "type": "content_check"},
+        {"text": "Job handler uses Wire service-only injection", "type": "content_check"},
+        {"text": "Registers job code in the jobRegistry map", "type": "content_check"},
+        {"text": "Uses CronLocker (Redis SetNX) for distributed locking", "type": "content_check"},
+        {"text": "Service method has triple return pattern", "type": "content_check"},
+        {"text": "Repository uses ForStatus(\"processing\") fluent filter", "type": "content_check"},
+        {"text": "Calls SyncFailedDate() on the Failable trait", "type": "content_check"},
+        {"text": "Uses transaction for batch state transitions", "type": "content_check"},
+        {"text": "Mentions 15-second hot reload for new jobs", "type": "content_check"}
+      ]
+    }
+  ]
+}
