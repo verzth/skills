@@ -95,8 +95,9 @@ cp -r /tmp/verzth-skills/skills/humanoid-thinking .claude/skills/humanoid-thinki
 | Skill | Description | Highlights |
 |-------|-------------|------------|
 | [`humanoid-thinking`](./skills/humanoid-thinking/) | Human cognitive framework for Claude | Common-sense reasoning, intuition-first logic, smart confirmation, personality system |
+| [`golang-developer`](./skills/golang-developer/) | Go microservices development skill | Clean Architecture, gRPC + grpc-gateway, GORM, Google Wire DI, NATS JetStream, Redis |
 
-> More skills coming soon. [Request a skill →](https://github.com/verzth/skills/issues/new)
+> Want something else? [Request a skill →](https://github.com/verzth/skills/issues/new)
 
 ## How Skills Work
 
@@ -125,6 +126,20 @@ The flagship skill. Makes Claude think with human-like common sense instead of e
 > *With skill:* "Naik mobil — mobilnya harus dibawa ke sana."
 
 [Read full documentation →](./skills/humanoid-thinking/SKILL.md)
+
+## Skill: golang-developer
+
+An opinionated Go microservices development skill that enforces production-proven patterns across your entire Go codebase.
+
+**What it does:**
+- **Clean Architecture** — strict layering: entity → repository → service → handler, with Google Wire for compile-time DI
+- **gRPC + grpc-gateway** — three-tier API design (Admin/Insider/Public) with buf for proto management and OpenAPI generation
+- **Production stack** — GORM + MySQL, NATS JetStream for event streaming, Redis for caching and distributed locking
+- **Comprehensive references** — covers entity patterns, repository patterns, service patterns, scheduler patterns, testing, infrastructure, and provider integration
+
+**Covers:** scaffolding, code review, debugging, testing, and architecture guidance for Go microservices.
+
+[Read full documentation →](./skills/golang-developer/SKILL.md)
 
 ## Requirements
 
