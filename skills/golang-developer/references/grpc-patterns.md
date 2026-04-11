@@ -34,7 +34,7 @@ The system provides three separate gRPC servers, each running on its own port wi
         ▼                         ▼                         ▼
     [Admin API]             [Insider API]            [Public API]
     Port: GRPC_PORT         Port: GRPC_INSIDER_PORT  Port: GRPC_PUBLIC_PORT
-    Full Access             Partner Access           Read-Heavy
+    Full Access             Tenant Access            Read-Heavy
         │                         │                         │
         ├─────────────────────────┼─────────────────────────┤
         │
@@ -57,8 +57,8 @@ The system provides three separate gRPC servers, each running on its own port wi
 - **Background**: Background pool listeners, async workers
 
 #### Insider (`engine/grpc-insider/`)
-- **Access Level**: Internal partner access
-- **Use Cases**: Partner portal, order management, approval callbacks
+- **Access Level**: Internal tenant access
+- **Use Cases**: Tenant portal, order management, approval callbacks
 - **Controllers**: Subset of admin controllers + tier-specific services
 - **Proto Package**: `proto/{project}/insider/v1/`
 - **Operations**: Read, create orders, view transactions, approval callbacks
@@ -1270,6 +1270,78 @@ SID → Info → ZapLogger → Recovery → Auth → [Custom] → [Handler]
 **Optional** (per-endpoint):
 ```
 RequestResponseLog (async DB logging for callback endpoints)
+```
+
+### Middleware Files
+
+All middleware lives in `src/middleware/`:
+
+| File | Purpose |
+|------|---------|
+| `sid_middleware.go` | Inject unique Session/Request ID into context |
+| `info_middleware.go` | Extract geolocation, user-agent, client metadata |
+| `grpc_zap_logger_middleware.go` | Structured logging adapter (1KB msg / 512B field limits) |
+| `grpc_auth_middleware.go` | Bearer/TOTP application authentication |
+| `rest_auth_middleware.go` | HTTP variant of auth middleware |
+| `request_response_log_middleware.go` | Selective req/res DB logging |
+| `tenant_id_middleware.go` | Tenant identification from context |
+| `identify_middleware.go` | Client identification |
+| `rest_notfound_middleware.go` | Custom 404 handler |
+| `middleware.go` | Core types, constants (MaxMessageSize: 50MB) |
+
+### Server Registration
+
+```go
+// File: engine/grpc/grpc.go
+grpcServer := grpc.NewServer(
+    grpc.MaxRecvMsgSize(middleware.MaxMessageSize),  // 50MB
+    grpc.MaxSendMsgSize(middleware.MaxMessageSize),
+    grpc.ChainUnaryInterceptor(
+        middleware.SIDUnaryServerInterceptor(),
+        middleware.InfoUnaryServerInterceptor(),
+        grpc_zap.UnaryServerInterceptor(zapLogger),
+        grpc_recovery.UnaryServerInterceptor(),
+        middleware.AuthUnaryServerInterceptor(),
+    ),
+    grpc.ChainStreamInterceptor(
+        middleware.SIDStreamServerInterceptor(),
+        middleware.InfoStreamServerInterceptor(),
+        grpc_zap.StreamServerInterceptor(zapLogger),
+        grpc_recovery.StreamServerInterceptor(),
+        middleware.AuthStreamServerInterceptor(),
+    ),
+)
+```
+
+### SID Middleware (Request ID)
+
+Generates a unique Session ID per request and stores it in context. All downstream logging uses this for correlation:
+
+```go
+func SIDUnaryServerInterceptor() grpc.UnaryServerInterceptor {
+    return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+        sid := uuid.New().String()
+        ctx = context.WithValue(ctx, helpers.SIDCtxKey, sid)
+        // Also inject into gRPC response header for client correlation
+        grpc.SetHeader(ctx, metadata.Pairs("x-sid", sid))
+        return handler(ctx, req)
+    }
+}
+```
+
+### Info Middleware (Metadata Extraction)
+
+Extracts client metadata from gRPC headers and stores in context:
+
+```go
+func InfoUnaryServerInterceptor() grpc.UnaryServerInterceptor {
+    // Extracts from metadata:
+    // - x-forwarded-for → client IP
+    // - user-agent → client info
+    // - x-client-id → application code
+    // - referer → request origin
+    // Stores all as context values for downstream use
+}
 ```
 
 ### Auth Interceptor

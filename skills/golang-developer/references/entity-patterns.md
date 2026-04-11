@@ -11,10 +11,11 @@ A comprehensive guide to Entity layer patterns for Go microservices. This docume
 5. [Entity Composition Example](#entity-composition-example)
 6. [Sign Interface for Financial Entities](#sign-interface-for-financial-entities)
 7. [GORM Conventions](#gorm-conventions)
-8. [Frame/DTO Layer](#framedto-layer)
+8. [Frame/DTO Layer (Three-Tier DTO Architecture)](#framedto-layer)
 9. [Value Types](#value-types)
 10. [When to Use Each Pattern](#when-to-use-each-pattern)
-10. [Best Practices](#best-practices)
+10. [Encrypted Field Types](#encrypted-field-types)
+11. [Best Practices](#best-practices)
 
 ---
 
@@ -97,7 +98,7 @@ type Customer struct {
 
 ### 2. BaseEntityUint64 (Auto-Increment uint64)
 
-**Use for**: Tenant/partner IDs, multi-tenant systems, large-scale deployments.
+**Use for**: Tenant IDs, multi-tenant systems, large-scale deployments.
 
 ```go
 type BaseEntityUint64 struct {
@@ -110,7 +111,7 @@ type BaseEntityUint64 struct {
 - 64-bit unsigned integer primary key
 - Auto-incrementing (suitable for sequential IDs at scale)
 - Handles very large datasets (up to ~18 quintillion)
-- Commonly used for tenant IDs, partner IDs, investor IDs
+- Commonly used for tenant IDs, investor IDs, external reference IDs
 - Embeds `Timestamp` (no soft-delete by default)
 
 **Example Entity**:
@@ -840,62 +841,245 @@ func downCreateOrders(tx *sql.Tx) error {
 
 ## Frame/DTO Layer
 
-Frames are **data transfer objects** separate from domain entities. They represent external data structures and calculation contexts.
+The architecture uses a **three-tier DTO strategy** that separates generic data structures from protocol-specific response shapes. This ensures domain entities stay clean while each API tier (Admin, Insider, Public) controls exactly what data is exposed.
 
-### Common Frames
+### DTO Architecture Overview
 
-#### Promotion Frame
-```go
-// model/frame/Promotion.go
-type Promotion struct {
-    IsApplyOnPurchase int               // Apply promotion on purchase transactions (0/1)
-    IsApplyOnRefund   int               // Apply promotion on refund transactions (0/1)
-    IsApplyOnReturn   int               // Apply promotion on return transactions (0/1)
-    PercentageReturn  decimal.Decimal   // Promotion percentage
-    MaxAmount         decimal.Decimal   // Maximum promotion cap
-}
+```
+┌──────────────────────────────────────────────────────────────┐
+│  src/model/frame/              GENERIC DTOs (Frame Layer)    │
+│  ─────────────────────────────────────────────────────────── │
+│  Protocol-agnostic structs. Used as GORM JSON column types,  │
+│  calculation contexts, and cross-service data holders.       │
+│  Implement sql.Scanner + driver.Valuer for DB serialization. │
+│  JSON tags only — no proto/gRPC awareness.                   │
+└─────────────────────────┬────────────────────────────────────┘
+                          │ referenced by entities + services
+                          ▼
+┌──────────────────────────────────────────────────────────────┐
+│  src/model/entity/             DOMAIN ENTITIES               │
+│  ─────────────────────────────────────────────────────────── │
+│  Business objects with GORM mappings. Embed frame types as   │
+│  JSON columns (e.g., Charges []frame.Charge).                │
+└─────────────────────────┬────────────────────────────────────┘
+                          │ consumed by transformers
+                          ▼
+┌──────────────────────────────────────────────────────────────┐
+│  engine/grpc/transformer/      ADMIN gRPC DTOs               │
+│  engine/grpc-insider/transformer/  INSIDER gRPC DTOs         │
+│  engine/grpc-public/transformer/   PUBLIC gRPC DTOs          │
+│  engine/rest/dto/              ADMIN REST DTOs (if needed)    │
+│  engine/rest-insider/dto/      INSIDER REST DTOs (if needed)  │
+│  engine/rest-public/dto/       PUBLIC REST DTOs (if needed)   │
+│  ─────────────────────────────────────────────────────────── │
+│  Protocol-specific response shapes. gRPC uses proto messages │
+│  via transformers. REST uses dedicated DTO structs when the   │
+│  response shape differs from proto (custom endpoints, file    │
+│  downloads, aggregations). Each tier exposes different fields.│
+└──────────────────────────────────────────────────────────────┘
 ```
 
-**Use cases**:
-- Calculating promotion rewards on customer transactions
-- Conditional promotion application based on transaction type
-- Promotion eligibility filtering
+### Layer 1: Generic Frame DTOs (`src/model/frame/`)
 
-#### Charge Frame
+Frames are **protocol-agnostic data structures** separate from domain entities. They serve three purposes:
+1. **JSON column types** — stored as JSON blobs in MySQL, auto-serialized via GORM hooks
+2. **Calculation contexts** — intermediate results during fee/charge/bonus calculations
+3. **Cross-service data holders** — external data from other microservices (e.g., product-engine)
+
+**Key trait**: All DB-persisted frames implement `sql.Scanner` + `driver.Valuer` for automatic JSON marshaling.
+
 ```go
-// model/frame/Charge.go
+package frame
+
+// Charge is a generic DTO stored as JSON column in entity tables.
+// Used by Product, Order, and Transaction entities.
 type Charge struct {
-    IsExclusive  int               // Exclusive charge (added to total) (0/1)
-    BeforeTax    int               // Apply before tax calculation (0/1)
-    AfterTax     int               // Apply after tax calculation (0/1)
-    Percentage   decimal.Decimal   // Fee percentage (if percentage-based)
-    FixedAmount  decimal.Decimal   // Fixed fee amount
-    Description  string            // Charge description
-    ChargeType   string            // "FEE", "TAX", "COMMISSION"
+    Name                        string          `json:"name"`
+    Description                 string          `json:"description"`
+    Type                        string          `json:"type"`         // "amount" or "percentage"
+    Amount                      decimal.Decimal `json:"amount"`
+    IsApplySubscription         bool            `json:"is_apply_subscription"`
+    IsApplyRedemption           bool            `json:"is_apply_redemption"`
+    IsApplyAfterSubscriptionFee bool            `json:"is_apply_after_subscription_fee"`
+    IsApplyAfterRedemptionFee   bool            `json:"is_apply_after_redemption_fee"`
+    IsApplyOnRealized           bool            `json:"is_apply_on_realized"`
+    IsExclusive                 bool            `json:"is_exclusive"`
+}
+
+// Scan implements sql.Scanner — deserialize JSON from DB
+func (t *Charge) Scan(value any) error {
+    if value != nil {
+        bytes, ok := value.([]byte)
+        if !ok {
+            return errors.New(fmt.Sprint("Failed to unmarshal JSONB value:", value))
+        }
+        result := Charge{}
+        err := json.Unmarshal(bytes, &result)
+        *t = result
+        return err
+    }
+    *t = Charge{}
+    return nil
+}
+
+// Value implements driver.Valuer — serialize to JSON for DB
+func (t Charge) Value() (driver.Value, error) {
+    return t.String(), nil
 }
 ```
 
-**Use cases**:
-- Fee structure definition
-- Tax calculation before/after determination
-- Commission structure for partners
+**Frame types by purpose**:
 
-#### Product Frame
+| Frame | Purpose | DB-Persisted |
+|-------|---------|:---:|
+| `Charge` | Fee/charge definition with apply flags | Yes |
+| `Bonus` | Bonus definition with apply flags | Yes |
+| `CalculationBreakdown` | Full calculation audit trail (amounts, fees, charges per stage) | Yes |
+| `ChargeBreakdown` | Per-charge calculation detail | Yes |
+| `BonusBreakdown` | Per-bonus calculation detail | Yes |
+| `FeesTaxesSummaryResponse` | Aggregated fee/tax summary with breakdowns | No (query result) |
+| `Product` | External product data from product-engine | No (cross-service) |
+| `PdfTemplate` | PDF generation template data | No (render context) |
+
+**How entities use frames** (JSON column embedding):
 ```go
-// model/frame/Product.go
 type Product struct {
-    ID              uint64            // External product reference
-    Name            string
-    CurrencyCode    string
-    MinimumInvest   decimal.Decimal
-    UnitPrice       decimal.Decimal
+    BaseEntity
+    TenantID    uint64
+    Name        string
+    // Frame types as JSON columns — auto-serialized by GORM
+    Charges     datatypes.JSONSlice[frame.Charge]  `gorm:"column:charges;type:json"`
+    Bonuses     datatypes.JSONSlice[frame.Bonus]   `gorm:"column:bonuses;type:json"`
 }
 ```
 
-**Use cases**:
-- External product data reference
-- Portfolio product details
-- Cross-system product identification
+### Type Mapping Across Layers
+
+Boolean flags use `int` (0/1) throughout — NOT Go `bool`. This aligns with MySQL TINYINT columns and protobuf int32 representation. The only exception is frame config flags (e.g., `IsApplySubscription` in Charge/Bonus) which use `bool` because they're JSON-serialized, not DB columns.
+
+| Type | Entity (GORM) | Frame DTO | Proto (.proto) | Proto (Go generated) |
+|------|:------------:|:---------:|:--------------:|:-------------------:|
+| Boolean flags | `int` (0/1) | `int` or `bool` | `int32` | `int32` |
+| Primary key (auto-inc) | `uint` | — | `uint64` | `uint64` |
+| Primary key (snowflake) | `int64` | — | `int64` | `int64` |
+| Tenant ID | `uint64` | `uint64` | `uint64` | `uint64` |
+| Money/decimal | `decimal.Decimal` | `decimal.Decimal` | `string` | `string` |
+| Timestamps | `*time.Time` | `*time.Time` | `string` (RFC3339) | `string` |
+| Counters/retry | `int` | `int` | `int32` | `int32` |
+
+**Key rules**:
+- **Entity → Proto boolean conversion**: `int` to `int32` (direct cast, both 0/1)
+- **Frame → Proto boolean conversion**: `bool` to `int32` (requires explicit conversion)
+- **Decimal → Proto**: Always `.StringFixed(PRECISION)` — never float
+- **Proto uses `int32` not `int`** — protobuf has no native `int` type, only `int32`/`int64`
+- **Frame DTOs that mirror external proto** (e.g., `frame.Product` from product-engine) use `int32` to stay aligned with the source proto definition
+
+**Example — transformer type conversion**:
+```go
+// Entity (int) → Proto (int32)
+fundData.IsActive = int32(data.IsActive)
+
+// Frame bool → Proto int32
+if charge.IsExclusive {
+    protoCharge.IsExclusive = 1
+} else {
+    protoCharge.IsExclusive = 0
+}
+
+// Decimal → Proto string
+fundData.AvgPrice = data.AvgPrice.StringFixed(DEFAULT_PRECISION)
+```
+
+### Layer 2: Protocol-Specific DTOs (Transformer + DTO packages)
+
+Each API tier has its own response shapes that control **what data is exposed** to the consumer. The key principle: **the same entity gets transformed differently per tier**.
+
+#### gRPC DTOs (via Transformers + Proto)
+
+For gRPC APIs, the proto-generated messages ARE the DTOs. Transformers convert entities to proto messages:
+
+```go
+// engine/grpc/transformer/ — Admin tier (full data)
+func (c FundTransformerImpl) TransformFund(data *entity.Fund) *adminv2.FundData {
+    fundData := &adminv2.FundData{
+        Id:         uint64(data.ID),
+        InvestorId: data.InvestorID,
+        TenantId:   data.TenantID,        // Admin sees tenant ID
+        // ... all fields exposed
+    }
+    if data.Investor != nil {
+        fundData.Investor = c.TransformInvestor(data.Investor)  // Full investor data
+    }
+    return fundData
+}
+
+// engine/grpc-public/transformer/ — Public tier (restricted data)
+func (t FundTransformerImpl) TransformToFundData(fund *entity.Fund) *publicv2.FundData {
+    fundData := &publicv2.FundData{
+        Id:         fund.ID,              // int64, not uint64
+        InvestorId: fund.InvestorID,
+        // TenantId:  NOT exposed to public
+        // Investor:  NOT exposed to public
+    }
+    return fundData
+}
+```
+
+**Per-tier field exposure rules**:
+
+| Field | Admin | Insider | Public |
+|-------|:-----:|:-------:|:------:|
+| `TenantId` | Yes | Yes | No |
+| `Investor` (nested) | Yes (full) | Yes (full) | No |
+| `ID` type | `uint64` | `uint64` | `int64` |
+| Transform prefix | `Transform*` | `Transform*` | `TransformTo*` |
+| Wrapper methods | `TransformWrapper*` | No | No |
+
+#### REST DTOs (dedicated DTO packages)
+
+For REST endpoints that need response shapes **different from proto messages** (custom aggregations, file downloads, dashboard data), use dedicated DTO structs:
+
+```go
+// engine/rest/dto/summary_dto.go — Admin REST-specific DTO
+package dto
+
+type FundSummaryResponse struct {
+    TotalFunds    int             `json:"total_funds"`
+    TotalAUM      decimal.Decimal `json:"total_aum"`
+    ByProduct     []ProductAUM    `json:"by_product"`
+    GeneratedAt   time.Time       `json:"generated_at"`
+}
+
+type ProductAUM struct {
+    ProductID   uint64          `json:"product_id"`
+    ProductName string          `json:"product_name"`
+    AUM         decimal.Decimal `json:"aum"`
+    FundCount   int             `json:"fund_count"`
+}
+```
+
+**When to use REST DTO vs proto message**:
+- **Use proto** (via grpc-gateway): Standard CRUD responses that mirror the gRPC API
+- **Use REST DTO**: Custom aggregations, file downloads, dashboard endpoints, webhook payloads, or any shape that doesn't map to a proto message
+
+### Data Flow Summary
+
+```
+DB → Entity (with frame JSON columns)
+  → Service (business logic, uses frame types for calculations)
+    → Controller
+      ├── gRPC: Transformer → Proto Message → gRPC Response
+      └── REST: Transformer → REST DTO (or Proto via gateway) → JSON Response
+```
+
+### Key Rules
+
+1. **Frame DTOs are protocol-agnostic** — never import proto or gRPC packages in `src/model/frame/`
+2. **Entities own frame types** — frames are embedded as JSON columns, not standalone DB tables
+3. **Each API tier controls its own exposure** — Admin/Insider/Public transformers decide what to include
+4. **REST DTOs only when needed** — if grpc-gateway already produces the right JSON shape, don't duplicate
+5. **Frame types implement Scanner/Valuer** — any frame stored in DB MUST have these GORM hooks
+6. **Never return raw entities from controllers** — always transform to the appropriate DTO/proto message
 
 ---
 
@@ -1156,6 +1340,78 @@ func (r *OrderRepositoryImpl) Get(ctx context.Context) (*Order, error) {
     return order, nil
 }
 ```
+
+---
+
+## Encrypted Field Types
+
+Sensitive PII fields use custom Go types that **automatically encrypt on write and decrypt on read** via GORM's `sql.Scanner` and `driver.Valuer` interfaces. Business logic never touches plaintext/ciphertext — it's fully transparent.
+
+### Available Types
+
+| Type | Algorithm | Key Size | Use Case |
+|------|-----------|----------|----------|
+| `EncryptedAES` | AES-256-CBC | 32 bytes | High sensitivity (API keys, server credentials) |
+| `EncryptedAES128` | AES-128-CBC | 16 bytes | Standard PII (bank accounts, addresses) |
+| `EncryptedAES128ECB` | AES-128-ECB | 16 bytes | Legacy system compatibility only |
+| `EncryptedRSA` | RSA-OAEP | 2048-bit | Asymmetric encryption (cross-service sharing) |
+
+### Type Definition Pattern
+
+Each encrypted type is defined in `src/model/types/`:
+
+```go
+// src/model/types/encrypted_aes128.go
+type EncryptedAES128 string
+
+// GORM auto-decrypts on database read
+func (t *EncryptedAES128) Scan(value any) error {
+    decrypted, err := helpers.DecryptAES128CBC(
+        viper.GetString(constant.AES_128_KEY),
+        string(value.([]byte)),
+    )
+    *t = EncryptedAES128(decrypted)
+    return err
+}
+
+// GORM auto-encrypts on database write
+func (t EncryptedAES128) Value() (driver.Value, error) {
+    encrypted, err := helpers.EncryptAES128CBC(
+        viper.GetString(constant.AES_128_KEY),
+        string(t),
+    )
+    return encrypted, nil
+}
+```
+
+### Entity Usage
+
+Just declare the field type — no manual encrypt/decrypt calls needed:
+
+```go
+type User struct {
+    BaseEntitySF
+    Firstname types.EncryptedAES128ECB  // Auto-encrypted PII
+    Lastname  types.EncryptedAES128ECB
+    Email     types.EncryptedAES128ECB
+    Phone     types.EncryptedAES128ECB
+    TaxID     types.EncryptedAES        // Higher security tier
+}
+```
+
+### Key Management
+
+- **AES keys**: Stored in `.env` via Viper constants (`AES_KEY`, `AES_128_KEY`)
+- **RSA keys**: Generated as 2048-bit pairs, stored AES-encrypted in `.env`, loaded at startup via `app.GetRSAPublicKey()` / `app.GetRSAPrivateKey()`
+- **Auto-generation**: Keys auto-generated on first run if not present
+
+### Rules
+
+- **Database column type**: `TEXT` (stores hex-encoded ciphertext)
+- **Never use `string`** for sensitive fields — always use an encrypted type
+- **Choose tier by sensitivity**: API keys → AES-256, PII → AES-128, legacy → AES-128-ECB
+- **ECB mode is legacy only** — never use for new fields (identical plaintext = identical ciphertext)
+- **RSA for cross-service**: When another service needs to decrypt without sharing the same symmetric key
 
 ---
 

@@ -15,6 +15,7 @@ A comprehensive guide to database, caching, event streaming, dependency injectio
 9. [Context Helpers](#9-context-helpers)
 10. [PDF Infrastructure](#10-pdf-infrastructure)
 11. [Supervisord (Multi-Process)](#11-supervisord-multi-process)
+12. [Helpers & Calculators](#12-helpers--calculators)
 
 ---
 
@@ -789,6 +790,66 @@ app.Zap.Error("failed to process order",
 )
 ```
 
+### Common Structured Fields
+
+Use consistent field names across the codebase:
+
+| Field | Type | Context |
+|-------|------|---------|
+| `sid` | `zap.String` | Session/request ID (from SID middleware) |
+| `endpoint` | `zap.String` | gRPC full method name |
+| `order_id` | `zap.Uint64` | Entity correlation |
+| `transaction_id` | `zap.Uint64` | Entity correlation |
+| `processing_time` | `zap.Duration` | Latency tracking |
+| `error` | `zap.Error` | Error context |
+
+### Panic Recovery Pattern
+
+Every exported service method must use `defer helpers.LogAndCatchPanic()`:
+
+```go
+// File: src/helpers/common.go
+func LogAndCatchPanic() {
+    if r := recover(); r != nil {
+        // Log to external crash reporting service (ClogRPC)
+        clog.Report(r, string(debug.Stack()))
+        // Print stack trace to stderr
+        fmt.Fprintf(os.Stderr, "panic: %v\n%s", r, debug.Stack())
+    }
+}
+
+// Variant that re-panics after logging (for middleware use)
+func LogAndRethrowPanic() {
+    if r := recover(); r != nil {
+        clog.Report(r, string(debug.Stack()))
+        panic(r)
+    }
+}
+```
+
+### gRPC Logging Middleware
+
+```go
+// File: src/middleware/grpc_zap_logger_middleware.go
+func ZapInterceptorLogger(l *zap.Logger) logging.Logger {
+    // Defensive limits to prevent memory issues:
+    // - Message body: max 1KB
+    // - Field values: max 512B
+    // Truncates silently if exceeded
+}
+```
+
+### Request/Response Logging
+
+Selective logging via `LoggableEndpoints` map — only configured endpoints log full req/res:
+
+```go
+// File: src/middleware/request_response_log_middleware.go
+// Triggered by: endpoint in LoggableEndpoints map OR x-log-request-response header
+// Captures: request body, response, latency, client IP, user agent
+// Stores to: RequestResponseLog entity
+```
+
 ---
 
 ## 8. App Initialization
@@ -1119,6 +1180,83 @@ supervisorctl tail grpc-admin -f
 | Logging | Structured logging | Zap + lumberjack | JSON + file rotation |
 | PDF | Document generation | Chromium + GCS/local | NATS-driven async |
 | Process Mgmt | Multi-process orchestration | Supervisord | 7 binaries |
+
+---
+
+## 12. Helpers & Calculators
+
+Financial calculations live in `src/helpers/` as pure functions. All follow the **sign convention**: fees, charges, and taxes are stored as **negative values**; only bonuses are positive.
+
+### Calculator Files
+
+| File | Purpose | Sign |
+|------|---------|------|
+| `fee_calculator.go` | Subscription/redemption fee (inclusive/deductive) | **Negative** |
+| `charge_calculator.go` | Charges (% or fixed, before/after fee) | **Negative** |
+| `tax_calculator.go` | Tax on fees | **Negative** |
+| `bonus_calculator.go` | Bonuses (% or fixed) | **Positive** |
+
+### Sign Convention
+
+```
+Fee    = -(amount × feeRate)           // Always negative
+Charge = -(amount × chargeRate)        // Always negative
+Tax    = -(abs(feeAmount) × taxRate)   // Always negative (calculated on absolute fee)
+Bonus  = +(amount × bonusRate)         // Only positive item
+```
+
+When calculating net amount: `GrossAmount + Fee + Tax + Charge + Bonus` — negatives subtract naturally.
+
+### Function Signatures
+
+```go
+// src/helpers/fee_calculator.go
+func CalculateSubscriptionFee(totalAmount, feePercentage decimal.Decimal) FeeCalculationResult
+func CalculateRedemptionFee(baseAmount, feePercentage decimal.Decimal) FeeCalculationResult
+
+// src/helpers/charge_calculator.go
+func ApplySubscriptionCharges(baseAmount decimal.Decimal, charges []ChargeConfig, isAfterFee bool) ChargeCalculationResult
+
+// src/helpers/tax_calculator.go
+func CalculateSubscriptionTax(feeAmount, taxPercentage decimal.Decimal) TaxCalculationResult
+
+// src/helpers/bonus_calculator.go
+func ApplySubscriptionBonuses(baseAmount decimal.Decimal, bonuses []BonusConfig) BonusCalculationResult
+```
+
+### Decimal Precision Rules
+
+- **Library**: `shopspring/decimal` — never use `float64` for money
+- **Calculation**: `.Truncate(14)` after every calculator result
+- **Display**: `.StringFixed(8)` for user-facing output (DEFAULT_PRECISION = 8)
+- **Storage**: `DECIMAL(64,15)` in database
+- **Rounding**: Always truncate (round down) — never round up for user-facing amounts
+
+### Service Calculation Flow
+
+```
+GrossAmount
+  → Apply before-fee bonuses     (+)
+  → Apply before-fee charges     (-)
+  → CalculateFee()               (-)
+  → CalculateTax(abs(fee))       (-)
+  → Apply after-fee bonuses      (+)
+  → Apply after-fee charges      (-)
+  → FinalAmount = sum of all
+```
+
+### Shared Helper Functions
+
+```go
+// Decimal to fixed-string (for Sign interface, display, etc.)
+func DecimalPtrToStringFixed(d *decimal.Decimal, precision int32) string
+
+// Panic recovery — mandatory at top of every exported service method
+func LogAndCatchPanic()
+
+// Transaction helper — commit on success, rollback on panic
+func CommitOrRollback(repo repository.BaseRepository, err *error)
+```
 
 ---
 

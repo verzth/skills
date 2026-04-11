@@ -428,7 +428,38 @@ headersOk := gorillaHandlers.AllowedHeaders([]string{
 })
 ```
 
-**Note**: Public gateways may add extra headers and middleware depending on project-specific needs (e.g., partner identification, tenant isolation). Add custom CORS headers and extraction middleware at the router level.
+### REST Auth Middleware
+
+For endpoints that bypass gRPC gateway (direct REST handlers), use the REST auth middleware:
+
+```go
+// File: src/middleware/rest_auth_middleware.go
+func RestApplicationAuthMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Same validation as gRPC auth interceptor:
+        // 1. Extract X-Client-ID header
+        // 2. Lookup Application by code
+        // 3. Validate active + not suspended
+        // 4. Validate IP host eligibility
+        // 5. Validate Authorization (Bearer SHA256 or TOTP)
+        // 6. Store application in request context via helpers.RestAppIdCtxKey
+        ctx := context.WithValue(r.Context(), helpers.RestAppIdCtxKey, app)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
+}
+```
+
+### Gateway Metadata Forwarding
+
+The REST gateway forwards HTTP headers as gRPC metadata so the gRPC interceptor chain works transparently:
+
+```go
+// File: src/middleware/grpc_gateway.go
+// Forwarded headers: x-forwarded-for, user-agent, x-client-id, referer
+// PHP-style array params normalized: ?param[]=val → ?param=val
+```
+
+**Note**: Public gateways may add extra headers and middleware depending on project-specific needs (e.g., tenant identification, tenant isolation). Add custom CORS headers and extraction middleware at the router level.
 
 ### Message Size Limits
 

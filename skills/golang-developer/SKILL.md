@@ -1,14 +1,10 @@
 ---
 name: golang-developer
 description: >
-  Go microservices development skill strictly following the team's production standards —
+  Go microservices development skill following the team's production standards.
   Clean Architecture with GORM, gRPC + grpc-gateway, Google Wire DI, NATS JetStream, Redis,
   and MySQL. Covers scaffolding, code review, debugging, testing, and architecture guidance.
-  Use this skill whenever the user mentions Go, Golang, microservices, gRPC services, Go APIs,
-  Go project structure, Go testing, or any Go-related development task. Also trigger when working
-  on any repository that uses Go as the primary language, even if the user doesn't explicitly
-  mention Go. If someone says "build a service", "create an API", "add a new feature", or
-  "review this code" in a Go context, use this skill.
+  Use when user mentions Go, Golang, microservices, gRPC, or any Go-related development task.
 ---
 
 # Go Microservices Developer
@@ -156,12 +152,12 @@ When generating code, ALWAYS include these patterns:
 - Wire naming: `InitializeXxxControllerGRPC` / `...GRPCInsider` / `...GRPCPublic`
 
 Read the reference files for detailed patterns:
-- `references/entity-patterns.md` — composable traits, BaseEntity, Sign interface, multi-tenant pattern
+- `references/entity-patterns.md` — composable traits, BaseEntity, Sign interface, multi-tenant pattern, encrypted field types (AES/RSA)
 - `references/repository-patterns.md` — fluent builder, generics, transactions
 - `references/service-patterns.md` — triple return, Params validation, panic recovery
-- `references/grpc-patterns.md` — three-tier controllers, transformers, interceptors, health check endpoint
-- `references/rest-gateway.md` — GRPCGatewayServer pattern, gorilla/mux, CORS, metadata forwarding, Swagger/metrics, health & connection check
-- `references/infrastructure.md` — GORM/MySQL, Redis, NATS JetStream, Wire DI, Viper/Vault config, encryption, Zap logger, PDF, Supervisord
+- `references/grpc-patterns.md` — three-tier controllers, transformers, interceptor chain (SID/Info/Zap/Recovery/Auth), middleware patterns, health check
+- `references/rest-gateway.md` — GRPCGatewayServer pattern, gorilla/mux, CORS, REST auth middleware, metadata forwarding, Swagger/metrics
+- `references/infrastructure.md` — GORM/MySQL, Redis, NATS JetStream, Wire DI, Viper/Vault config, encryption, Zap logger, app singleton, calculators, PDF, Supervisord
 - `references/scheduler-patterns.md` — multi-mode scheduler (database/http/message/disable), CronLocker, NATS consumer, hot reload
 - `references/provider-integration-patterns.md` — outbound providers, inbound SDK, TOTP auth
 - `references/testing.md` — testify/mock, table-driven, build tags
