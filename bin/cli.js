@@ -21,25 +21,73 @@ const c = {
 };
 
 // ── Helpers ─────────────────────────────────────────────
+
+// Detect skill type:
+//   "single"  → folder with SKILL.md at top level (humanoid-thinking, golang-developer)
+//   "bundle"  → folder with .claude-plugin/plugin.json (multi-skill plugin like pm-thinking)
+//   null      → not a recognized skill
+function detectSkillType(skillName) {
+  const skillRoot = path.join(SKILLS_DIR, skillName);
+  if (!fs.existsSync(skillRoot)) return null;
+
+  const hasSkillMd = fs.existsSync(path.join(skillRoot, "SKILL.md"));
+  const hasPluginManifest = fs.existsSync(
+    path.join(skillRoot, ".claude-plugin", "plugin.json")
+  );
+
+  if (hasSkillMd) return "single";
+  if (hasPluginManifest) return "bundle";
+  return null;
+}
+
 function getAvailableSkills() {
   if (!fs.existsSync(SKILLS_DIR)) return [];
   return fs
     .readdirSync(SKILLS_DIR)
-    .filter((name) => {
-      const skillPath = path.join(SKILLS_DIR, name, "SKILL.md");
-      return fs.existsSync(skillPath);
-    })
+    .filter((name) => detectSkillType(name) !== null)
     .sort();
 }
 
 function getSkillDescription(skillName) {
-  const skillMd = path.join(SKILLS_DIR, skillName, "SKILL.md");
-  if (!fs.existsSync(skillMd)) return "";
-  const content = fs.readFileSync(skillMd, "utf-8");
-  const match = content.match(/description:\s*>?\s*\n?([\s\S]*?)(?=\n---|\n\w+:)/);
-  if (match) {
-    return match[1].trim().split("\n")[0].trim().slice(0, 80);
+  const type = detectSkillType(skillName);
+
+  if (type === "single") {
+    const skillMd = path.join(SKILLS_DIR, skillName, "SKILL.md");
+    const content = fs.readFileSync(skillMd, "utf-8");
+    const match = content.match(/description:\s*>?\s*\n?([\s\S]*?)(?=\n---|\n\w+:)/);
+    if (match) {
+      return match[1].trim().split("\n")[0].trim().slice(0, 80);
+    }
+    return "";
   }
+
+  if (type === "bundle") {
+    // Bundle: read description from .claude-plugin/plugin.json
+    const pluginJson = path.join(
+      SKILLS_DIR,
+      skillName,
+      ".claude-plugin",
+      "plugin.json"
+    );
+    try {
+      const manifest = JSON.parse(fs.readFileSync(pluginJson, "utf-8"));
+      // Count sub-skills inside bundle's skills/ subfolder
+      const subSkillsDir = path.join(SKILLS_DIR, skillName, "skills");
+      let subSkillCount = 0;
+      if (fs.existsSync(subSkillsDir)) {
+        subSkillCount = fs
+          .readdirSync(subSkillsDir)
+          .filter((sub) =>
+            fs.existsSync(path.join(subSkillsDir, sub, "SKILL.md"))
+          ).length;
+      }
+      const bundleSuffix = subSkillCount > 0 ? ` [bundle: ${subSkillCount} skills]` : " [bundle]";
+      return (manifest.description || "").slice(0, 80 - bundleSuffix.length) + bundleSuffix;
+    } catch {
+      return "[bundle]";
+    }
+  }
+
   return "";
 }
 

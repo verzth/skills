@@ -1,0 +1,23 @@
+{
+  "name": "golang-developer",
+  "version": "1.1.1",
+  "description": "Go microservices development with Clean Architecture, GORM, gRPC + grpc-gateway, Google Wire DI, NATS JetStream, Redis, MySQL. Covers scaffolding, code review, debugging, testing, and architecture guidance.",
+  "author": {
+    "name": "Dodi (Verzth)",
+    "url": "https://github.com/verzth"
+  },
+  "homepage": "https://github.com/verzth/skills/tree/main/skills/golang-developer",
+  "repository": "https://github.com/verzth/skills",
+  "license": "MIT",
+  "keywords": [
+    "go",
+    "golang",
+    "microservices",
+    "grpc",
+    "grpc-gateway",
+    "clean-architecture",
+    "gorm",
+    "wire-di",
+    "nats-jetstream"
+  ]
+}

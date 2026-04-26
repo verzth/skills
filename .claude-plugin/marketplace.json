@@ -1,0 +1,44 @@
+{
+  "name": "verzth-skills",
+  "owner": {
+    "name": "Dodi (Verzth)",
+    "email": "silveriusdodi@gmail.com",
+    "url": "https://github.com/verzth"
+  },
+  "metadata": {
+    "description": "Verzth's curated Claude Code skills — humanoid-thinking framework, Go microservices, AI-First Product Management, and more. Available via npm and Claude Code plugin marketplace.",
+    "version": "1.2.0"
+  },
+  "plugins": [
+    {
+      "name": "humanoid-thinking",
+      "source": "./skills/humanoid-thinking",
+      "description": "Human cognitive framework — default mode for all interactions. Intuition-first thinking validated by logic. Confirms over assumes when ambiguous.",
+      "version": "1.1.1",
+      "author": {"name": "Dodi (Verzth)"},
+      "category": "thinking-framework",
+      "tags": ["thinking", "framework", "common-sense", "cognitive", "default-behavior"],
+      "homepage": "https://github.com/verzth/skills/tree/main/skills/humanoid-thinking"
+    },
+    {
+      "name": "golang-developer",
+      "source": "./skills/golang-developer",
+      "description": "Go microservices development with Clean Architecture, GORM, gRPC + grpc-gateway, Wire DI, NATS JetStream, Redis, MySQL. Covers scaffolding, code review, debugging, testing.",
+      "version": "1.1.1",
+      "author": {"name": "Dodi (Verzth)"},
+      "category": "engineering",
+      "tags": ["go", "golang", "microservices", "grpc", "clean-architecture"],
+      "homepage": "https://github.com/verzth/skills/tree/main/skills/golang-developer"
+    },
+    {
+      "name": "pm-thinking",
+      "source": "./skills/pm-thinking",
+      "description": "AI-First Product Management bundle — pm-discover (synthesize research), pm-works (write PRD with Tech Implications), pm-decide (multi-mode: prio/review/stakeholder/retro). Tech-literate, with explicit handoff to engineer-manager.",
+      "version": "0.1.0",
+      "author": {"name": "Dodi (Verzth)"},
+      "category": "product-management",
+      "tags": ["pm", "ai-first", "prd", "discovery", "prioritization", "retro", "stakeholder-update"],
+      "homepage": "https://github.com/verzth/skills/tree/main/skills/pm-thinking"
+    }
+  ]
+}

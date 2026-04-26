@@ -19,7 +19,21 @@
 
 A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Cowork](https://claude.ai). Each skill extends Claude's behavior with domain-specific frameworks, workflows, and personality — installed with a single command.
 
-## Quick Start
+**Two install paths supported:**
+- **npm CLI** (legacy, simple) — `npx @verzth/skills install <name>`
+- **Claude Code plugin marketplace** (newer, native) — `/plugin install <name>@verzth-skills`
+
+Both methods install the same content. Pick whichever fits your workflow.
+
+## Available skills
+
+| Skill | Type | Description |
+|-------|------|-------------|
+| `humanoid-thinking` | single | Human cognitive framework — intuition-first, validated by logic |
+| `golang-developer` | single | Go microservices development (Clean Architecture, gRPC, Wire DI) |
+| `pm-thinking` | bundle | AI-First Product Management — pm-discover, pm-works, pm-decide |
+
+## Quick Start (npm)
 
 ```bash
 npx @verzth/skills install humanoid-thinking
@@ -66,6 +80,28 @@ npx @verzth/skills list
 | `--project` | `-p` | Install to `./.claude/skills/` — scoped to current project only |
 
 When no flag is provided and the session is interactive, the CLI prompts you to choose. In non-interactive environments (CI/CD, piped input), it auto-detects based on whether `.claude/` exists in the current directory.
+
+## Install via Claude Code plugin marketplace
+
+If you prefer the native plugin marketplace mechanism in Claude Code:
+
+```
+# Add this repo as a marketplace (one-time)
+/plugin marketplace add https://github.com/verzth/skills.git
+
+# Install any skill
+/plugin install humanoid-thinking@verzth-skills
+/plugin install golang-developer@verzth-skills
+/plugin install pm-thinking@verzth-skills
+```
+
+Update later:
+```
+/plugin marketplace update verzth-skills
+/plugin update <skill-name>@verzth-skills
+```
+
+Marketplace catalog: [`.claude-plugin/marketplace.json`](./.claude-plugin/marketplace.json)
 
 ### Alternative Install Methods
 

@@ -1,7 +1,7 @@
 {
   "name": "@verzth/skills",
-  "version": "1.1.1",
-  "description": "Custom Claude skills by verzth — install via npx",
+  "version": "1.2.0",
+  "description": "Custom Claude skills by verzth — install via npx, or via Claude Code plugin marketplace",
   "bin": {
     "verzth-skills": "./bin/cli.js"
   },
@@ -11,7 +11,8 @@
     "cowork",
     "skills",
     "ai",
-    "anthropic"
+    "anthropic",
+    "plugin-marketplace"
   ],
   "author": "verzth",
   "license": "MIT",
@@ -20,6 +21,7 @@
     "url": "https://github.com/verzth/skills.git"
   },
   "files": [
+    ".claude-plugin/",
     "bin/",
     "skills/",
     "README.md"
