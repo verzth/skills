@@ -33,6 +33,8 @@ Both methods install the same content. Pick whichever fits your workflow.
 | `golang-developer` | single | Go microservices development (Clean Architecture, gRPC, Wire DI) |
 | `pm-thinking` | bundle | AI-First Product Management — pm-discover, pm-works, pm-decide |
 
+> Want something else? [Request a skill →](https://github.com/verzth/skills/issues/new)
+
 ## Quick Start (npm)
 
 ```bash
@@ -126,15 +128,6 @@ cp -r /tmp/verzth-skills/skills/humanoid-thinking .claude/skills/humanoid-thinki
 ```
 </details>
 
-## Available Skills
-
-| Skill | Description | Highlights |
-|-------|-------------|------------|
-| [`humanoid-thinking`](./skills/humanoid-thinking/) | Human cognitive framework for Claude | Common-sense reasoning, intuition-first logic, smart confirmation, personality system |
-| [`golang-developer`](./skills/golang-developer/) | Go microservices development skill | Clean Architecture, gRPC + grpc-gateway, GORM, Google Wire DI, NATS JetStream, Redis |
-
-> Want something else? [Request a skill →](https://github.com/verzth/skills/issues/new)
-
 ## How Skills Work
 
 Claude Code and Cowork load skills from `.claude/skills/` directories. Each skill is a folder containing a `SKILL.md` with instructions that shape how Claude thinks and responds.
@@ -176,6 +169,21 @@ An opinionated Go microservices development skill that enforces production-prove
 **Covers:** scaffolding, code review, debugging, testing, and architecture guidance for Go microservices.
 
 [Read full documentation →](./skills/golang-developer/SKILL.md)
+
+## Skill: pm-thinking
+
+A bundle that turns Claude into a virtual PM team. **One install → 3 sub-skills**: `/pm-discover` (researcher), `/pm-works` (senior PM), `/pm-decide` (strategist).
+
+**What it does:**
+- **Forcing questions, not templates** — each skill pushes you to answer sharp questions instead of filling out blank forms
+- **Markdown handoffs between skills** — `discovery.md` feeds `/pm-works`, `prd.md` feeds `/pm-decide --review`, nothing falls through the cracks
+- **Tech-aware, not tech-decide** — PMs understand technical impact (schema, API, backward compat) without making engineering decisions; clear boundary to a separate `engineer-manager` skill
+- **Multi-mode `/pm-decide`** — `--prio` (prioritization), `--review` (PRD review), `--stakeholder` (updates), `--retro` (post-launch reflection)
+- **Numbered questions, anti-ambiguity** — every question to the user is labeled (1/2/3 or a/b/c) so responses like "1a, 2c" stay precise and audit-friendly
+
+**Sprint flow:** `/pm-discover` → `/pm-works` → `/pm-decide --review` → handoff to engineering → `/pm-decide --stakeholder` during build → `/pm-decide --retro` after ship.
+
+[Read full documentation →](./skills/pm-thinking/README.md)
 
 ## Requirements
 
