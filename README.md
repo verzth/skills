@@ -32,6 +32,7 @@ Both methods install the same content. Pick whichever fits your workflow.
 | `humanoid-thinking` | single | Human cognitive framework — intuition-first, validated by logic |
 | `golang-developer` | single | Go microservices development (Clean Architecture, gRPC, Wire DI) |
 | `pm-thinking` | bundle | AI-First Product Management — pm-discover, pm-works, pm-decide |
+| `em-thinking` | bundle | AI-First Engineering Management — em-plan, em-works, em-review |
 
 > Want something else? [Request a skill →](https://github.com/verzth/skills/issues/new)
 
@@ -95,6 +96,7 @@ If you prefer the native plugin marketplace mechanism in Claude Code:
 /plugin install humanoid-thinking@verzth-skills
 /plugin install golang-developer@verzth-skills
 /plugin install pm-thinking@verzth-skills
+/plugin install em-thinking@verzth-skills
 ```
 
 Update later:
@@ -184,6 +186,24 @@ A bundle that turns Claude into a virtual PM team. **One install → 3 sub-skill
 **Sprint flow:** `/pm-discover` → `/pm-works` → `/pm-decide --review` → handoff to engineering → `/pm-decide --stakeholder` during build → `/pm-decide --retro` after ship.
 
 [Read full documentation →](./skills/pm-thinking/README.md)
+
+## Skill: em-thinking
+
+A bundle that turns Claude into a virtual EM team. **One install → 3 sub-skills**: `/em-plan` (architect), `/em-works` (delivery prep), `/em-review` (reviewer + debugger). Companion to pm-thinking — picks up where PRD ends.
+
+**What it does:**
+- **EDD as PRD's parallel** — `/em-plan` produces `edd.md` (Engineering Design Document) with risk tier (T0-T3), scope challenge, invariants, failure modes table, test strategy, and ASCII diagrams for component boundaries / data flow / state machine
+- **15 cognitive patterns from canonical sources** — State Diagnosis (Larson), Boring by Default (McKinley), Failure is Information (Allspaw/SRE), Make Change Easy (Beck), Conway's Law (Skelton/Pais), and more — applied as lens, not checklist
+- **Execution-ready handoff** — `/em-works` translates EDD into atomic tickets + worktree parallelization lanes + env/secrets spec + deploy plan artifact (artifact-only, doesn't execute — devops/release skill handles execution)
+- **Auto-detect mode in /em-review** — input contains PR ref → Mode A (code review); stack trace / "bug" / "error" → Mode B (debug, hypothesis-driven, no blind fixes); ambiguous → asks
+- **Role-based handoff (not skill-specific)** — outputs reference role names (`engineer`, `security-reviewer`, `qa-reviewer`, `release-engineer`/`devops`, `pm`) so they work across env conventions (verzth, soekarno, gstack, generic)
+- **Numbered questions, anti-ambiguity** — same pattern as pm-thinking
+
+**EM lifecycle flow:** `/em-plan` → `/em-works` → engineer role → `/em-review` (Mode A approve → release; Mode B debug if production incident → loop back to `/em-plan` if architectural).
+
+**Inspired by** [gstack](https://github.com/garrytan/gstack) (Garry Tan, YC) for cognitive patterns + scope challenge discipline, and [soekarno](https://github.com/verzth/soekarno) for multi-agent process + structured handoff philosophy.
+
+[Read full documentation →](./skills/em-thinking/README.md)
 
 ## Requirements
 
