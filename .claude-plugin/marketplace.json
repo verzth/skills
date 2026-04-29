@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Verzth's curated Claude Code skills — humanoid-thinking framework, Go microservices, AI-First Product Management, AI-First Engineering Management, and more. Available via npm and Claude Code plugin marketplace.",
-    "version": "1.3.0"
+    "version": "1.3.1"
   },
   "plugins": [
     {
@@ -44,7 +44,7 @@
       "name": "em-thinking",
       "source": "./skills/em-thinking",
       "description": "AI-First Engineering Management bundle — em-plan (architectural plan with risk tier T0-T3, scope challenge, invariants, failure modes, test strategy, produces edd.md), em-works (execution-ready handoff: atomic tickets, worktree lanes, env/secrets spec, deploy plan artifact), em-review (Mode A code review + Mode B hypothesis-driven debug). Companion to pm-thinking. Role-based handoff (engineer/security-reviewer/qa-reviewer/release-engineer/devops).",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {"name": "Dodi (Verzth)"},
       "category": "engineering-management",
       "tags": ["em", "engineering-management", "ai-first", "architecture", "edd", "code-review", "debug", "risk-tiering", "cognitive-patterns", "deployment-prep"],

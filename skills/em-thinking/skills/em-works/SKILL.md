@@ -31,10 +31,10 @@ Baca dari working dir atau path yang user kasih. Kalau gak ada → **berhenti**.
 
 #### Step 2: Atomic ticket decomposition
 
-Pecah scope eng-plan jadi atomic tickets. Per ticket:
+Pecah scope edd jadi atomic tickets. Per ticket:
 
 - **What:** 1 deliverable, measurable, ≤ 2 days work (smaller better)
-- **Why:** Connect ke eng-plan invariant atau failure mode # spesifik
+- **Why:** Connect ke edd invariant atau failure mode # spesifik
 - **Acceptance criteria:** Test cases + behavioral expectations + observability check
 - **Dependencies:** Ticket lain yang harus done dulu (be explicit, not implicit)
 - **Owner suggestion:** Based on module ownership kalau team punya context, atau "any IC"
@@ -228,7 +228,7 @@ Kalau ada item belum READY → flag explicitly. Engineer bisa start ticket yang 
 ### T1 — [name]
 
 - **What:** [1-line deliverable]
-- **Why:** Implements invariant #X / closes failure mode #Y from eng-plan
+- **Why:** Implements invariant #X / closes failure mode #Y from edd
 - **Acceptance:**
   - [ ] [test case 1]
   - [ ] [test case 2]

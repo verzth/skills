@@ -121,7 +121,7 @@ em-thinking opportunistically calls connected MCP tools — **kalau ada, dipake;
 
 | Tool | Dipake oleh | Untuk apa |
 |------|-------------|-----------|
-| **Notion** | em-plan, em-works, em-review | Push eng-plan/eng-works/pr-review/debug-trace ke Notion engineering page |
+| **Notion** | em-plan, em-works, em-review | Push edd/eng-works/pr-review/debug-trace ke Notion engineering page |
 | **GitHub** | em-review (Mode A) | Auto-fetch PR diff, post review comments inline |
 | **Linear / GitHub Issues** | em-works, em-review | Auto-create issue per ticket / regression / process gap |
 | **BigQuery** | em-plan, em-review (Mode B) | Validate scale assumption / pull production telemetry untuk debug evidence |
@@ -132,7 +132,7 @@ Skill gak akan minta lo connect tools yang gak ada — straight ke manual mode.
 
 ## Boundary: em-thinking vs pm-thinking
 
-pm-thinking ends di **PRD ready (handoff to eng)**. em-thinking starts di **PRD received → eng-plan**.
+pm-thinking ends di **PRD ready (handoff to eng)**. em-thinking starts di **PRD received → edd**.
 
 | pm-thinking owns | em-thinking owns |
 |-------------------|-------------------|

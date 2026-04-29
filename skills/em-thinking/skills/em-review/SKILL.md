@@ -1,6 +1,6 @@
 ---
 name: em-review
-description: Review what comes back from engineers — Mode A code review (PR review against eng-plan, bug-first, regression-first), Mode B debug (root cause investigation when production bug emerges, hypothesis-driven, no blind fixes). Use when a PR is ready for engineering manager review, when a bug appears in staging or production and needs structured root-cause analysis, when CI fails repeatedly with unclear root cause, or when investigating recurring issues. Pushes back on LGTM-without-grounding and on patches-without-root-cause.
+description: Review what comes back from engineers — Mode A code review (PR review against edd, bug-first, regression-first), Mode B debug (root cause investigation when production bug emerges, hypothesis-driven, no blind fixes). Use when a PR is ready for engineering manager review, when a bug appears in staging or production and needs structured root-cause analysis, when CI fails repeatedly with unclear root cause, or when investigating recurring issues. Pushes back on LGTM-without-grounding and on patches-without-root-cause.
 ---
 
 # /em-review
@@ -27,7 +27,7 @@ Lihat [../../ETHOS.md](../../ETHOS.md) prinsip #8. Numbered questions, AskUserQu
 **Mode A (review):**
 - "PR dari engineer Y udah ready, mau review"
 - "Batch review end-of-lane (3 PR yang related)"
-- "Mau audit apakah PR sesuai dengan eng-plan invariant"
+- "Mau audit apakah PR sesuai dengan edd invariant"
 
 **Mode B (debug):**
 - "Production error spike di endpoint X, gue investigate"
@@ -51,12 +51,12 @@ Kalau plan/works files gak ada → **flag explicitly**. Review tetep bisa jalan 
 #### Section 1: Architecture conformance
 
 Cognitive patterns aktif:
-- **Match plan:** PR architecture sesuai dengan eng-plan? Deviation justified?
+- **Match plan:** PR architecture sesuai dengan edd? Deviation justified?
 - **Boundary integrity:** Trust boundary dari plan dipertahankan?
 - **Conway's Law:** Module ownership clear?
 
 Forcing questions per issue (one issue = one AskUserQuestion):
-1. "PR introduce new module X yang gak ada di eng-plan. a) Justified deviation (rationale) b) Out of scope, harus dipisah jadi PR terpisah c) Plan harus di-update dulu lewat /em-plan"
+1. "PR introduce new module X yang gak ada di edd. a) Justified deviation (rationale) b) Out of scope, harus dipisah jadi PR terpisah c) Plan harus di-update dulu lewat /em-plan"
 2. "Trust boundary di [file Y line Z] — ada validation yang missing. a) Add validation (block merge) b) Defer ke ticket follow-up (justify) c) Out of scope, parking lot"
 
 #### Section 2: Code quality
@@ -80,7 +80,7 @@ Cognitive patterns aktif:
 - **Boundary tests** — empty, max, concurrent, partial-failure
 
 Forcing questions:
-1. "Failure mode #X dari eng-plan — test coverage? a) Yes (test name) b) No (block) c) Deferred (justify)"
+1. "Failure mode #X dari edd — test coverage? a) Yes (test name) b) No (block) c) Deferred (justify)"
 2. "Edge case [empty input / null / max value / concurrent] — covered? a) Yes b) Subset c) No (block T0/T1, allow T2/T3 with note)"
 
 Detail rubric di [../../references/code-review-rubric.md](../../references/code-review-rubric.md).
@@ -335,7 +335,7 @@ Forcing questions:
 
 ### Mode A
 - ❌ **"LGTM" tanpa annotation di T0/T1 PR.** Review unmoored.
-- ❌ **Approve PR tanpa baca eng-plan reference.** Grounding lemah.
+- ❌ **Approve PR tanpa baca edd reference.** Grounding lemah.
 - ❌ **Skip section.** Anti-skip rule berlaku.
 - ❌ **Batch multiple issues into one AskUserQuestion.** One issue = one question.
 - ❌ **"Add tests later" sebagai blocker negosiable di T0/T1.** Block harus block.

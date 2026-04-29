@@ -91,7 +91,7 @@ Test strategy dari plan implemented. Failure modes dari plan covered.
 
 ### Forcing question template
 
-1. "Failure mode #X dari eng-plan — test coverage? a) Yes (test name: ...) b) No (block) c) Deferred (justify)"
+1. "Failure mode #X dari edd — test coverage? a) Yes (test name: ...) b) No (block) c) Deferred (justify)"
 2. "Edge case [empty / null / max / concurrent] — covered? a) Yes b) Subset c) No (block T0/T1, allow T2/T3 with note)"
 3. "Test commit timing — pre atau post implementation? a) Pre (test-first) b) Same commit c) Post (red flag T0/T1)"
 
@@ -151,7 +151,7 @@ Engineer judgment override allowed dengan rationale di output.
 ## Anti-pattern Reviewer (jangan dilakuin)
 
 - ❌ **"LGTM" tanpa annotation di T0/T1 PR.** Review unmoored.
-- ❌ **Approve tanpa baca eng-plan.** Grounding lemah.
+- ❌ **Approve tanpa baca edd.** Grounding lemah.
 - ❌ **Skip section.** Anti-skip rule — even "no issues" must be stated explicit.
 - ❌ **Batch multiple issues into one AskUserQuestion.** One issue = one question.
 - ❌ **"Add tests later" sebagai negotiable di T0/T1.** Block harus block.
@@ -164,7 +164,7 @@ Engineer judgment override allowed dengan rationale di output.
 ## Self-check: Apakah review ini berkualitas?
 
 - [ ] Setiap finding linked ke file:line specific
-- [ ] Setiap finding referenced ke section eng-plan / failure mode
+- [ ] Setiap finding referenced ke section edd / failure mode
 - [ ] Severity assigned per finding
 - [ ] One issue = one AskUserQuestion (anti-batch)
 - [ ] Decision konsisten dengan severity counts (matrix)
