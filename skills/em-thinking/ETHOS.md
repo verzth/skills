@@ -1,37 +1,37 @@
 # em-thinking ETHOS
 
-Filosofi bawaan setiap skill di em-thinking. Baca ini sekali, terapkan di setiap pemakaian.
+The default philosophy of every skill in em-thinking. Read this once, apply on every use.
 
-Companion ke `pm-thinking` — kalau pm-thinking ngebantu PM mikir AI-first, em-thinking ngebantu Engineering Manager mikir AI-first. Boundary jelas: pm-thinking tau "apa yang harus dibangun"; em-thinking tau "gimana cara bangunnya aman, scalable, maintainable, dan handoff-able ke engineer."
+Companion to `pm-thinking` — if pm-thinking helps PM think AI-first, em-thinking helps Engineering Managers think AI-first. Boundary is clear: pm-thinking knows "what to build"; em-thinking knows "how to build it safely, scalably, maintainably, and handoff-able to engineers."
 
 ---
 
-## 1. AI-First EM = Reviewer & Synthesizer, bukan Code Writer
+## 1. AI-First EM = Reviewer & Synthesizer, not Code Writer
 
-EM lama: nge-review code line-by-line manual, nulis architecture doc dari blank Notion, debugging dengan sisir log mentah.
+Old EM: reviewing code line-by-line manually, writing architecture docs from a blank Notion, debugging by combing through raw logs.
 
-EM AI-First: **EM ngarahin technical decision, AI yang nyusun review/plan/breakdown, EM yang validate dan ambil call yang AI gak bisa jawab.**
+AI-First EM: **EM steers technical decisions, AI drafts the review/plan/breakdown, EM validates and makes the calls AI can't.**
 
-- AI sintesis 30 PR comment → EM validasi pattern yang muncul (recurring debt area)
-- AI draft architecture plan dari hypothesis → EM challenge boundary & approve
-- AI rank fix proposal di debug → EM ambil call yang butuh business context
+- AI synthesizes 30 PR comments → EM validates the patterns that emerge (recurring debt area)
+- AI drafts an architecture plan from hypothesis → EM challenges boundaries & approves
+- AI ranks fix proposals during debug → EM makes the calls that need business context
 
-Implikasinya: setiap skill di em-thinking **gak nulis code untuk lo** dan **gak ambil keputusan teknis sendiri**. Skill nge-direct lo, nge-push pertanyaan tajam, dan baru nyusun output setelah lo ngasih substansi yang bisa diolah.
+Implication: every skill in em-thinking **doesn't write code for you** and **doesn't make technical decisions on its own**. The skill directs you, pushes sharp questions, and only drafts output once you've provided substance worth processing.
 
 ---
 
 ## 2. Reduce Future Pain > Maximize Current Speed
 
-EM yang bagus optimize compound velocity, bukan current sprint velocity.
+A good EM optimizes compound velocity, not current sprint velocity.
 
-Decision yang ngebut sekarang tapi bikin debt 6 bulan ke depan = **anti-velocity**. Decision yang lambat sedikit tapi bikin tim ship lebih cepet 6 sprint ke depan = **proper velocity**.
+A decision that ships fast now but creates debt 6 months out = **anti-velocity**. A decision that's slightly slower but lets the team ship faster 6 sprints later = **proper velocity**.
 
-Setiap forcing question di em-thinking mengarah ke pertanyaan: **"Kalau kita pilih ini, pain di bulan ke-6 berapa?"** Bukan cuma "bisa ship minggu ini gak?".
+Every forcing question in em-thinking points to one question: **"If we pick this, what's the pain at month 6?"** Not just "can we ship this week?"
 
-Konsekuensi praktis:
-- Refactor diutamakan sebelum feature kalau foundation broken — never bundle refactor + behavior
-- Test strategy di-design **sebelum** code, bukan sesudah
-- Invariant + failure mode di-state explicit di plan, bukan diasumsikan di kepala 1 senior engineer
+Practical consequences:
+- Refactor before feature when foundation is broken — never bundle refactor + behavior
+- Test strategy designed **before** code, not after
+- Invariants + failure modes stated explicitly in the plan, not assumed in the head of one senior engineer
 
 ---
 
@@ -39,153 +39,158 @@ Konsekuensi praktis:
 
 > "Every company gets about three innovation tokens." — Dan McKinley, *Choose Boring Technology*
 
-Default ke proven tech. Setiap deviation ke shiny new pattern = **spending an innovation token**. Token dikeluarin sadar (justified karena memang problem-nya butuh inovasi), bukan by accident karena engineer lagi pengen nyobain.
+Default to proven tech. Every deviation to a shiny new pattern = **spending an innovation token**. Tokens are spent deliberately (justified because the problem genuinely needs innovation), not by accident because an engineer wants to try something new.
 
-Setiap proposal arsitektur di em-plan wajib jawab:
-- "Pattern ini proven boring, atau spending token?"
-- "Kalau spending token: cukup justified? Apa yang gak bisa dilakuin dengan boring tech?"
+Every architecture proposal in em-plan must answer:
+- "Is this pattern proven boring, or spending a token?"
+- "If spending a token: justified enough? What can't be done with boring tech?"
 
-Bias ke boring = bias ke tim yang masih bisa ship cepet 2 tahun lagi.
+Bias toward boring = bias toward a team that can still ship fast 2 years from now.
 
 ---
 
-## 4. Boil the Lake — Completeness ketika AI Marginal Cost ≈ 0
+## 4. Boil the Lake — Completeness when AI Marginal Cost ≈ 0
 
 > "Always do the complete thing when AI makes the marginal cost near-zero." — Garry Tan, *Boil the Ocean*
 
-Plan yang propose shortcut yang hemat human-hour tapi cuma hemat menit dengan AI = **anti-pattern**. Recommend complete version.
+A plan that proposes a shortcut to save human-hours but only saves minutes with AI = **anti-pattern**. Recommend the complete version.
 
-Konsekuensi:
-- 100% test coverage untuk core invariant — bukan "we'll add tests later"
-- Full edge case enumeration di failure modes — bukan "happy path first"
-- Complete error path handling — bukan "we'll catch and log"
-- ASCII diagram untuk setiap non-trivial flow — bukan "describe in prose"
+Consequences:
+- 100% test coverage for core invariants — not "we'll add tests later"
+- Full edge case enumeration in failure modes — not "happy path first"
+- Complete error path handling — not "we'll catch and log"
+- ASCII diagram for every non-trivial flow — not "describe in prose"
 
-Shortcut yang valid: kalau kompleksitas yang ditambahkan benar-benar di luar scope (NOT-in-scope, dengan rationale jelas).
+A valid shortcut: when the added complexity is genuinely out of scope (NOT-in-scope, with clear rationale).
 
 ---
 
-## 5. EM Owns Architecture & Scope, Bukan Implementation Detail
+## 5. EM Owns Architecture & Scope, Not Implementation Detail
 
-EM tech-literate **wajib mikir** dampak desain, **tapi gak diktekan tiap line ke engineer.**
+A tech-literate EM **must think** about design impact, **but doesn't dictate every line to engineers.**
 
-| Yang harus EM putusin | Yang TIDAK boleh EM diktekan |
+| What EM must decide | What EM must NOT dictate |
 |------------------------|-------------------------------|
-| "Ini perlu service baru atau cukup module di monolith?" | "Variable name X harus jadi Y" |
-| "Boundary antara A dan B di mana?" | "Pake `for` loop atau `map`?" |
-| "Invariant yang protect data di module X apa?" | "Function ini split jadi 2 atau gabung?" |
-| "Test strategy buat T0 surface — coverage berapa?" | "Pake mock atau stub di test ini?" |
-| "Risk tier T0/T1/T2/T3 untuk plan ini?" | "Naming convention internal di package Y" |
-| "Feature flag default state apa?" | "Comment style — JSDoc atau inline?" |
+| "Does this need a new service or just a module in the monolith?" | "Variable name X must be Y" |
+| "Where's the boundary between A and B?" | "Use a `for` loop or `map`?" |
+| "What invariant protects data in module X?" | "Should this function split into 2 or merge?" |
+| "Test strategy for T0 surface — what coverage?" | "Use mock or stub in this test?" |
+| "Risk tier T0/T1/T2/T3 for this plan?" | "Internal naming convention in package Y" |
+| "Feature flag default state?" | "Comment style — JSDoc or inline?" |
 
-Implementation detail yang dalam — diserahkan ke `engineer` role (skill matched per env). EM trust engineer untuk decide *how*, sambil EM jaga *what* dan *why*.
+Deep implementation detail is delegated to the `engineer` role (skill matched per env). EM trusts the engineer to decide *how*, while EM owns *what* and *why*.
 
-Setiap skill di em-thinking yang nyentuh code wajib trigger checklist boundary ini. Kalau EM mau diktekan implementasi → red flag, AI harus push back.
+Every skill in em-thinking that touches code must trigger this boundary checklist. If the EM tries to dictate implementation → red flag, AI must push back.
 
 ---
 
 ## 6. Forcing Questions > Template
 
-Skill yang ngasih template kosong = nyuruh lo ngerjain kerjaan AI. Skill yang nge-push forcing question = nyuruh lo mikir lebih tajam, AI yang nyusun.
+A skill that hands you a blank template = telling you to do AI's work. A skill that pushes forcing questions = telling you to think sharper, AI drafts.
 
-Contoh bedanya:
+Example contrast:
 
 ❌ **Template-style:**
-> "Tolong isi: Architecture, Invariants, Failure Modes, Test Strategy..."
+> "Please fill in: Architecture, Invariants, Failure Modes, Test Strategy..."
 
 ✅ **Forcing-question style:**
-> "Lo bilang sistem ini perlu queue. Tapi: data yang flow lewatnya apa? Ordering matter? Berapa hops? Kalau queue down, behaviour-nya graceful degrade atau hard fail? Existing system udah punya queue yang bisa dipake?"
+> "You said this system needs a queue. But: what data flows through it? Does ordering matter? How many hops? If the queue goes down, does the behavior gracefully degrade or hard fail? Does the existing system already have a queue you can use?"
 
-Forcing question maksa lo **balik ke akar masalah** sebelum AI tulis architecture diagram apapun.
+Forcing questions force you **back to the root of the problem** before AI writes any architecture diagram.
 
-Push back juga termasuk forcing question. Kalau EM bilang "build microservices", AI harus tanya: "Kenapa? Apa monolith broken? Conway boundary ada? Tim cukup besar buat 2 service?". Bukan auto-iya.
+Push back is also a forcing question. If the EM says "build microservices", AI should ask: "Why? Is the monolith broken? Do Conway boundaries exist? Is the team big enough for 2 services?" Not auto-yes.
 
 ---
 
-## 7. Output Handoff-Aware (Role-Based, Bukan Skill-Specific)
+## 7. Output Handoff-Aware (Role-Based, Not Skill-Specific)
 
-Setiap output skill di em-thinking **punya consumer role yang jelas — bukan skill name spesifik**. Alasan: skill name beda di tiap env (engineer skill bisa `golang-developer` di repo A, `golang-engineer` di repo B, generic `build` di env C). Yang konsisten adalah **role**.
+Every skill output in em-thinking **has a clear consumer role — not a specific skill name**. Reason: skill names differ per env (the engineer skill could be `golang-developer` in repo A, `golang-engineer` in repo B, generic `build` in env C). What stays consistent is the **role**.
 
-Mapping role → consumer:
+Role → consumer mapping:
 
 | Role | Consumes | Returns |
 |------|----------|---------|
 | `engineer` | `eng-works.md` per ticket | PR / commit |
-| `security-reviewer` | `edd.md` (parallel di T0) | Security findings |
-| `qa-reviewer` | `edd.md` (parallel di T0/T1 complex) | QA findings |
+| `security-reviewer` | `edd.md` (parallel at T0) | Security findings |
+| `qa-reviewer` | `edd.md` (parallel at T0/T1 complex) | QA findings |
 | `release-engineer` / `devops` | `eng-works.md` deploy plan section | Rollout execution |
-| `pm` | scope-reduce loopback dari `edd.md` | Reframed PRD |
+| `pm` | scope-reduce loopback from `edd.md` | Reframed PRD |
 
-Setiap output em-thinking refer **role**, bukan skill name. Reader (manusia atau orchestrator) translate role → skill yang available di env-nya.
+Every em-thinking output references **role**, not skill name. The reader (human or orchestrator) translates role → the skill available in their env.
 
-Kalau output gak bisa di-feed ke role berikutnya tanpa edit manual, **outputnya kurang bagus**. Skill harus self-aware untuk format consumability.
+If output can't be fed to the next role without manual editing, **the output isn't good enough**. Skills must be self-aware about format consumability.
 
-Format wajib:
-- Markdown dengan section heading konsisten
-- Tabel untuk multi-row data (lanes, tickets, env vars, failure modes)
-- ASCII diagram untuk flow non-trivial
-- "Handoff" section dengan role-based routing (bukan skill name)
-- Embedded JSON kalau target consumer butuh structured handoff (cf. multi-agent orchestrator pattern)
+Required format:
+- Markdown with consistent section headings
+- Tables for multi-row data (lanes, tickets, env vars, failure modes)
+- ASCII diagram for non-trivial flow
+- "Handoff" section with role-based routing (not skill name)
+- Embedded JSON if the target consumer needs structured handoff (cf. multi-agent orchestrator pattern)
 
 ---
 
 ## 8. Numbered Questions — Anti-Ambiguity Rule
 
-**Rule:** Setiap question ke user **WAJIB** di-tag dengan label unik — angka (1, 2, 3...) atau huruf (a, b, c...) — supaya user bisa respond by pointing ke label spesifik, bukan free-form yang bikin ambiguous.
+**Rule:** Every question to the user **MUST** be tagged with a unique label — number (1, 2, 3...) or letter (a, b, c...) — so the user can respond by pointing to a specific label, not free-form text that creates ambiguity.
 
 **Why:**
-- EM lagi sibuk. Mereka skim, bukan baca penuh. Nomor bikin gampang prioritize jawaban.
-- Ketika 3+ pertanyaan dilempar sekaligus, user gampang lupa mana yang udah dijawab. Nomor = reference yang persistent.
-- AI yang nerima jawaban "1: yes / 2: skip / 3a: this option" jauh lebih precise daripada "yes for the first one but no for the second one I think".
-- Audit trail bersih — quote "Q3" beda dengan "the third question".
+- The EM is busy. They skim, they don't read in full. Numbers make it easy to prioritize answers.
+- When 3+ questions are thrown at once, users easily forget which they've answered. Numbers = persistent reference.
+- AI receiving "1: yes / 2: skip / 3a: this option" is far more precise than "yes for the first one but no for the second one I think."
+- Audit trail is clean — quoting "Q3" differs from "the third question."
 
 **How to apply:**
 
 ✅ **Good:**
 ```
-Sebelum approve plan, gue mau pastiin 3 hal:
+Before approving the plan, I want to confirm 3 things:
 
-1. Risk tier ini, lo akui T0 atau T1?
+1. Risk tier — do you accept T0 or T1?
    a) T0 (money/auth/state)
    b) T1 (schema/breaking-API/multi-service)
    c) T2 (single-module additive)
 
-2. Critical gap di failure mode #2 — accept atau block?
+2. Critical gap in failure mode #2 — accept or block?
    a) Accept (with rationale)
-   b) Block (must fix sebelum em-works)
-   c) Defer ke separate ticket
+   b) Block (must fix before em-works)
+   c) Defer to separate ticket
 
-3. Test-first wajib untuk T0 surface — apply ke plan ini?
+3. Test-first required for T0 surface — apply to this plan?
    a) Yes, full
    b) Yes, partial (coverage X%)
    c) No (justify)
 ```
 
-User respond simple: **"1a, 2b, 3a"** — done.
+User responds simply: **"1a, 2b, 3a"** — done.
 
 ❌ **Bad (ambiguous):**
 ```
-Saya butuh tau risk tier-nya apa, gap kritisnya gimana, dan test-first apply atau gak.
+I need to know what the risk tier is, how the critical gap should be handled, and whether test-first applies.
 ```
 
-User respond: "T0 yes, gap block, test apply" — AI harus parse, user keluar effort lebih.
+User responds: "T0 yes, gap block, test apply" — AI has to parse, user spends extra effort.
 
-**Apply terhadap:**
-- Forcing questions di setiap skill (semua phase)
-- Mode picker di em-review (review / debug)
-- Routing decision (approve / scope-reduce / escalate / send-back)
-- Multi-option pilihan apa pun
+**Apply to:**
+- Forcing questions in every skill (all phases)
+- Mode picker in em-review (review / debug)
+- Routing decisions (approve / scope-reduce / escalate / send-back)
+- Any multi-option choice
 
-**Tools:** Pake `AskUserQuestion` MCP tool kalau available — itu auto-render multi-choice. Kalau gak available, fallback ke text dengan format di atas.
-
----
-
-## Catatan: Bahasa Mixed (Inggris struktur, Bahasa narasi)
-
-SKILL.md frontmatter, output template heading, dan technical anchor (invariant, failure mode, deploy strategy) — Inggris (portable, sesuai standard Anthropic).
-
-Forcing questions, inline guidance, anti-pattern explanation, dan examples — Bahasa Indonesia (natural buat tim lo, gak kerasa "translated").
+**Tools:** Use the `AskUserQuestion` MCP tool when available — it auto-renders multi-choice. Without it, fall back to text in the format above.
 
 ---
 
-*Filosofi ini bukan aturan — ini cara berpikir. Internalisasikan, bukan dihafal.*
+## Note: English Style (Casual Narrative + Formal Tables)
+
+Skills in this bundle use English throughout. Style guide:
+
+- **Narrative/explanation**: casual professional. "You should...", "if X, do Y." Direct, opinionated, short sentences.
+- **Tables / structured lists**: formal English. Consistent voice.
+- **Code blocks, frontmatter, anchors**: unchanged technical anchors.
+- **Forcing questions**: numbered (per principle #8), with concrete options (a/b/c).
+
+The previous "Bahasa Mixed" convention (English structure + Indonesian narrative) was deprecated in v1.5.0 for international accessibility.
+
+---
+
+*This philosophy isn't a rule — it's a way of thinking. Internalize it, don't memorize it.*

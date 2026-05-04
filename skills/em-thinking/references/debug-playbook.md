@@ -1,6 +1,6 @@
 # Debug Playbook
 
-Detail untuk `/em-review` Mode B. 5-step investigation, hypothesis-driven, **no blind fixes**.
+Detail for `/em-review` Mode B. 5-step investigation, hypothesis-driven, **no blind fixes**.
 
 ---
 
@@ -8,65 +8,65 @@ Detail untuk `/em-review` Mode B. 5-step investigation, hypothesis-driven, **no 
 
 > **No fixes without root cause confirmed.**
 
-Patch yang ship sebelum hypothesis confirmed = future bug yang akan recur. Symptom ≠ root cause.
+A patch shipped before the hypothesis is confirmed = a future bug that will recur. Symptom ≠ root cause.
 
 ---
 
 ## Step 1: Reproduce
 
-### Tujuan
-Gak bisa repro = gak bisa debug. **Stop kalau cuma 1 anecdotal report tanpa repro path.**
+### Goal
+Can't repro = can't debug. **Stop if there's only 1 anecdotal report without a repro path.**
 
 ### Reliability levels
 
 | Level | Description | Action |
 |-------|-------------|--------|
-| **Consistent** | Repro 100% dengan langkah jelas | Proceed to Step 2 |
-| **Intermittent** | Repro sometimes, butuh observability | Instrument, gather data, retry |
-| **Anecdotal** | Single report, gak bisa repro | **Stop**. Instrument observability dulu. |
+| **Consistent** | Repro 100% with clear steps | Proceed to Step 2 |
+| **Intermittent** | Repro sometimes, need observability | Instrument, gather data, retry |
+| **Anecdotal** | Single report, can't repro | **Stop**. Instrument observability first. |
 
 ### Forcing questions
 
-1. "Bug ini: a) Repro consistent (langkah jelas) b) Repro intermittent (perlu more obs) c) Anecdotal (gak bisa repro)"
-2. "Kalau (c) — stop dan instrument. Kasih tau user: bug yang gak bisa di-repro = bug yang akan recur."
+1. "This bug: a) Repro consistent (clear steps) b) Repro intermittent (need more obs) c) Anecdotal (can't repro)"
+2. "If (c) — stop and instrument. Tell the user: a bug that can't be repro'd = a bug that will recur."
 
 ### Anti-pattern
 
-❌ **"Cannot reproduce, closing."** Tanpa instrument observability dulu = bug yang akan kembali.
+❌ **"Cannot reproduce, closing."** Without instrumenting observability first = a bug that will return.
 
-❌ **"Customer report, gue assume legit."** Repro path harus established sebelum waktu engineer di-spend.
+❌ **"Customer report, I assume legit."** A repro path must be established before engineer time is spent.
 
 ---
 
 ## Step 2: Isolate
 
-### Tujuan
-Narrow surface ke **minimum repro case** (smallest input + state yang reproduce bug).
+### Goal
+Narrow the surface to **minimum repro case** (smallest input + state that reproduces the bug).
 
 ### Techniques
 
-- **Disable feature flag** yang gak related → masih repro?
-- **Test dengan input subset** → mana yang trigger?
-- **Run di env berbeda** (staging vs local) → consistent?
-- **Strip dependencies** — kalau bug di service A→B→C, isolate apakah B atau C yang misbehave
-- **Time-based isolation** — kalau bug muncul setelah deploy X, bisect git history
-- **Data-based isolation** — affected user/record share property yang common?
+- **Disable feature flag** unrelated → still repro?
+- **Test with input subset** → which one triggers it?
+- **Run in different env** (staging vs local) → consistent?
+- **Strip dependencies** — if the bug is in service A→B→C, isolate whether B or C is misbehaving
+- **Time-based isolation** — if the bug appeared after deploy X, bisect git history
+- **Data-based isolation** — do affected users/records share a common property?
 
 ### Output
 
-Minimum repro case sebagai code/script + state setup.
+Minimum repro case as code/script + state setup.
 
 ### Forcing questions
 
-1. "Minimum repro case udah established? a) Yes b) Still narrowing c) Cannot narrow further (proceed dengan caveat)"
-2. "Pattern di affected — same user segment? same time window? same data shape?"
+1. "Minimum repro case established? a) Yes b) Still narrowing c) Cannot narrow further (proceed with caveat)"
+2. "Pattern across affected — same user segment? same time window? same data shape?"
 
 ---
 
 ## Step 3: Hypothesize
 
-### Tujuan
-List 3 hypothesis, rank by likelihood. Hypothesis yang testable.
+### Goal
+List 3 hypotheses, rank by likelihood. Hypotheses that are testable.
 
 ### Format per hypothesis
 
@@ -90,20 +90,20 @@ Hypothesis [N] (likelihood: high/medium/low):
 - Recent infra changes (deploy, config, scale)
 - Recent dependency updates
 - Recent user behavior change (load, pattern)
-- Known existing tech debt yang touched
+- Known existing tech debt that was touched
 - Time correlation (cron job? business hour pattern?)
 
 ### Forcing questions
 
-1. "Top hypothesis confidence: a) High (evidence strong, test plan clear) b) Medium (need more data) c) Low (still guessing — keep observing)"
+1. "Top hypothesis confidence: a) High (strong evidence, clear test plan) b) Medium (need more data) c) Low (still guessing — keep observing)"
 2. "Hypothesis count — minimum 2 alternatives considered? Single-hypothesis investigation = confirmation bias risk."
 
 ---
 
 ## Step 4: Test
 
-### Tujuan
-Verify each hypothesis dengan **evidence**, bukan opinion. Don't blind-fix.
+### Goal
+Verify each hypothesis with **evidence**, not opinion. Don't blind-fix.
 
 ### Per hypothesis
 
@@ -118,19 +118,19 @@ Verify each hypothesis dengan **evidence**, bukan opinion. Don't blind-fix.
 
 - **Confirmed** — evidence directly supports hypothesis (e.g. expected log line matched)
 - **Refuted** — evidence contradicts hypothesis
-- **Inconclusive** — evidence gathered tapi gak decisive — refine hypothesis atau collect more
+- **Inconclusive** — evidence gathered but not decisive — refine hypothesis or collect more
 
 ### Forcing questions
 
 1. "Test [X] — verdict: a) Confirmed b) Refuted c) Inconclusive — keep gathering"
-2. "Multiple hypothesis confirmed simultaneously — check kalau hypothesis ada subset/superset relationship"
+2. "Multiple hypotheses confirmed simultaneously — check if hypotheses have a subset/superset relationship"
 
 ---
 
 ## Step 5: Diagnose & Propose Fix
 
-### Tujuan
-**Root cause stated explicit.** Symptom ≠ root cause.
+### Goal
+**Root cause stated explicitly.** Symptom ≠ root cause.
 
 ### Symptom vs root cause
 
@@ -158,30 +158,30 @@ Service uses default isolation, never set to SERIALIZABLE for this critical path
                Root cause
 ```
 
-Stop deeper kalau hit organizational / external boundary (e.g. "tim gak punya budget upgrade DB" = real root cause yang gak bisa di-solve teknis).
+Stop deeper if you hit an organizational / external boundary (e.g. "the team doesn't have a budget to upgrade DB" = a real root cause that can't be solved technically).
 
 ### Fix scope decision
 
 | Scope | Description | Routing |
 |-------|-------------|---------|
-| **Local** | 1-3 file, contained, tactical | Engineer role (skill matched per env) — handoff per fix PR |
-| **Architectural** | Cross-module, design issue | Loop ke `/em-plan` dengan flag "rooted in production bug X" |
-| **Process** | CI gap, test gap, observability gap | Ticket via `/em-works` next sprint (route ke engineer/qa-reviewer/devops role per gap type) |
+| **Local** | 1-3 files, contained, tactical | Engineer role (skill matched per env) — handoff per fix PR |
+| **Architectural** | Cross-module, design issue | Loop to `/em-plan` with flag "rooted in production bug X" |
+| **Process** | CI gap, test gap, observability gap | Ticket via `/em-works` next sprint (route to engineer/qa-reviewer/devops role per gap type) |
 
 ### Why not caught earlier?
 
-Wajib answer ini di output. Memorialize untuk preventative learning:
+Must answer this in output. Memorialize for preventative learning:
 
 - Test gap? — add regression test
 - Observability gap? — add metric/log/trace
 - Review gap? — add to code-review-rubric.md
-- Architecture gap? — flag to em-plan untuk future similar work
+- Architecture gap? — flag to em-plan for future similar work
 
 ### Forcing questions
 
 1. "Root cause confirmed: a) Yes (evidence: ...) b) Strong hypothesis (more verification needed) c) Guessing (continue investigation)"
 2. "Fix scope: a) Local b) Architectural c) Process"
-3. "Test buat regression: a) Yes (test name) b) Akan ditambah di fix PR c) Belum decide"
+3. "Test for regression: a) Yes (test name) b) Will be added in fix PR c) Not yet decided"
 4. "Why not caught earlier — gap type: a) Test gap b) Observability gap c) Review gap d) Architecture gap"
 
 ---
@@ -189,34 +189,34 @@ Wajib answer ini di output. Memorialize untuk preventative learning:
 ## Common Anti-patterns in Debugging
 
 ### ❌ Blind fix
-"Restart fixes it" — gak diagnosis. Restart hides root cause. Bug akan recur.
+"Restart fixes it" — no diagnosis. A restart hides root cause. The bug will recur.
 
 ### ❌ Symptom patch
-"Add try/catch around the failing line" — masking, bukan fixing. Future bug akan emerge dengan less visibility.
+"Add try/catch around the failing line" — masking, not fixing. A future bug will emerge with less visibility.
 
 ### ❌ Single hypothesis
-"It's definitely the cache" — confirmation bias. Always ≥ 2 hypothesis dipertimbangkan.
+"It's definitely the cache" — confirmation bias. Always ≥ 2 hypotheses considered.
 
 ### ❌ "Cannot reproduce, closing"
-Tanpa instrument observability. Anecdotal yang dipencet hilang = bug yang akan kembali.
+Without instrumenting observability. An anecdotal that gets dismissed = a bug that will return.
 
 ### ❌ Skip regression test
-Bug yang fix-nya gak punya test bakal recur. Always test.
+A bug whose fix has no test will recur. Always test.
 
-### ❌ Architectural fix dilempar ke engineer ticket
-Tanpa loop ke `/em-plan`. EM bypass own job. Engineer fix locally, pattern propagates ke service lain.
+### ❌ Architectural fix tossed to engineer ticket
+Without looping to `/em-plan`. EM bypasses own job. Engineer fixes locally, the pattern propagates to other services.
 
-### ❌ Stop di proximate cause
-"Engineer X membuat bug" — bukan root cause, itu blame. Sistem-nya kenapa allow this bug? Test? Review? Process?
+### ❌ Stop at proximate cause
+"Engineer X created the bug" — that's not root cause, that's blame. Why does the system allow this bug? Test? Review? Process?
 
 ---
 
 ## Output Linkage
 
-Debug output (`debug-<bug-id>.md`) feed:
+Debug output (`debug-<bug-id>.md`) feeds:
 - **Local fix** → engineer role (skill matched per env)
 - **Architectural fix** → `/em-plan` (re-planning context: production bug drove re-frame)
 - **Process fix** → `/em-works` next sprint ticket
-- **Lessons** → update `references/code-review-rubric.md` atau `references/architecture-checklist.md` kalau pattern generalizable
+- **Lessons** → update `references/code-review-rubric.md` or `references/architecture-checklist.md` if pattern is generalizable
 
-Self-improving loop: debug findings → reference doc updates → fewer similar bugs di future.
+Self-improving loop: debug findings → reference doc updates → fewer similar bugs in the future.

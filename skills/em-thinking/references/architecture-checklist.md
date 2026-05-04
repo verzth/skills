@@ -1,15 +1,15 @@
 # Architecture Checklist
 
-Detail untuk `/em-plan` Phase 3 (Architecture Design). **Bukan to fill out blindly** — gunakan sebagai trigger forcing questions.
+Detail for `/em-plan` Phase 3 (Architecture Design). **Not to fill out blindly** — use as a trigger for forcing questions.
 
-ASCII diagram conventions, what makes good invariant, failure mode enumeration approach, dll.
+ASCII diagram conventions, what makes a good invariant, failure mode enumeration approach, etc.
 
 ---
 
 ## 1. Component Boundaries
 
-### Tujuan
-State explicit apa yang **di dalam scope perubahan** dan apa yang **di luar**. Boundary = kontrak yang gak boleh dilanggar.
+### Goal
+State explicitly what's **inside the scope of change** and what's **outside**. Boundary = a contract that can't be violated.
 
 ### ASCII box convention
 
@@ -17,7 +17,7 @@ State explicit apa yang **di dalam scope perubahan** dan apa yang **di luar**. B
 ┌─────────────────────┐
 │   PaymentService    │
 │  ┌───────────────┐  │
-│  │  Idempotency  │  │  ← dipisah karena reused
+│  │  Idempotency  │  │  ← split out because reused
 │  │     Cache     │  │
 │  └───────────────┘  │
 └──────────┬──────────┘
@@ -30,18 +30,18 @@ State explicit apa yang **di dalam scope perubahan** dan apa yang **di luar**. B
 
 ### Forcing questions
 
-1. **Apa yang di dalam, apa di luar?** Line yang harus di-draw dengan tegas. Vague boundary = vague responsibility = vague ownership.
+1. **What's inside, what's outside?** Lines must be drawn firmly. Vague boundary = vague responsibility = vague ownership.
 
-2. **External system di sini punya kontrak apa?** SLA, retry policy, error semantics, rate limit. State explicit.
+2. **What contract does the external system here have?** SLA, retry policy, error semantics, rate limit. State explicitly.
 
-3. **Module ini own oleh siapa?** Conway's Law check. Kalau gak ada owner clear, service akan jadi orphan dalam 6 bulan.
+3. **Who owns this module?** Conway's Law check. If there's no clear owner, the service will become an orphan in 6 months.
 
 ---
 
 ## 2. Data Flow
 
-### Tujuan
-Trace lifecycle: data masuk dari mana, lewat apa, keluar ke mana. ASCII diagram **wajib** untuk flow > 2 hop.
+### Goal
+Trace the lifecycle: where data comes in, what it passes through, where it goes out. ASCII diagram is **required** for flows > 2 hops.
 
 ### ASCII arrow convention
 
@@ -64,17 +64,17 @@ Trace lifecycle: data masuk dari mana, lewat apa, keluar ke mana. ASCII diagram 
 
 ### Forcing questions
 
-1. **Synchronous vs async di setiap hop?** State explicit. User-facing latency = sum of sync hops only.
+1. **Synchronous vs async at each hop?** State explicitly. User-facing latency = sum of sync hops only.
 
-2. **Failure di hop X, behaviour-nya apa?** Per hop:
+2. **Failure at hop X, what's the behavior?** Per hop:
    - Retry?
    - Dead letter?
    - User-facing error?
    - Silent log + retry later?
 
-3. **Backpressure?** Kalau hop downstream slow, upstream apa yang terjadi? (queue accumulate, drop, error?)
+3. **Backpressure?** If a downstream hop is slow, what happens upstream? (queue accumulate, drop, error?)
 
-4. **Ordering matter?** FIFO, key-based ordering, atau no ordering needed?
+4. **Does ordering matter?** FIFO, key-based ordering, or no ordering needed?
 
 5. **Exactly-once / at-least-once / at-most-once?** Be explicit. Vague = future bug.
 
@@ -82,8 +82,8 @@ Trace lifecycle: data masuk dari mana, lewat apa, keluar ke mana. ASCII diagram 
 
 ## 3. State Machine
 
-### Tujuan
-Wajib draw kalau entity punya state >2. State implicit di kepala = future bug source.
+### Goal
+Required to draw if entity has state count >2. Implicit state in your head = future bug source.
 
 ### ASCII state convention
 
@@ -105,11 +105,11 @@ Wajib draw kalau entity punya state >2. State implicit di kepala = future bug so
 
 ### Forcing questions
 
-1. **State transitions allowed exhaustive?** Apa yang TIDAK boleh transition? (e.g. SHIPPED → PENDING harus impossible.)
+1. **Are state transitions exhaustively allowed?** What is NOT allowed to transition? (e.g. SHIPPED → PENDING must be impossible.)
 
 2. **Side effect per transition?** Database write, event emit, notification — listed per transition.
 
-3. **Concurrency on state?** Apa yang terjadi kalau 2 actor coba transition simultaneously? Lock? Optimistic concurrency? Last-write-wins?
+3. **Concurrency on state?** What happens if 2 actors try to transition simultaneously? Lock? Optimistic concurrency? Last-write-wins?
 
 4. **Who can transition?** Auth/role check per transition.
 
@@ -117,36 +117,36 @@ Wajib draw kalau entity punya state >2. State implicit di kepala = future bug so
 
 ## 4. Trust Boundaries
 
-### Tujuan
-Identify **di mana data validated** vs **di mana data trusted as-is**. Common attack vector = trust boundary yang salah.
+### Goal
+Identify **where data is validated** vs **where data is trusted as-is**. Common attack vector = a wrong trust boundary.
 
 ### Common boundaries
 
 - **HTTP request → Server** — input must be validated. Schema check, sanitization, auth check.
-- **Database → Application** — usually trusted (data writer-controlled), tapi check kalau ada user-input fields.
+- **Database → Application** — usually trusted (data writer-controlled), but check if there are user-input fields.
 - **External API → Application** — semi-trusted. Validate response schema.
-- **Service A → Service B (internal)** — trusted di shared cluster, **gak trusted** kalau cross-tenant.
+- **Service A → Service B (internal)** — trusted in shared cluster, **not trusted** if cross-tenant.
 - **User session → Authorization** — never trust user-supplied role/identity. Always re-derive from session.
 
 ### Forcing questions
 
-1. **Setiap data point — di mana di-validate?** Trust boundary harus eksplisit. Validation duplicate (di multiple boundary) = OK; missing validation = bug.
+1. **Each data point — where is it validated?** The trust boundary must be explicit. Duplicate validation (across multiple boundaries) = OK; missing validation = bug.
 
-2. **Authorization check di mana?** Pre-controller (middleware), per-endpoint, atau per-record? Be explicit.
+2. **Authorization check — where?** Pre-controller (middleware), per-endpoint, or per-record? Be explicit.
 
-3. **Secret yang lewat boundary?** API key, token, password. Storage encrypted? Transport encrypted?
+3. **Secret crossing boundary?** API key, token, password. Storage encrypted? Transport encrypted?
 
 ---
 
 ## 5. Invariants
 
-### Tujuan
-"What must always be true." Statement yang lebih spesifik dari prose, tapi gak harus formal logic.
+### Goal
+"What must always be true." Statements more specific than prose, but not necessarily formal logic.
 
 ### Good invariant characteristics
-- **Specific** — bukan abstract
-- **Testable** — bisa di-write sebagai assert
-- **Stateful** — about data/state, bukan code style
+- **Specific** — not abstract
+- **Testable** — can be written as an assert
+- **Stateful** — about data/state, not code style
 - **Falsifiable** — clear violation criteria
 
 ### Examples
@@ -159,17 +159,17 @@ Identify **di mana data validated** vs **di mana data trusted as-is**. Common at
 - "User can only access records owned by their tenant."
 
 ❌ **Bad:**
-- "TBD" — kalau gak bisa state, plan belum ready
-- "Code is clean" — bukan invariant, itu aspirasi
-- "No bugs" — bukan invariant, itu impossible
-- "Performance is good" — bukan invariant, kalau yes — quantify (e.g. "P99 latency < 200ms")
+- "TBD" — if you can't state it, the plan isn't ready
+- "Code is clean" — not an invariant, that's an aspiration
+- "No bugs" — not an invariant, that's impossible
+- "Performance is good" — not an invariant; if yes — quantify (e.g. "P99 latency < 200ms")
 
 ---
 
 ## 6. Failure Modes
 
-### Tujuan
-Enumerate apa yang bisa salah, plus bagaimana sistem react. Table form mandatory.
+### Goal
+Enumerate what can go wrong, plus how the system reacts. Table form mandatory.
 
 ### Format
 
@@ -180,14 +180,14 @@ Enumerate apa yang bisa salah, plus bagaimana sistem react. Table form mandatory
 | 3 | Invalid input from user | ✓ | ✓ validate | Error message | Low |
 
 ### Critical gap definition
-**No test + no handling + silent** = **critical gap**. Block sebelum em-works handoff.
+**No test + no handling + silent** = **critical gap**. Block before em-works handoff.
 
 ### Forcing questions per row
 
 1. "Failure scenario [X] — covered by test? Path: [test name / location]"
 2. "Failure handling — graceful degrade, retry, hard fail? Choice rationale?"
-3. "User-visible — error visible immediately, atau silent until detected later?"
-4. "Severity — kalau happen di prod, blast radius?"
+3. "User-visible — error visible immediately, or silent until detected later?"
+4. "Severity — if it happens in prod, blast radius?"
 
 ### Common scenarios to enumerate (checklist)
 
@@ -202,8 +202,8 @@ Enumerate apa yang bisa salah, plus bagaimana sistem react. Table form mandatory
 
 ## 7. Single Points of Failure
 
-### Tujuan
-Identify SPOFs. Untuk setiap, decide: **accept** (with rationale) atau **mitigate**.
+### Goal
+Identify SPOFs. For each, decide: **accept** (with rationale) or **mitigate**.
 
 ### Common SPOFs
 
@@ -215,18 +215,18 @@ Identify SPOFs. Untuk setiap, decide: **accept** (with rationale) atau **mitigat
 
 ### Forcing questions
 
-1. "SPOF [X] — accept atau mitigate?"
-2. "Kalau accept — apa SLA implication, dan stakeholder agree?"
-3. "Kalau mitigate — cost vs benefit reasonable?"
+1. "SPOF [X] — accept or mitigate?"
+2. "If accept — what's the SLA implication, and do stakeholders agree?"
+3. "If mitigate — cost vs benefit reasonable?"
 
 ---
 
 ## ASCII Diagram Anti-Patterns
 
-❌ **Diagram inaccurate vs code** — stale diagram lebih buruk dari no diagram. Update sebagai bagian dari change.
+❌ **Diagram inaccurate vs code** — a stale diagram is worse than no diagram. Update as part of the change.
 
-❌ **Diagram terlalu busy** — kalau ada >10 box atau >15 arrow, split jadi multiple diagrams (component view + data flow view + state view).
+❌ **Diagram too busy** — if there are >10 boxes or >15 arrows, split into multiple diagrams (component view + data flow view + state view).
 
-❌ **Diagram gak label-ed arrows** — arrow tanpa label = guesswork. Label dengan: action ("calls", "writes"), payload ("event"), atau condition ("if invalid").
+❌ **Diagram with unlabeled arrows** — an unlabeled arrow = guesswork. Label with: action ("calls", "writes"), payload ("event"), or condition ("if invalid").
 
-❌ **Skip diagram untuk flow > 2 hop** — non-trivial flow, prose alone gak cukup. Diagram mandatory.
+❌ **Skip diagram for flow > 2 hops** — non-trivial flow, prose alone isn't enough. Diagram mandatory.

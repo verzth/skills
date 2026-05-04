@@ -1,125 +1,131 @@
 # AI-First PM Principles
 
-Reference doc untuk semua skill di `pm-thinking`. Baca ini sekali biar tau cara berpikir di balik forcing questions.
+Reference doc for every skill in `pm-thinking`. Read this once so you know the thinking behind the forcing questions.
 
 ---
 
-## 1. PM = Orchestrator, AI = Tim
+## 1. PM = Orchestrator, AI = Team
 
-PM tradisional: nulis PRD dari blank doc, manual sintesis interview, baca ribuan ticket.
-PM AI-First: ngarahin AI, AI yang nyusun, PM yang ambil keputusan akhir.
+Traditional PM: writes a PRD from a blank doc, manually synthesizes interviews, reads thousands of tickets.
+AI-First PM: directs the AI, AI does the assembly, the PM makes the final call.
 
-**Implikasi:**
-- Setiap skill di pm-thinking gak nge-template kosong buat lo isi
-- Skill nge-direct, nge-push, nge-challenge — lo respond, AI nyusun
-- Lo evaluate, AI iterate
+**Implication:**
+- Every skill in pm-thinking doesn't hand you an empty template to fill in
+- The skill directs, pushes, challenges — you respond, AI assembles
+- You evaluate, AI iterates
 
 ---
 
 ## 2. Forcing Questions > Template Fill-In
 
-Skill yang ngasih template kosong = lo masih kerjain pekerjaan AI.
-Skill yang nge-push forcing question = lo mikir tajam, AI nyusun.
+A skill that gives an empty template = you're still doing the AI's work.
+A skill that pushes a forcing question = you think sharper, AI assembles.
 
-**Contoh kontras:**
+**Contrast example:**
 
 ❌ Template-style:
-> "Isi: Problem Statement, Goals, Non-Goals, Acceptance Criteria..."
+> "Fill in: Problem Statement, Goals, Non-Goals, Acceptance Criteria..."
 
 ✅ Forcing-question style:
-> "Lo bilang user pengen export CSV. Tapi: kapan terakhir lo wawancara mereka? Apakah CSV itu solusi atau request? Apa pain sebenarnya?"
+> "You said the user wants CSV export. But: when did you last interview them? Is CSV the solution or the request? What's the real pain?"
 
-Forcing question maksa lo balik ke akar masalah sebelum AI tulis apapun.
-
----
-
-## 3. Output Markdown Yang Self-Aware Reader-nya
-
-Setiap output skill **wajib tau** siapa yang baca selanjutnya:
-
-- `discovery.md` → di-baca `/pm-works` saat tulis PRD
-- `prd.md` → di-baca `/pm-decide --review` (audit) dan `engineer-manager` skill (technical design)
-- `priority.md` → di-baca tim untuk sprint planning
-- `update.md` → di-deliver ke audience specific
-- `retro.md` → di-feed loop discovery berikutnya
-
-Kalau output bisa di-feed langsung ke skill berikutnya tanpa edit manual, **outputnya bagus**. Kalau gak, redesign.
+A forcing question forces you back to the root cause before AI writes anything.
 
 ---
 
-## 4. Tech-Aware, Bukan Tech-Decide
+## 3. Markdown Output That's Self-Aware About Its Reader
 
-Product PM yang tech-literate **wajib mikir** dampak teknis dari spec-nya, **gak ambil keputusan** engineering.
+Every skill output **must know** who reads it next:
 
-| PM **wajib** tau | PM **TIDAK** putusin |
+- `discovery.md` → read by `/pm-works` when writing the PRD
+- `prd.md` → read by `/pm-decide --review` (audit) and the `engineer-manager` skill (technical design)
+- `priority.md` → read by the team for sprint planning
+- `update.md` → delivered to a specific audience
+- `retro.md` → fed into the next discovery loop
+
+If output can be fed directly into the next skill without manual editing, **the output is good**. If not, redesign.
+
+---
+
+## 4. Tech-Aware, Not Tech-Decide
+
+A tech-literate Product PM **must think** about the technical impact of their spec, **doesn't make** engineering decisions.
+
+| PM **must** know | PM **does NOT** decide |
 |-------------------|------------------------|
-| "Ini perlu schema baru?" | "Pake Postgres atau Mongo?" |
-| "API contract berubah? Backward compat?" | "REST atau gRPC?" |
-| "Data privacy / compliance impact?" | "Service boundary di mana?" |
-| "Existing component yang bisa di-reuse?" | "Microservices atau monolith?" |
-| "Ballpark effort — week atau month?" | "Tech stack yang dipake apa?" |
+| "Does this need a new schema?" | "Postgres or Mongo?" |
+| "API contract change? Backward compat?" | "REST or gRPC?" |
+| "Data privacy / compliance impact?" | "Where's the service boundary?" |
+| "Existing component to reuse?" | "Microservices or monolith?" |
+| "Effort ballpark — week or month?" | "What's the tech stack?" |
 
-Detail di [tech-literacy-checklist.md](./tech-literacy-checklist.md).
+Detail in [tech-literacy-checklist.md](./tech-literacy-checklist.md).
 
 ---
 
-## 5. Push Back, Bukan Yes-Man
+## 5. Push Back, Not Yes-Man
 
-Skill di pm-thinking **wajib challenge balik** PM kalau:
+Skills in pm-thinking **must push back** on the PM when:
 
-- Framing terlalu solution-prescriptive ("user mau dropdown" → "kenapa? apa yang dia coba achieve?")
-- Asumsi gak ke-validate ("retention bakal naik 30%" → "based on what?")
-- Scope terlalu lebar ("ini bisa di-break jadi v1, v2, v3?")
-- Success metric vague ("improve UX" → "lo ukurnya gimana, target berapa, time window kapan?")
-- Confidence rendah tapi masih push prio ("RICE confidence 30%, perlu more discovery dulu")
+- Framing is too solution-prescriptive ("user wants a dropdown" → "why? what are they trying to achieve?")
+- Assumptions aren't validated ("retention will rise 30%" → "based on what?")
+- Scope is too broad ("can this be broken into v1, v2, v3?")
+- Success metric is vague ("improve UX" → "how do you measure it, what's the target, what's the time window?")
+- Confidence is low but still pushed for prio ("RICE confidence 30%, more discovery needed first")
 
-PM AI-First belajar di-challenge AI sama kerasnya kayak di-challenge senior PM. Itu nilai workflow ini.
+The AI-First PM learns to be challenged by AI as hard as by a senior PM. That's the value of this workflow.
 
 ---
 
 ## 6. Conditional Tool Usage
 
-MCP integration **opportunistic**:
-- Connected → otomatis dipake (no asking)
-- Gak connected → fallback ke manual mode (no nagging untuk connect)
+MCP integration is **opportunistic**:
+- Connected → used automatically (no asking)
+- Not connected → fall back to manual mode (no nagging to connect)
 
-Reason: friction kill workflow. Skill jalan di laptop fresh tanpa setup, makin bertenaga begitu tools nyambung.
+Reason: friction kills workflow. The skill runs on a fresh laptop with no setup, becomes more powerful as soon as tools come online.
 
 ---
 
-## 7. Bahasa Mixed (Inggris struktur, Bahasa Indonesia narasi)
+## 7. Note: English Style (Casual Narrative + Formal Tables)
 
-- **Frontmatter, output template heading, tech anchor:** Inggris (portable, sesuai standard Anthropic / Cowork)
-- **Forcing questions, inline guidance, examples:** Bahasa Indonesia (natural buat tim lo, gak kerasa "translated")
+Skills in this bundle use English throughout. Style guide:
+
+- **Narrative/explanation**: casual professional. "You should...", "if X, do Y." Direct, opinionated, short sentences.
+- **Tables / structured lists**: formal English. Consistent voice.
+- **Code blocks, frontmatter, anchors**: unchanged technical anchors.
+- **Forcing questions**: numbered (per principle on numbered questions), with concrete options (a/b/c).
+
+The previous "Bahasa Mixed" convention (English structure + Indonesian narrative) was deprecated in v1.5.0 for international accessibility.
 
 ---
 
 ## 8. Numbered Questions — Anti-Ambiguity
 
-**Rule:** Setiap question ke user **WAJIB** di-tag dengan label unik (1/2/3 atau a/b/c) supaya user bisa respond by pointing ke label spesifik.
+**Rule:** Every question to the user **MUST** be tagged with a unique label (1/2/3 or a/b/c) so the user can respond by pointing to a specific label.
 
 **Why:**
-- User PM sibuk — skim bukan baca penuh
-- Nomor = persistent reference, gampang prioritize jawaban
-- Reduces ambiguity di AI parser ("1c, 2b" vs "yes for the first, at risk for second")
-- Audit trail lebih bersih
+- The PM user is busy — skim, not read in full
+- Number = persistent reference, easy to prioritize answers
+- Reduces ambiguity in the AI parser ("1c, 2b" vs "yes for the first, at risk for second")
+- Cleaner audit trail
 
 **Apply on:**
-- Forcing questions semua mode
+- Forcing questions in all modes
 - Gather context phase
-- Mode picker (kalau user gak kasih flag)
-- Confirmation prompt sebelum push ke external tool
+- Mode picker (when the user doesn't pass a flag)
+- Confirmation prompt before pushing to an external tool
 
-**Tool preference:** Pake `AskUserQuestion` MCP kalau available — auto-render multi-choice. Fallback ke numbered text format kalau gak ada.
+**Tool preference:** Use the `AskUserQuestion` MCP if available — auto-renders multi-choice. Fall back to numbered text format if unavailable.
 
 **Format reference:**
 ```
-1. [Question pertama]?
+1. [First question]?
    a) Option A
    b) Option B
    c) Option C
 
-2. [Question kedua]?
+2. [Second question]?
    a) ...
 ```
 
@@ -127,16 +133,16 @@ User: "1b, 2c" → done.
 
 ---
 
-## 9. Boundary ke Engineer-Manager Skill
+## 9. Boundary to the Engineer-Manager Skill
 
-pm-thinking **TIDAK** ngambil keputusan teknis dalam:
-- Pilih database / framework / arsitektur
-- Trade-off performance vs cost
-- Service boundary / API design level implementasi
+pm-thinking does **NOT** make technical decisions in:
+- Choice of database / framework / architecture
+- Performance vs cost trade-offs
+- Service boundary / API design at the implementation level
 - Infra / deployment strategy
 
-Untuk semua itu, hand-off ke `engineer-manager` skill (separate, nanti dibangun terpisah).
+For all of those, hand off to the `engineer-manager` skill (separate, to be built independently later).
 
-`pm-thinking` cukup **sadar** dampaknya (schema baru? backward compat? data privacy?) — supaya engineer gak surprise pas kickoff.
+`pm-thinking` only needs to be **aware** of the impact (new schema? backward compat? data privacy?) — so the engineer isn't surprised at kickoff.
 
-Detail kontrak handoff di [handoff-to-eng-manager.md](./handoff-to-eng-manager.md).
+Detail of the handoff contract in [handoff-to-eng-manager.md](./handoff-to-eng-manager.md).

@@ -5,50 +5,50 @@ description: Translate edd.md into execution-ready handoff package — atomic ti
 
 # /em-works
 
-Translate `edd.md` → execution-ready handoff package. Output `eng-works.md` siap di-distribute ke `engineer` role untuk implement, plus deployment plan artifact yang siap dipake `release-engineer` / `devops` role.
+Translate `edd.md` → execution-ready handoff package. Output `eng-works.md` ready to distribute to the `engineer` role for implementation, plus a deployment plan artifact ready to be picked up by the `release-engineer` / `devops` role.
 
-Scope penting: **em-works prepare artifact, gak execute deployment.** Provisioning secrets, creating feature flags, applying migrations, running rollout — itu devops territory.
+Important scope: **em-works prepares artifact, doesn't execute deployment.** Provisioning secrets, creating feature flags, applying migrations, running rollout — that's devops territory.
 
 ## ⚠ Question Format Rule
 
-Lihat [../../ETHOS.md](../../ETHOS.md) prinsip #8. Numbered questions, AskUserQuestion kalau available.
+See [../../ETHOS.md](../../ETHOS.md) principle #8. Numbered questions, AskUserQuestion if available.
 
-## Kapan trigger skill ini
+## When to trigger this skill
 
-- Otomatis setelah `/em-plan` selesai (seamless handoff)
-- "Plan udah lock, mau breakdown ke ticket level"
-- "Ada plan, mau prep buat sprint planning"
-- "Mau distribute kerjaan ke 3 engineer paralel — butuh lane plan"
-- "Implementation udah jalan, butuh deploy artifact buat hand off ke devops"
+- Automatically after `/em-plan` finishes (seamless handoff)
+- "The plan is locked, want to break it down to ticket level"
+- "Have a plan, want to prep for sprint planning"
+- "Want to distribute work across 3 engineers in parallel — need a lane plan"
+- "Implementation is running, need a deploy artifact to hand off to devops"
 
-## Workflow — 4 phase
+## Workflow — 4 phases
 
 ### Phase 1 — Task Breakdown
 
 #### Step 1: Read edd.md
 
-Baca dari working dir atau path yang user kasih. Kalau gak ada → **berhenti**. em-works gak start dari blank — selalu dari plan yang udah di-frame.
+Read from working dir or the path the user provides. If missing → **stop**. em-works doesn't start from blank — always from a plan that's already been framed.
 
 #### Step 2: Atomic ticket decomposition
 
-Pecah scope edd jadi atomic tickets. Per ticket:
+Break the edd scope into atomic tickets. Per ticket:
 
-- **What:** 1 deliverable, measurable, ≤ 2 days work (smaller better)
-- **Why:** Connect ke edd invariant atau failure mode # spesifik
+- **What:** 1 deliverable, measurable, ≤ 2 days work (smaller is better)
+- **Why:** Connect to a specific edd invariant or failure mode #
 - **Acceptance criteria:** Test cases + behavioral expectations + observability check
-- **Dependencies:** Ticket lain yang harus done dulu (be explicit, not implicit)
-- **Owner suggestion:** Based on module ownership kalau team punya context, atau "any IC"
-- **Touched modules:** Directories (controllers/, models/) — bukan file spesifik
-- **Estimate ballpark:** Hour / Day / >2 days (kalau >2 days, split lagi)
+- **Dependencies:** Other tickets that must be done first (be explicit, not implicit)
+- **Owner suggestion:** Based on module ownership if the team has context, or "any IC"
+- **Touched modules:** Directories (controllers/, models/) — not specific files
+- **Estimate ballpark:** Hour / Day / >2 days (if >2 days, split again)
 
-#### Step 3: Apply Beck principle
+#### Step 3: Apply the Beck principle
 
 > "Make the change easy, then make the easy change." — Kent Beck
 
-Refactor ticket selalu **sebelum** feature ticket. Jangan bundle keduanya di 1 ticket.
+Refactor ticket always **before** feature ticket. Don't bundle them in 1 ticket.
 
 ✅ Good:
-- T1: Refactor PaymentService extract idempotency key handling (no behavior change)
+- T1: Refactor PaymentService to extract idempotency key handling (no behavior change)
 - T2: Add new payment provider X (using extracted idempotency)
 
 ❌ Bad:
@@ -56,7 +56,7 @@ Refactor ticket selalu **sebelum** feature ticket. Jangan bundle keduanya di 1 t
 
 #### Step 4: Glue work flag
 
-Identify ticket yang invisible coordination:
+Identify tickets that are invisible coordination:
 - Migration scripts
 - Test fixtures
 - Documentation updates
@@ -64,21 +64,21 @@ Identify ticket yang invisible coordination:
 - Monitoring dashboard creation
 - Runbook writing
 
-**Visible them.** Distribute fairly across team — jangan biarin 1 person stuck doing only glue (anti-pattern, Reilly's *The Staff Engineer's Path*).
+**Make them visible.** Distribute fairly across the team — don't let 1 person get stuck doing only glue (anti-pattern, Reilly's *The Staff Engineer's Path*).
 
 ### Phase 2 — Worktree / Parallelization Lanes
 
 Forcing questions:
 
-1. **Lane analysis** — tickets share module?
+1. **Lane analysis** — do tickets share modules?
    - a) Yes → same lane (sequential within lane)
    - b) No + no dep → separate lane (parallel)
-   - c) Yes but read-only overlap → parallel ok dengan flag
+   - c) Yes but read-only overlap → parallel ok with flag
 
-2. **Conflict flag** — 2 lane nyentuh module yang sama?
+2. **Conflict flag** — do 2 lanes touch the same module?
    - a) Sequential (safer)
    - b) Coordinate explicitly (require sync points)
-   - c) Refactor module dulu jadi 2 sub-modules (separate ticket)
+   - c) Refactor module first into 2 sub-modules (separate ticket)
 
 #### Output lanes table
 
@@ -92,13 +92,13 @@ Forcing questions:
 
 Format: "Launch A + B parallel via worktree. Merge both. Then C."
 
-Kalau Claude Code Agent dengan `isolation: "worktree"` available, suggest pake itu untuk lane A & B.
+If Claude Code Agent with `isolation: "worktree"` is available, suggest using it for lanes A & B.
 
 ### Phase 3 — Environment & Secrets Specification
 
-> Penting: em-works **specify what's needed**, gak provisioning. Provisioning = devops skill.
+> Important: em-works **specifies what's needed**, doesn't provision. Provisioning = devops skill.
 
-Per env (local / staging / prod), spec berikut:
+Per env (local / staging / prod), spec the following:
 
 #### Env vars table
 
@@ -115,10 +115,10 @@ Per env (local / staging / prod), spec berikut:
 | `db-url-prod` | AWS Secrets Manager | 90 days | infra-team, app-pods | TODO: provision |
 
 Status keywords:
-- `TODO: provision` — devops perlu create
-- `TODO: rotate` — exists but butuh rotation
+- `TODO: provision` — devops needs to create
+- `TODO: rotate` — exists but needs rotation
 - `READY` — confirmed exists & accessible
-- `DEPRECATED` — old secret yang harus di-remove post-deploy
+- `DEPRECATED` — old secret to be removed post-deploy
 
 #### Infra prereqs checklist
 
@@ -129,16 +129,16 @@ Status keywords:
 - [ ] Alert rule plan (threshold: error rate > 1% / 5min, escalation: PagerDuty payments-oncall)
 - [ ] Runbook draft (link or path)
 
-Status untuk setiap item: `READY` / `TODO` / `BLOCKED (waiting on X)`.
+Status for each item: `READY` / `TODO` / `BLOCKED (waiting on X)`.
 
 Forcing questions:
 
-1. **Secrets status:** Prod secret X — udah exist atau perlu provision?
+1. **Secrets status:** Prod secret X — exists already or needs provisioning?
    - a) Ready (link to Secrets Manager entry)
    - b) Need provisioning (assign to devops)
    - c) Need rotation (current secret valid until ...)
 
-2. **Feature flag default:** apa?
+2. **Feature flag default:** what is it?
    - a) Off (recommended — safest rollout)
    - b) On (justify — usually only for refactor with no behavior change)
    - c) Per-env (off in prod, on in staging — for testing)
@@ -150,12 +150,12 @@ Forcing questions:
 
 ### Phase 4 — Deployment Plan Artifact
 
-> em-works **write the plan**, gak execute. Execution = `release-engineer` / `devops` role.
+> em-works **writes the plan**, doesn't execute. Execution = `release-engineer` / `devops` role.
 
-Cognitive patterns aktif:
+Active cognitive patterns:
 - **Reversibility preference** — feature flag, canary, blue-green, incremental rollout
 - **Error budgets over uptime** — what's the budget to spend on this rollout?
-- **Own your code in production** — siapa on-call window pertama?
+- **Own your code in production** — who's the first on-call window owner?
 
 #### Deploy strategy
 
@@ -170,7 +170,7 @@ Pick one + justify:
 
 - **Trigger conditions:** explicit threshold (error rate, latency P99, manual decision)
 - **Procedure:** step-by-step, target < 5 minute execution
-- **Data implications:** kalau migration involved, rollback procedure for data juga (forward-compat data, backfill plan, dll.)
+- **Data implications:** if migration is involved, rollback procedure for data too (forward-compat data, backfill plan, etc.)
 - **Communication:** who to notify, channel
 
 #### Monitoring window
@@ -187,7 +187,7 @@ Pick one + justify:
 
 ### Phase 5 — Pre-Handoff Checklist
 
-Sebelum handoff ke engineer, validate:
+Before handoff to engineer, validate:
 
 - [ ] All tickets have clear acceptance criteria
 - [ ] Lane plan unambiguous (no orphan tickets, no overlapping module conflict unresolved)
@@ -199,7 +199,7 @@ Sebelum handoff ke engineer, validate:
 - [ ] Rollback procedure documented
 - [ ] On-call window-1 owner identified
 
-Kalau ada item belum READY → flag explicitly. Engineer bisa start ticket yang gak depend on missing item.
+If any item isn't READY → flag explicitly. Engineers can start tickets that don't depend on the missing item.
 
 ## Output: `eng-works.md`
 
@@ -336,11 +336,11 @@ Kalau ada item belum READY → flag explicitly. Engineer bisa start ticket yang 
 - Skill matched per env (env-team picks the engineer skill that handles this role)
 
 ### After implementation → /em-review
-- Per PR atau batch end-of-lane
-- Mode: review (standard) atau debug (kalau bug emerge)
+- Per PR or batch end-of-lane
+- Mode: review (standard) or debug (if a bug emerges)
 
 ### Deployment → `release-engineer` / `devops` role
-- Deploy artifact ready: deployment plan section di atas
+- Deploy artifact ready: deployment plan section above
 - Pre-deploy validation: monitoring window owner confirmed, rollback procedure tested in staging
 - Skill matched per env (env-team picks the deploy/release skill that handles this role)
 
@@ -350,33 +350,33 @@ Kalau ada item belum READY → flag explicitly. Engineer bisa start ticket yang 
 **Ready for:** Engineer skill (per ticket) + future devops skill (per deploy plan)
 ```
 
-## Integration dengan tools
+## Integration with tools
 
-| Kondisi | Behavior |
+| Condition | Behavior |
 |---------|----------|
-| Notion MCP connected | Tawarin push `eng-works.md` ke Notion engineering page; tickets bisa di-mirror jadi Notion database row |
-| Linear MCP connected | Tawarin create Linear issue per ticket dengan dependency link |
+| Notion MCP connected | Offer to push `eng-works.md` to Notion engineering page; tickets can be mirrored as Notion database rows |
+| Linear MCP connected | Offer to create a Linear issue per ticket with dependency link |
 | ClickUp / Monday MCP connected | Same — bulk task creation |
-| GitHub MCP connected | Tawarin create issue per ticket di repo target |
-| Pencil MCP connected | Tawarin generate visual lane diagram dari ASCII |
-| Tidak ada MCP | File saved as local `eng-works.md`, user copy manual ke task tracker |
+| GitHub MCP connected | Offer to create an issue per ticket in the target repo |
+| Pencil MCP connected | Offer to generate a visual lane diagram from ASCII |
+| No MCP | File saved as local `eng-works.md`, user copies manually to task tracker |
 
-## Anti-pattern (jangan dilakuin)
+## Anti-pattern (don't do this)
 
-- ❌ **"Implementation: TBD"** — gak ticket-level breakdown. Output gak handoff-able.
-- ❌ **Skip env/secrets spec.** Engineer stuck di local setup, lose 2 day cycle time.
-- ❌ **Bundle refactor + feature di 1 ticket.** Anti Beck principle.
-- ❌ **Big bang deploy untuk T0/T1.** Sin. Always feature-flag atau canary.
-- ❌ **Rollback = "git revert" tanpa data consideration.** Migration rollback butuh data plan.
-- ❌ **Ticket >2 day estimate yang gak di-split.** Atomicity broken.
-- ❌ **Glue work invisible.** Bikin 1 person stuck doing only glue, anti-pattern Reilly.
-- ❌ **Lane plan dengan 2 lane share module tanpa conflict flag.** Bakal ada merge hell.
-- ❌ **Execute deployment di em-works.** Out of scope. Hand off ke devops skill.
+- ❌ **"Implementation: TBD"** — no ticket-level breakdown. Output isn't handoff-able.
+- ❌ **Skip env/secrets spec.** Engineer gets stuck in local setup, loses 2 days of cycle time.
+- ❌ **Bundle refactor + feature in 1 ticket.** Anti-Beck principle.
+- ❌ **Big bang deploy for T0/T1.** Sin. Always feature-flag or canary.
+- ❌ **Rollback = "git revert" without data consideration.** Migration rollback needs a data plan.
+- ❌ **Ticket >2 day estimate that isn't split.** Atomicity broken.
+- ❌ **Glue work invisible.** Causes 1 person to get stuck doing only glue, anti-pattern Reilly.
+- ❌ **Lane plan with 2 lanes sharing a module without conflict flag.** There will be merge hell.
+- ❌ **Execute deployment in em-works.** Out of scope. Hand off to devops skill.
 
 ## Handoff
 
 - **Per ticket** → `engineer` role (skill matched per env).
-- **PR comes back** → `/em-review` (per ticket atau batch end-of-lane).
+- **PR comes back** → `/em-review` (per ticket or batch end-of-lane).
 - **Deploy artifact ready** → `release-engineer` / `devops` role (skill matched per env).
 
-Kalau pre-handoff checklist gak lengkap (banyak BLOCKED items), output flag "BLOCKED" di TL;DR — engineer jangan start sampai blockers cleared. Loop balik ke `devops` / `infra-owner` sebelum handoff.
+If the pre-handoff checklist is incomplete (many BLOCKED items), the output flags "BLOCKED" in the TL;DR — engineers don't start until blockers are cleared. Loop back to `devops` / `infra-owner` before handoff.

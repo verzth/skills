@@ -1,15 +1,15 @@
 # HTML Template for em-thinking Artifacts
 
-Self-contained HTML template untuk render artifact em-thinking jadi human-readable review version.
+Self-contained HTML template to render em-thinking artifacts as a human-readable review version.
 
 ---
 
 ## Used By
 
-- **`/em-plan`** → renders `edd.html` (companion ke `edd.md`)
-- **`/em-review` Mode A** → renders `pr-review-<sha>.html` (companion ke `pr-review-<sha>.md`)
+- **`/em-plan`** → renders `edd.html` (companion to `edd.md`)
+- **`/em-review` Mode A** → renders `pr-review-<sha>.html` (companion to `pr-review-<sha>.md`)
 
-Skills lain (`/em-works`, `/em-review` Mode B) saat ini emit `.md` only. Future v1.5+ kemungkinan extend coverage.
+Other skills (`/em-works`, `/em-review` Mode B) currently emit `.md` only. Future v1.5+ may extend coverage.
 
 ---
 
@@ -18,9 +18,9 @@ Skills lain (`/em-works`, `/em-review` Mode B) saat ini emit `.md` only. Future 
 | File | Audience | Purpose |
 |------|----------|---------|
 | `edd.md` | Engineer (handoff), version control, future skill consumption | Source-of-truth, editable, diff-friendly |
-| `edd.html` | EM, stakeholders, human reviewer | Self-contained, styled, print-friendly, share-able |
+| `edd.html` | EM, stakeholders, human reviewer | Self-contained, styled, print-friendly, shareable |
 
-**Both wajib di-write per skill invocation.** Konten harus konsisten 1:1 (same data, beda rendering).
+**Both must be written per skill invocation.** Content must be 1:1 consistent (same data, different rendering).
 
 ---
 
@@ -296,7 +296,7 @@ table tbody tr.critical-gap td:first-child {
   font-weight: 600;
 }
 
-/* Component diagram (HTML/CSS — alternative ke ASCII untuk component boundary) */
+/* Component diagram (HTML/CSS — alternative to ASCII for component boundary) */
 .component-diagram {
   display: flex;
   flex-wrap: wrap;
@@ -418,7 +418,7 @@ footer code { background: transparent; color: inherit; padding: 0; }
 <span class="badge risk-t3">T3 — Trivial</span>
 ```
 
-Pakai di header meta + di tempat lain di body kalau perlu inline mention.
+Use in header meta + elsewhere in body if needed for inline mention.
 
 ### Severity badge
 
@@ -461,9 +461,9 @@ Pakai di header meta + di tempat lain di body kalau perlu inline mention.
 </pre>
 ```
 
-### Component diagram (HTML/CSS — optional alternative untuk component boundary)
+### Component diagram (HTML/CSS — optional alternative for component boundary)
 
-Pakai kalau component diagram-nya simple linear flow dan benefit dari color coding. Untuk diagram complex (multi-arrow, branching), tetep ASCII.
+Use if the component diagram is a simple linear flow and benefits from color coding. For complex diagrams (multi-arrow, branching), stick with ASCII.
 
 ```html
 <div class="component-diagram">
@@ -515,7 +515,7 @@ Pakai kalau component diagram-nya simple linear flow dan benefit dari color codi
     </tr>
     <tr class="critical-gap">
       <td>2</td>
-      <td>Race condition di concurrent write</td>
+      <td>Race condition in concurrent write</td>
       <td>✗</td>
       <td>✗</td>
       <td>Silent corruption</td>
@@ -531,7 +531,7 @@ Pakai kalau component diagram-nya simple linear flow dan benefit dari color codi
 
 ```html
 <div class="forcing-question">
-  <strong>Q1 (Risk tier):</strong> Lo akui ini T0 atau T1?
+  <strong>Q1 (Risk tier):</strong> Do you accept this as T0 or T1?
   <ul>
     <li>a) T0 (irreversible op, sensitive data)</li>
     <li>b) T1 (schema migration, breaking API)</li>
@@ -544,8 +544,8 @@ Pakai kalau component diagram-nya simple linear flow dan benefit dari color codi
 
 ```html
 <ul>
-  <li><div class="anti-pattern">Skip risk tier — bikin downstream gak punya gate yang bener.</div></li>
-  <li><div class="anti-pattern">Jumping ke implementation tanpa state diagnosis.</div></li>
+  <li><div class="anti-pattern">Skip risk tier — leaves downstream without a proper gate.</div></li>
+  <li><div class="anti-pattern">Jumping to implementation without state diagnosis.</div></li>
 </ul>
 ```
 
@@ -579,7 +579,7 @@ git -C repo status</code></pre>
 
 ## TOC Auto-Generation
 
-Build dari `<h2>` (top-level) dan `<h3>` (nested). Setiap heading wajib punya `id` (slug dari heading text).
+Build from `<h2>` (top-level) and `<h3>` (nested). Every heading must have an `id` (slug from heading text).
 
 Example:
 
@@ -605,25 +605,25 @@ Example:
 </nav>
 ```
 
-Heading dengan matching id:
+Heading with matching id:
 
 ```html
 <h2 id="tldr">TL;DR</h2>
 ```
 
-Slug rule: lowercase, replace space dengan `-`, strip non-alphanumeric kecuali `-`.
+Slug rule: lowercase, replace space with `-`, strip non-alphanumeric except `-`.
 
 ---
 
 ## Breadcrumb
 
-Inline di `<header>`. Format:
+Inline in `<header>`. Format:
 
 ```
 em-thinking › <skill-name> › <artifact-short-title>
 ```
 
-Contoh untuk em-plan:
+Example for em-plan:
 ```html
 <nav class="breadcrumb" aria-label="Breadcrumb">
   <a href="#">em-thinking</a>
@@ -634,7 +634,7 @@ Contoh untuk em-plan:
 </nav>
 ```
 
-Contoh untuk em-review Mode A:
+Example for em-review Mode A:
 ```html
 <nav class="breadcrumb" aria-label="Breadcrumb">
   <a href="#">em-thinking</a>
@@ -651,14 +651,14 @@ Contoh untuk em-review Mode A:
 
 ## Common Mistakes
 
-- ❌ **Skip HTML output** — user explicitly review via HTML, mandatory.
+- ❌ **Skip HTML output** — user explicitly reviews via HTML, mandatory.
 - ❌ **External CDN** (e.g. `<link href="https://cdn...">`) — breaks file:// loading + offline.
 - ❌ **Mismatch .md ↔ .html content** — must be 1:1. HTML is rendering, not different content.
-- ❌ **JavaScript dependencies** — tidak boleh, HTML harus pure static.
-- ❌ **Hardcoded inline styles per element** — semua styling lewat class. CSS sudah inline di `<style>`.
-- ❌ **Missing TOC** — required even untuk artifact pendek (3-5 sections).
-- ❌ **Critical gap row tanpa class="critical-gap"** — kehilangan visual signal.
-- ❌ **Risk tier mention tanpa `<span class="badge risk-tX">`** — lose color coding.
+- ❌ **JavaScript dependencies** — not allowed, HTML must be pure static.
+- ❌ **Hardcoded inline styles per element** — all styling via class. CSS already inlined in `<style>`.
+- ❌ **Missing TOC** — required even for short artifacts (3-5 sections).
+- ❌ **Critical gap row without class="critical-gap"** — loses visual signal.
+- ❌ **Risk tier mention without `<span class="badge risk-tX">`** — loses color coding.
 
 ---
 

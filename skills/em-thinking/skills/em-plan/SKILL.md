@@ -5,15 +5,15 @@ description: Receive engineering intake (PRD, design doc, bug repro, ad-hoc requ
 
 # /em-plan
 
-Terima input mentah (PRD, design doc, bug repro, ad-hoc request) → produce `edd.md` yang lock architecture, risk tier, invariants, failure modes, dan test strategy.
+Take raw input (PRD, design doc, bug repro, ad-hoc request) → produce `edd.md` that locks architecture, risk tier, invariants, failure modes, and test strategy.
 
-Bukan execution detail (task breakdown, env, deploy) — itu `/em-works` job. Bukan code review — itu `/em-review` job. **em-plan = pikirin sebelum kerja.**
+Not execution detail (task breakdown, env, deploy) — that's `/em-works`. Not code review — that's `/em-review`. **em-plan = think before you work.**
 
-## ⚠ Question Format Rule (wajib semua skill di em-thinking)
+## ⚠ Question Format Rule (required for all em-thinking skills)
 
-**Setiap question ke user wajib di-tag label unik** (1/2/3 atau a/b/c) supaya user bisa respond by pointing — anti-ambigu, hemat user effort.
+**Every question to the user must be tagged with a unique label** (1/2/3 or a/b/c) so the user can respond by pointing — anti-ambiguity, saves user effort.
 
-Pake `AskUserQuestion` MCP kalau available. Fallback ke numbered text:
+Use `AskUserQuestion` MCP if available. Fall back to numbered text:
 
 ```
 1. [Q]?
@@ -24,47 +24,47 @@ Pake `AskUserQuestion` MCP kalau available. Fallback ke numbered text:
    b) ...
 ```
 
-User: "1a, 2b" — done. Detail di [../../ETHOS.md](../../ETHOS.md) prinsip #8.
+User: "1a, 2b" — done. Detail in [../../ETHOS.md](../../ETHOS.md) principle #8.
 
-## Kapan trigger skill ini
+## When to trigger this skill
 
-- "PRD dari `/pm-works` udah ready, gue mau eng plan"
-- "Bug recurring di production, gue butuh proper plan sebelum patch"
-- "Founder minta feature X — gue belum yakin scope eng-nya"
-- "Tim debat 2 approach (microservice vs module) — butuh structured framing"
-- "Refactor module Y — mau plan proper sebelum start"
-- "Plan dari junior eng — gue mau audit framing-nya"
+- "PRD from `/pm-works` is ready, I want an eng plan"
+- "Recurring bug in production, I need a proper plan before patching"
+- "Founder asked for feature X — I'm not sure of the eng scope yet"
+- "Team is debating 2 approaches (microservice vs module) — need structured framing"
+- "Refactor module Y — want a proper plan before starting"
+- "Plan from a junior eng — I want to audit the framing"
 
-## Workflow — 4 phase
+## Workflow — 4 phases
 
 ### Phase 1 — Capture & Risk-Classify
 
-#### Step 1: Tangkap input
+#### Step 1: Capture input
 
-Tanya user salah satu:
+Ask the user for one of:
 
-a) **PRD / discovery.md** — output dari pm-thinking (path / Notion link)
+a) **PRD / discovery.md** — output from pm-thinking (path / Notion link)
 b) **Design doc** — markdown / Notion / Pencil canvas
 c) **Bug repro** — stack trace + repro steps + observed behaviour
-d) **Ad-hoc verbal** — user paste plain English request
-e) **Existing code** — refactor request, "module X mau di-rework"
+d) **Ad-hoc verbal** — user pastes plain English request
+e) **Existing code** — refactor request, "module X needs rework"
 
-Kalau gak ada satu pun → **berhenti**. Skill ini gak speculate. Kasih tau user untuk balik dengan minimum 1 concrete artifact.
+If none available → **stop**. This skill doesn't speculate. Tell the user to come back with at least 1 concrete artifact.
 
-#### Step 2: Klasifikasi risk tier
+#### Step 2: Classify risk tier
 
-Wajib state explicit di awal — risk tier nentuin discipline yang harus apply (test-first, security review, dll).
+Must state explicitly upfront — risk tier determines the discipline that applies (test-first, security review, etc.).
 
 | Tier | Surface | Examples | Required discipline |
 |------|---------|----------|---------------------|
-| **T0 — Critical** | Irreversible operations, security boundaries (auth/authz, secrets), state machines with concurrency, external system contracts (idempotency, exactly-once), sensitive data (PII, regulated, financial, health) | Critical write path, login/session handling, distributed lock, webhook receiver, data export with sensitive fields | Test-first wajib. `security-reviewer` role parallel. Postmortem-grade documentation. |
-| **T1 — High** | Schema migration, breaking API, multi-service coordination, observability gap di area sensitif | Add NOT NULL column, change response field type, cross-service transaction | Test strategy explicit. Migration plan reviewed. Backward compat addressed. |
+| **T0 — Critical** | Irreversible operations, security boundaries (auth/authz, secrets), state machines with concurrency, external system contracts (idempotency, exactly-once), sensitive data (PII, regulated, financial, health) | Critical write path, login/session handling, distributed lock, webhook receiver, data export with sensitive fields | Test-first required. `security-reviewer` role parallel. Postmortem-grade documentation. |
+| **T1 — High** | Schema migration, breaking API, multi-service coordination, observability gap in sensitive area | Add NOT NULL column, change response field type, cross-service transaction | Test strategy explicit. Migration plan reviewed. Backward compat addressed. |
 | **T2 — Standard** | Single-module feature, additive backward-compat, isolated surface | New endpoint with feature flag, internal helper module | Standard test coverage. Invariants stated. |
 | **T3 — Trivial** | Config / docs / dev tooling / style | README update, CI workflow tweak, lint rule | Sanity check only. Skip heavy review. |
 
-Detail klasifikasi di [../../references/risk-tiering.md](../../references/risk-tiering.md).
+Classification detail in [../../references/risk-tiering.md](../../references/risk-tiering.md).
 
-T0/T1 → wajib test-first di Phase 4. T2/T3 → fast lane, tetep wajib invariant statement min 1.
+T0/T1 → test-first required in Phase 4. T2/T3 → fast lane, still requires minimum 1 invariant statement.
 
 ### Phase 2 — Step-0 Scope Challenge
 
@@ -72,58 +72,58 @@ T0/T1 → wajib test-first di Phase 4. T2/T3 → fast lane, tetep wajib invarian
 
 Forcing questions (one issue = one AskUserQuestion):
 
-1. **What already exists** — code/flow yang udah partially solve problem ini?
-   - Skill harus *search* (Grep/Glob), bukan tanya user. Cari similar function, similar module, similar pattern.
-   - Output: list dengan reuse decision per item ("reuse / extend / parallel-build with rationale").
+1. **What already exists** — code/flow that already partially solves this problem?
+   - The skill must *search* (Grep/Glob), not ask the user. Look for similar functions, similar modules, similar patterns.
+   - Output: list with reuse decision per item ("reuse / extend / parallel-build with rationale").
 
-2. **Minimum change set** — kalau goal cuma X, apa yang bisa di-defer?
-   - Push back kalau scope mengandung "while we're at it..." — itu scope creep.
+2. **Minimum change set** — if the goal is just X, what can be deferred?
+   - Push back if scope contains "while we're at it..." — that's scope creep.
    - Output: in-scope vs deferred (NOT-in-scope) list.
 
-3. **Complexity smell check** — proposal nyentuh >8 file atau introduce >2 new class/service?
-   - Trigger scope-reduce conversation kalau yes.
-   - AskUserQuestion: "Plan ini nyentuh N file (>8). Reduce scope, atau lanjut as-is dengan justifikasi?"
+3. **Complexity smell check** — does the proposal touch >8 files or introduce >2 new classes/services?
+   - Trigger scope-reduce conversation if yes.
+   - AskUserQuestion: "This plan touches N files (>8). Reduce scope, or proceed as-is with justification?"
 
-4. **Built-in check** — framework/runtime punya built-in untuk pattern ini?
-   - Search "{framework} {pattern} built-in" sebelum custom solution.
-   - Search "{pattern} pitfalls" untuk known footguns.
-   - Kalau WebSearch unavailable, note: "Search unavailable — proceeding with in-distribution knowledge only."
+4. **Built-in check** — does the framework/runtime have a built-in for this pattern?
+   - Search "{framework} {pattern} built-in" before custom solution.
+   - Search "{pattern} pitfalls" for known footguns.
+   - If WebSearch unavailable, note: "Search unavailable — proceeding with in-distribution knowledge only."
 
-5. **Two-week smell test** — competent engineer baru bisa ship feature ini dalam 2 minggu?
-   - Kalau gak, masalahnya di onboarding/architecture/docs, bukan di feature itu sendiri.
-   - Flag sebagai "onboarding problem masked sebagai architecture" kalau triggered.
+5. **Two-week smell test** — could a competent new engineer ship this feature in 2 weeks?
+   - If not, the problem is in onboarding/architecture/docs, not the feature itself.
+   - Flag as "onboarding problem masked as architecture" if triggered.
 
-Setelah Phase 2: **commit to scope.** Don't re-argue scope di Phase 3-4. Kalau scope berubah → loop balik ke Phase 1.
+After Phase 2: **commit to scope.** Don't re-argue scope in Phase 3-4. If scope changes → loop back to Phase 1.
 
 ### Phase 3 — Architecture Design
 
-Apply 15 cognitive patterns sebagai **lens**, bukan checklist mati. Detail di [../../references/cognitive-patterns.md](../../references/cognitive-patterns.md).
+Apply the 15 cognitive patterns as **lenses**, not a dead checklist. Detail in [../../references/cognitive-patterns.md](../../references/cognitive-patterns.md).
 
-Sub-step:
+Sub-steps:
 
 #### 3.1 — State Diagnosis (Larson)
-Tim ini di state apa?
-- a) **Falling behind** — backlog menumpuk, on-call lelah, ship lambat → intervention: reduce WIP, simplify
-- b) **Treading water** — ship kerja tapi gak progress strategis → intervention: reclaim slack
+What state is this team in?
+- a) **Falling behind** — backlog piling up, on-call exhausted, slow to ship → intervention: reduce WIP, simplify
+- b) **Treading water** — shipping works but no strategic progress → intervention: reclaim slack
 - c) **Repaying debt** — actively cleaning up → intervention: protect from new scope
-- d) **Innovating** — foundation kuat, tim explore → intervention: bounded experiments
+- d) **Innovating** — strong foundation, team explores → intervention: bounded experiments
 
-Plan harus kontekstual sama state. Plan ambitious untuk tim "falling behind" = menambah pain.
+The plan must be contextual to the state. An ambitious plan for a "falling behind" team = adding pain.
 
 #### 3.2 — Component & Data Flow
 
-Wajib produce:
-- **Component boundaries** — apa di dalam scope, apa di luar (ASCII box diagram)
-- **Data flow** — request masuk dari mana, lewat apa, keluar ke mana (ASCII arrow diagram)
-- **State machine** — kalau ada state >2, ASCII state diagram
-- **Trust boundaries** — di mana data validated, di mana di-trust apa adanya
-- **Single points of failure** — identify, then decide accept atau mitigate
+Must produce:
+- **Component boundaries** — what's in scope, what's out (ASCII box diagram)
+- **Data flow** — where requests come in, what they pass through, where they go out (ASCII arrow diagram)
+- **State machine** — if state count >2, ASCII state diagram
+- **Trust boundaries** — where data is validated, where it's trusted as-is
+- **Single points of failure** — identify, then decide accept or mitigate
 
-Diagram **wajib** untuk non-trivial flow (>2 hop). Skip diagram = anti-pattern.
+Diagram is **required** for non-trivial flow (>2 hops). Skipping the diagram = anti-pattern.
 
 #### 3.3 — Invariants (min 1)
 
-"What must always be true." Statement yang lebih spesifik dari prose, tapi gak harus formal logic.
+"What must always be true." Statements more specific than prose, but not necessarily formal logic.
 
 ✅ Good:
 - "Account balance can never be negative."
@@ -131,21 +131,21 @@ Diagram **wajib** untuk non-trivial flow (>2 hop). Skip diagram = anti-pattern.
 - "Session tokens are never logged or persisted in plaintext."
 
 ❌ Bad:
-- "TBD" — kalau gak bisa state, plan belum ready
-- "Code is clean" — bukan invariant, itu aspirasi
-- "No bugs" — bukan invariant, itu impossible
+- "TBD" — if you can't state it, the plan isn't ready
+- "Code is clean" — not an invariant, that's an aspiration
+- "No bugs" — not an invariant, that's impossible
 
 #### 3.4 — Cognitive Pattern Citation (min 2)
 
-Cite cognitive pattern yang aktually shape decision di plan ini. Bukan empty signaling.
+Cite cognitive patterns that actually shaped a decision in this plan. Not empty signaling.
 
 ✅ Good:
-- "Boring by default — picked Postgres over <new shiny db> karena tim udah operate Postgres 3 tahun. Innovation token saved untuk feature X."
-- "Reversibility — feature flag default off, canary 5% → 25% → 100%. Rollback < 5 minute via flag toggle."
+- "Boring by default — picked Postgres over <new shiny db> because the team has operated Postgres for 3 years. Innovation token saved for feature X."
+- "Reversibility — feature flag default off, canary 5% → 25% → 100%. Rollback < 5 minutes via flag toggle."
 
 ❌ Bad:
-- "We applied Conway's Law." — gak nyambung ke decision spesifik
-- (Tanpa citation sama sekali) — generic review
+- "We applied Conway's Law." — doesn't connect to a specific decision
+- (No citation at all) — generic review
 
 ### Phase 4 — Test Strategy
 
@@ -153,14 +153,14 @@ T0/T1 → mandatory test-first. T2/T3 → standard coverage.
 
 #### Failure modes table
 
-Wajib enumerate. Per row:
+Must enumerate. Per row:
 
 | # | Scenario | Test? | Handling? | Visible to user? | Severity |
 |---|----------|-------|-----------|-------------------|----------|
 | 1 | Network timeout to upstream | ✓ | ✓ retry | Loud retry message | Med |
-| 2 | Race condition di concurrent write | ✗ | ✗ | Silent corruption | **Critical gap** |
+| 2 | Race condition in concurrent write | ✗ | ✗ | Silent corruption | **Critical gap** |
 
-Critical gap = no test + no handling + silent. Critical gap > 0 → block sebelum em-works.
+Critical gap = no test + no handling + silent. Critical gaps > 0 → block before em-works.
 
 #### Coverage targets
 
@@ -170,21 +170,21 @@ Critical gap = no test + no handling + silent. Critical gap > 0 → block sebelu
 - Integration — required interactions covered
 
 Forcing questions:
-1. "Failure mode #X — accept gap atau block? a) Accept (rationale) b) Block c) Defer ke ticket follow-up"
-2. "Test-first untuk T0 surface — apply 100% atau partial dengan justifikasi? a) Full b) Partial X% c) No (justify)"
+1. "Failure mode #X — accept gap or block? a) Accept (rationale) b) Block c) Defer to follow-up ticket"
+2. "Test-first for T0 surface — apply 100% or partial with justification? a) Full b) Partial X% c) No (justify)"
 
 ## Output: `edd.md` + `edd.html` (dual output)
 
-**WAJIB tulis 2 file** di working dir:
+**Must write 2 files** in working dir:
 
-1. **`edd.md`** — source markdown (struktur di bawah, wajib persis untuk downstream skill consumption)
-2. **`edd.html`** — human-readable review version, self-contained dengan inline CSS (badge T0-T3 colored, ASCII diagram styled, failure modes table critical-gap highlighted, TOC + breadcrumb)
+1. **`edd.md`** — source markdown (structure below, must match exactly for downstream skill consumption)
+2. **`edd.html`** — human-readable review version, self-contained with inline CSS (badge T0-T3 colored, ASCII diagram styled, failure modes table critical-gap highlighted, TOC + breadcrumb)
 
-HTML render pakai template + full CSS spec dari [`../../references/html-template.md`](../../references/html-template.md). Konten harus konsisten 1:1 dengan markdown — same data, beda rendering. Skip HTML = anti-pattern (user explicitly review via HTML).
+HTML render uses the template + full CSS spec from [`../../references/html-template.md`](../../references/html-template.md). Content must be 1:1 consistent with markdown — same data, different rendering. Skipping HTML = anti-pattern (user explicitly reviews via HTML).
 
-Push opsional: kalau Notion MCP connected, tawarin push `edd.md` ke Notion (markdown render native di Notion). HTML keep local buat browser review.
+Optional push: if Notion MCP is connected, offer to push `edd.md` to Notion (markdown renders natively in Notion). Keep HTML local for browser review.
 
-### MD Structure (wajib persis)
+### MD Structure (must match)
 
 ```markdown
 # EDD: [topic]
@@ -204,7 +204,7 @@ Push opsional: kalau Notion MCP connected, tawarin push `edd.md` ke Notion (mark
 **Critical invariants:** [bullet list]
 **Critical gaps:** N (must resolve before em-works)
 **Recommended path:** [proceed to em-works / scope-reduce first / send back to PM]
-**Next skill:** `/em-works` (kalau ready) atau `/em-plan --rescope`
+**Next skill:** `/em-works` (if ready) or `/em-plan --rescope`
 
 ---
 
@@ -295,8 +295,8 @@ Push opsional: kalau Notion MCP connected, tawarin push `edd.md` ke Notion (mark
 
 ## Open Questions for em-works
 
-- [Q answerable di execution prep, e.g. infra prereq, secret management]
-- [Q yang harus di-resolve sebelum task breakdown]
+- [Q answerable in execution prep, e.g. infra prereq, secret management]
+- [Q that must be resolved before task breakdown]
 
 ---
 
@@ -305,9 +305,9 @@ Push opsional: kalau Notion MCP connected, tawarin push `edd.md` ke Notion (mark
 - **Next skill:** `/em-works`
 - **Required input:** this file + [referenced docs]
 - **Required follow-up review (route by role, not skill name):**
-  - `security-reviewer` role — kalau T0 + sensitive surface
-  - `qa-reviewer` role — kalau T0/T1 + complex test surface
-  - none — kalau T2/T3
+  - `security-reviewer` role — if T0 + sensitive surface
+  - `qa-reviewer` role — if T0/T1 + complex test surface
+  - none — if T2/T3
 - **Block conditions:** critical gaps > 0 → must resolve before em-works
 
 ---
@@ -316,33 +316,33 @@ Push opsional: kalau Notion MCP connected, tawarin push `edd.md` ke Notion (mark
 **Ready for:** /em-works
 ```
 
-## Integration dengan tools
+## Integration with tools
 
-| Kondisi | Behavior |
+| Condition | Behavior |
 |---------|----------|
-| Notion MCP connected | Tawarin push `edd.md` ke Notion engineering page (HTML keep local) |
-| BigQuery MCP connected | Tawarin pull metric data buat validate scale assumption (concurrent users, query volume) |
-| Pencil MCP connected | Tawarin generate diagram dari ASCII (kalau user prefer visual) |
-| WebSearch tool available | Auto-search built-in check di Phase 2 step 4 |
-| Tidak ada MCP | Files saved as local `edd.md` + `edd.html`, user open `edd.html` di browser |
+| Notion MCP connected | Offer to push `edd.md` to Notion engineering page (HTML stays local) |
+| BigQuery MCP connected | Offer to pull metric data to validate scale assumptions (concurrent users, query volume) |
+| Pencil MCP connected | Offer to generate diagram from ASCII (when user prefers visual) |
+| WebSearch tool available | Auto-search built-in check at Phase 2 step 4 |
+| No MCP | Files saved as local `edd.md` + `edd.html`, user opens `edd.html` in browser |
 
-## Anti-pattern (jangan dilakuin)
+## Anti-pattern (don't do this)
 
-- ❌ **Skip `edd.html` output.** Dual output (`.md` + `.html`) mandatory — user review via HTML.
-- ❌ **Skip risk tier.** Bikin downstream gak punya gate yang bener.
-- ❌ **Jumping ke implementation.** "Pake Postgres + Kafka" di Phase 3 tanpa state diagnosis = anti-pattern.
-- ❌ **Skip "what already exists" search.** Bikin tim rebuild parallel infrastructure.
-- ❌ **"Critical invariant: TBD"** — kalau gak bisa state, plan belum ready.
-- ❌ **Cite cognitive pattern tanpa connect ke decision konkret.** Empty signaling.
-- ❌ **Skip ASCII diagram untuk flow > 2 hop.** Diagram bukan optional.
-- ❌ **Recommend gede-gedean ke T2/T3.** Over-engineering = sin.
-- ❌ **Bundle refactor + feature di plan yang sama.** Beck's principle: make change easy, then make easy change. Two plans.
-- ❌ **Plan untuk tim "falling behind" yang nambah scope.** Menambah pain, bukan reducing.
+- ❌ **Skip `edd.html` output.** Dual output (`.md` + `.html`) mandatory — user reviews via HTML.
+- ❌ **Skip risk tier.** Leaves downstream without a proper gate.
+- ❌ **Jumping to implementation.** "Use Postgres + Kafka" in Phase 3 without state diagnosis = anti-pattern.
+- ❌ **Skip "what already exists" search.** Causes the team to rebuild parallel infrastructure.
+- ❌ **"Critical invariant: TBD"** — if you can't state it, the plan isn't ready.
+- ❌ **Cite cognitive pattern without connecting to a concrete decision.** Empty signaling.
+- ❌ **Skip ASCII diagram for flow > 2 hops.** Diagram is not optional.
+- ❌ **Recommend overkill for T2/T3.** Over-engineering = sin.
+- ❌ **Bundle refactor + feature in the same plan.** Beck's principle: make the change easy, then make the easy change. Two plans.
+- ❌ **A plan for a "falling behind" team that adds scope.** Adds pain, not reducing.
 
 ## Handoff
 
-Output `edd.md` jadi **input wajib** untuk `/em-works`. Critical gaps di failure modes → blocker, harus resolve dulu.
+The `edd.md` output becomes **required input** for `/em-works`. Critical gaps in failure modes → blocker, must resolve first.
 
-Kalau hasil em-plan menunjukkan **scope terlalu besar atau approach fundamentally wrong**, output juga valid — itu artinya `/pm-works` perlu di-loop balik dengan reframed problem, atau scope di-reduce sebelum lanjut.
+If em-plan reveals **scope is too large or the approach is fundamentally wrong**, the output is also valid — it means `/pm-works` needs to be looped back with reframed problem, or the scope must be reduced before continuing.
 
-Kalau T0 dengan security/compliance surface → trigger `security-reviewer` role parallel ke `/em-works`. Kedua jalan paralel, hasil security findings feedback ke em-works pre-handoff checklist.
+If T0 with security/compliance surface → trigger `security-reviewer` role parallel to `/em-works`. Both run in parallel; security findings feed back into the em-works pre-handoff checklist.

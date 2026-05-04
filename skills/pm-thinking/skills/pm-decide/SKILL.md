@@ -6,13 +6,13 @@ argument-hint: "--prio | --review <prd-path> | --stakeholder <audience> | --retr
 
 # /pm-decide
 
-Skill multi-mode untuk **deliberate reflection layer** — prio, review, stakeholder, retro. Setiap mode pake forcing question pattern, bukan template kosong.
+Multi-mode skill for the **deliberate reflection layer** — prio, review, stakeholder, retro. Each mode uses the forcing-question pattern, not an empty template.
 
-## ⚠ Question Format Rule (wajib semua skill di pm-thinking)
+## ⚠ Question Format Rule (mandatory for every skill in pm-thinking)
 
-**Setiap question ke user wajib di-tag label unik** (1/2/3 atau a/b/c) supaya user bisa respond by pointing — anti-ambigu, hemat user effort.
+**Every question to the user must be tagged with a unique label** (1/2/3 or a/b/c) so the user can respond by pointing — anti-ambiguous, saves user effort.
 
-Pake `AskUserQuestion` MCP kalau available. Fallback ke numbered text:
+Use the `AskUserQuestion` MCP when available. Fall back to numbered text:
 
 ```
 1. [Q]?
@@ -23,72 +23,72 @@ Pake `AskUserQuestion` MCP kalau available. Fallback ke numbered text:
    b) ...
 ```
 
-User: "1a, 2b" — done. Detail di [references/ai-first-principles.md](../../references/ai-first-principles.md) prinsip #8.
+User: "1a, 2b" — done. Detail in [references/ai-first-principles.md](../../references/ai-first-principles.md) principle #8.
 
-**Specific application untuk pm-decide:**
-- Mode picker (kalau user gak kasih flag): label setiap mode opsi 1/2/3/4
-- Forcing questions di tiap mode: number tiap question + letter tiap option pilihan
-- Confirmation prompts (push ke Notion, send update, etc.): a/b/c options
+**Specific application for pm-decide:**
+- Mode picker (when the user doesn't pass a flag): label each mode option 1/2/3/4
+- Forcing questions in each mode: number each question + letter each option
+- Confirmation prompts (push to Notion, send update, etc.): a/b/c options
 
-## Mode picker — kapan pake yang mana
+## Mode picker — when to use which
 
 | Mode | Triggers |
 |------|----------|
-| `--prio` | "Rank backlog Q3", "RICE this list", "apa yang harus dibangun duluan?", "decide next sprint focus" |
-| `--review` | "Audit PRD ini", "red-team spec gue", "ada yang missing di PRD?", "is this ready for eng?" |
-| `--stakeholder` | "Tulis weekly update", "translate progress untuk exec", "explain status ke sales", "monthly leadership report" |
-| `--retro` | "Post-mortem feature X", "retro fitur yang baru launch", "did we hit metric?", "lessons learned" |
+| `--prio` | "Rank Q3 backlog", "RICE this list", "what should we build first?", "decide next sprint focus" |
+| `--review` | "Audit this PRD", "red-team my spec", "anything missing in the PRD?", "is this ready for eng?" |
+| `--stakeholder` | "Write a weekly update", "translate progress for exec", "explain status to sales", "monthly leadership report" |
+| `--retro` | "Post-mortem feature X", "retro the feature that just launched", "did we hit metric?", "lessons learned" |
 
-Kalau user gak kasih flag, **tanya dulu** mana mode yang dimaksud. Jangan default ke salah satu.
+If the user doesn't pass a flag, **ask first** which mode they mean. Don't default to one.
 
 ---
 
 ## Mode 1: `--prio` (Prioritize)
 
-**Peran:** Product Lead. **Goal:** rank backlog dengan rationale yang gak feel-based.
+**Role:** Product Lead. **Goal:** rank the backlog with rationale that isn't feel-based.
 
 ### Workflow
 
-#### Step 1: Tangkap backlog
+#### Step 1: Capture the backlog
 
-Sumber:
-- File `.md` / `.csv` dengan list initiative
+Sources:
+- `.md` / `.csv` file with the list of initiatives
 - Notion database link (via Notion MCP)
-- BigQuery query untuk metric reach (kalau MCP connected)
-- Verbal list dari user
+- BigQuery query for reach metric (if MCP is connected)
+- Verbal list from the user
 
-Minimum: setiap item harus punya **nama + 1-line description**. Kalau user kasih list yang cuma judul tanpa konteks, **berhenti** dan minta minimum brief per item.
+Minimum: every item must have **a name + a 1-line description**. If the user provides a list with only titles and no context, **stop** and ask for a minimum brief per item.
 
-#### Step 2: Pilih framework
+#### Step 2: Pick a framework
 
-Tanya user (AskUserQuestion):
+Ask the user (AskUserQuestion):
 
-a) **RICE** (Reach × Impact × Confidence ÷ Effort) — paling umum, butuh angka
-b) **ICE** (Impact × Confidence × Ease) — versi simpler RICE, untuk early-stage
-c) **Kano** (Must-Have / Performance / Delighter) — untuk feature variation, gak buat strategic prio
-d) **Custom** — user define dimensi sendiri
+a) **RICE** (Reach × Impact × Confidence ÷ Effort) — most common, needs numbers
+b) **ICE** (Impact × Confidence × Ease) — simpler RICE variant, for early-stage
+c) **Kano** (Must-Have / Performance / Delighter) — for feature variation, not for strategic prio
+d) **Custom** — user defines their own dimensions
 
 #### Step 3: Drive scoring (forcing questions per item)
 
-Untuk **setiap item** di backlog, push PM jawab tajam:
+For **each item** in the backlog, push the PM to answer sharply:
 
-**Kalau RICE:**
-1. **Reach:** "Berapa user yang bakal kena dalam time window relevant? Source angka-nya dari mana? (Bukan tebakan — query, segment count, dll.)"
-2. **Impact:** "Kalau ini work, behavior user bakal change seberapa? Skala 0.25 / 0.5 / 1 / 2 / 3. Why?"
-3. **Confidence:** "Lo seberapa yakin Reach × Impact-nya bakal terealisasi? %. Evidence-nya apa?"
-4. **Effort:** "Eng ballpark — person-week. Confirmed by eng atau guess PM?"
+**For RICE:**
+1. **Reach:** "How many users will be affected within the relevant time window? Where does the number come from? (Not a guess — query, segment count, etc.)"
+2. **Impact:** "If this works, how much will user behavior change? Scale 0.25 / 0.5 / 1 / 2 / 3. Why?"
+3. **Confidence:** "How confident are you that Reach × Impact will happen? %. What's the evidence?"
+4. **Effort:** "Eng ballpark — person-week. Confirmed by eng or PM guess?"
 
-**Kalau Confidence < 50%:** flag — perlu more discovery atau experiment dulu.
+**If Confidence < 50%:** flag — needs more discovery or experiment first.
 
-**Kalau Effort = "PM guess":** flag — minta sanity check dari engineer-manager skill / eng lead sebelum lock prio.
+**If Effort = "PM guess":** flag — request a sanity check from the engineer-manager skill / eng lead before locking the prio.
 
 #### Step 4: Cross-cutting check
 
-Setelah scoring, tanya:
+After scoring, ask:
 
-- **"Item top-3 ini — apakah mereka semua bisa dikerjain bareng dari sisi capacity / dependency? Atau ada yang block-an?"**
-- **"Apakah ada item yang LOW score tapi strategic / commitment ke stakeholder?"** (force eksplisit override rationale)
-- **"Bottom-tier item — apa yang paling deserve di-kill, bukan parked?"** (force courage)
+- **"These top 3 items — can they all be worked on together from a capacity / dependency standpoint? Or is something blocking?"**
+- **"Are there any items with a LOW score but strategic / commitment to a stakeholder?"** (force explicit override rationale)
+- **"Bottom-tier items — which ones most deserve to be killed, not parked?"** (force courage)
 
 #### Step 5: Output
 
@@ -112,7 +112,7 @@ Setelah scoring, tanya:
 
 ## Low-score, strategic override
 
-- [Item] — kenapa di-promote padahal score rendah
+- [Item] — why promoted despite low score
 
 ## Killed (not parked)
 
@@ -133,36 +133,36 @@ Setelah scoring, tanya:
 
 ## Mode 2: `--review` (Red-team PRD audit)
 
-**Peran:** Senior PM Reviewer. **Goal:** find what's missing / weak in a PRD before handoff.
+**Role:** Senior PM Reviewer. **Goal:** find what's missing / weak in a PRD before handoff.
 
 ### Workflow
 
-#### Step 1: Read PRD
+#### Step 1: Read the PRD
 
-Argument: path ke `prd.md` atau Notion link. Kalau gak ada, tanya user.
+Argument: path to `prd.md` or Notion link. If missing, ask the user.
 
-Read full content. Kalau PRD gak pake template `pm-works`, masih bisa di-audit — tapi flag bahwa struktur kurang standar.
+Read the full content. If the PRD doesn't use the `pm-works` template, it can still be audited — but flag that the structure is non-standard.
 
-#### Step 2: Run audit checklist
+#### Step 2: Run the audit checklist
 
-Lihat tiap section, **bukan ngerangkum** — tapi cari **gap / weakness**.
+Look at each section, **not summarizing** — but searching for **gaps / weaknesses**.
 
 ##### Problem Statement audit
-- [ ] Specific user segment (bukan generic "users")?
-- [ ] Evidence di-cite (quote, data, source)? Bukan asumsi?
-- [ ] Cost-of-not-solving terbukti, bukan hand-wave?
+- [ ] Specific user segment (not generic "users")?
+- [ ] Evidence cited (quote, data, source)? Not assumption?
+- [ ] Cost-of-not-solving proven, not hand-waved?
 
 ##### Goals audit
-- [ ] Outcome-based, bukan output-based?
-- [ ] Measurable dengan target + time window?
-- [ ] 3-5 goal, bukan 10+ (dilution risk)?
+- [ ] Outcome-based, not output-based?
+- [ ] Measurable with target + time window?
+- [ ] 3-5 goals, not 10+ (dilution risk)?
 
 ##### Non-Goals audit
-- [ ] Cukup specific untuk prevent scope creep?
-- [ ] Rationale per non-goal jelas?
+- [ ] Specific enough to prevent scope creep?
+- [ ] Rationale per non-goal clear?
 
 ##### Requirements audit
-- [ ] P0 lean (max 5-7)? Kalau >10, force re-prioritize
+- [ ] P0 lean (max 5-7)? If >10, force re-prioritize
 - [ ] Acceptance criteria writable as test case?
 - [ ] Edge cases / error states covered?
 
@@ -171,7 +171,7 @@ Lihat tiap section, **bukan ngerangkum** — tapi cari **gap / weakness**.
 - [ ] API breaking change flagged?
 - [ ] Compliance / privacy reviewed?
 - [ ] Existing components affected listed?
-- [ ] Effort ballpark realistic / acknowledged as guess?
+- [ ] Effort ballpark realistic / acknowledged as a guess?
 
 ##### Success Metrics audit
 - [ ] Leading + lagging indicators?
@@ -187,18 +187,18 @@ Lihat tiap section, **bukan ngerangkum** — tapi cari **gap / weakness**.
 - [ ] Blocking vs non-blocking flagged?
 
 ##### Handoff section audit
-- [ ] Constraints PM-locked vs decisions delegated jelas separated?
-- [ ] Eng gak akan dapat surprise pas kickoff?
+- [ ] PM-locked constraints vs delegated decisions clearly separated?
+- [ ] Eng won't get surprised at kickoff?
 
 #### Step 3: Forcing questions to PM
 
-Untuk gap yang ditemukan, **bukan kasih checklist hasil**, tapi **trigger AskUserQuestion** atau pertanyaan langsung:
+For gaps you find, **don't hand over a checklist of results**, but **trigger AskUserQuestion** or direct questions:
 
-- "Lo bilang Reach = 10K user — angka itu dari mana? Lo pernah verify queryt-nya?"
-- "P0 lo ada 12 item. Yakin semua 12 bener-bener cannot-ship-without? Coba kill 5 yang paling bisa di-cut."
-- "Tech Implications kosong di section 'Existing components' — beneran gak nyentuh apa-apa, atau lo belum cek?"
+- "You said Reach = 10K users — where does that number come from? Have you ever verified the query?"
+- "Your P0 has 12 items. Sure all 12 are really cannot-ship-without? Try killing the 5 that are most cuttable."
+- "Tech Implications is empty in the 'Existing components' section — does it really not touch anything, or have you not checked?"
 
-PM jawab → update PRD sesuai feedback.
+PM answers → update PRD per feedback.
 
 #### Step 4: Output
 
@@ -244,13 +244,13 @@ PM jawab → update PRD sesuai feedback.
 
 ## Mode 3: `--stakeholder` (Audience-specific update)
 
-**Peran:** Comms Lead. **Goal:** translate same fact into different framing per audience.
+**Role:** Comms Lead. **Goal:** translate the same fact into different framings per audience.
 
 ### Workflow
 
-#### Step 1: Tangkap context + audience
+#### Step 1: Capture context + audience
 
-Tanya:
+Ask:
 
 a) **Audience:**
 - `exec` — board / leadership (impact + decision needed)
@@ -277,15 +277,15 @@ c) **Cadence:** weekly digest, monthly review, one-time escalation, launch annou
 | Customer | Value, transparency, what's next | Internal politics | Friendly, honest, no jargon |
 | Team | Progress, learnings, what's next | Anything siloed | Inclusive, energizing, honest |
 
-#### Step 3: Push back kalau lo nemu signal off
+#### Step 3: Push back if you spot an off signal
 
-- Update lo all-positive padahal milestone slipped → "Lo mau cover-up atau lo emang gak liat risk?"
-- Update terlalu detail untuk exec → "Cut 60%. Exec butuh impact, bukan log."
-- Update terlalu vague untuk eng → "Specific please — issue ID, file, deadline."
+- Update is all-positive even though milestone slipped → "Are you covering up, or do you genuinely not see the risk?"
+- Update too detailed for exec → "Cut 60%. Exec needs impact, not log."
+- Update too vague for eng → "Specific please — issue ID, file, deadline."
 
 #### Step 4: Output
 
-Template berbeda per audience:
+Different template per audience:
 
 ##### Exec / Leadership
 
@@ -294,7 +294,7 @@ Template berbeda per audience:
 
 **TL;DR:** [1 sentence — on track / at risk / off track + biggest signal]
 
-**Decision needed:** [Yes / No — kalau yes, isi di bawah]
+**Decision needed:** [Yes / No — if yes, fill in below]
 
 ## Wins this period
 - [Outcome with metric]
@@ -323,7 +323,7 @@ Template berbeda per audience:
 ## Blocked / Help wanted
 - [Issue] — [what's blocking, who can help]
 
-## Tech context (kalau relevant)
+## Tech context (if relevant)
 - [Migration, deprecation, new tooling]
 ```
 
@@ -336,7 +336,7 @@ Template berbeda per audience:
 **Status:** [On track / At risk]
 
 ## What's shipping
-[1-2 paragraf customer-language]
+[1-2 paragraphs in customer-language]
 
 ## How to talk about it
 - **Lead with:** [key benefit]
@@ -388,47 +388,47 @@ Template berbeda per audience:
 
 ## Mode 4: `--retro` (Post-launch reflection)
 
-**Peran:** Reflective PM. **Goal:** structured reflection — what surprised us, what's the gap.
+**Role:** Reflective PM. **Goal:** structured reflection — what surprised us, what's the gap.
 
 ### Workflow
 
-#### Step 1: Tangkap launch context
+#### Step 1: Capture launch context
 
-Tanya:
+Ask:
 - **Feature / project name** + launch date
-- **Time since launch** — minimum 1 sprint pasca-launch (kalau lebih cepat, retro premature)
-- **Original PRD path / link** — buat compare expectation vs reality
+- **Time since launch** — minimum 1 sprint post-launch (if sooner, retro is premature)
+- **Original PRD path / link** — to compare expectation vs reality
 - **Metric source** — BigQuery, Amplitude, Notion log
 
-#### Step 2: Pull data (kalau MCP connected)
+#### Step 2: Pull data (if MCP is connected)
 
-Kalau BigQuery MCP connected, tawarin pull metric:
+If BigQuery MCP is connected, offer to pull metrics:
 - Adoption rate (vs target)
 - Activation / completion rate
 - Error rate
 - Retention impact
 
-User confirm query yang dipake. Skill jalanin, tampilkan hasil.
+User confirms the query. Skill runs it, displays the result.
 
 #### Step 3: Structured reflection (forcing questions)
 
-Push PM jawab — bukan kasih template kosong:
+Push the PM to answer — don't hand over an empty template:
 
 ##### Outcome vs hypothesis
-1. **"Hypothesis lo: [from PRD]. Reality: [data]. Gap-nya gimana? Hypothesis confirmed, partially confirmed, atau salah?"**
-2. **"Kalau salah, lo rasa miss-nya di mana — discovery, framing, atau eksekusi?"**
+1. **"Your hypothesis: [from PRD]. Reality: [data]. What's the gap? Hypothesis confirmed, partially confirmed, or wrong?"**
+2. **"If wrong, where do you feel the miss is — discovery, framing, or execution?"**
 
 ##### Behavior change
-3. **"Behavior yang lo expect: [from PRD]. Behavior yang ke-observe: [data]. Surprise-nya apa?"**
-4. **"Ada signal yang lo gak expect — positif maupun negatif?"**
+3. **"Behavior you expected: [from PRD]. Behavior observed: [data]. What's the surprise?"**
+4. **"Any signal you didn't expect — positive or negative?"**
 
 ##### Process
-5. **"Eksekusi smooth atau kacau? Apa yang slow / unexpected? Eng dapet surprise gak pas build?"** (kalau yes → flag improvement untuk Tech Implications next time)
-6. **"Stakeholder alignment — eksekutif, sales, customer — sesuai expectation atau ada friction?"**
+5. **"Execution smooth or chaotic? What was slow / unexpected? Did eng get surprised during build?"** (if yes → flag improvement for Tech Implications next time)
+6. **"Stakeholder alignment — execs, sales, customer — as expected or any friction?"**
 
 ##### Forward
-7. **"Kalau lo ulang, apa yang lo ubah di discovery / PRD / rollout?"**
-8. **"Apa yang harus di-fix sekarang (fast follow), apa yang di-park, apa yang di-kill?"**
+7. **"If you redid this, what would you change in discovery / PRD / rollout?"**
+8. **"What needs fixing now (fast follow), what gets parked, what gets killed?"**
 
 #### Step 4: Output
 
@@ -462,7 +462,7 @@ Push PM jawab — bukan kasih template kosong:
 
 ## What we missed
 
-- [Discovery gap / framing miss / eksekusi issue]
+- [Discovery gap / framing miss / execution issue]
 - [Why we missed it — root cause, not blame]
 
 ## Process notes (next-time improvement)
@@ -488,26 +488,26 @@ For future similar features: confidence level on [type of bet] is [up / down / u
 
 ---
 
-## Anti-pattern (semua mode)
+## Anti-pattern (all modes)
 
-- ❌ Template fill-in tanpa forcing question — lo wasting AI capability
-- ❌ Override mode tanpa reason — kalau lo paksa skip --review padahal blocker ada, write-down trade-off
-- ❌ Stakeholder update yang sama copy-paste ke semua audience — itu bukan comms, itu lazy
-- ❌ Retro tanpa data — itu opinion, bukan retrospective
-- ❌ Prio tanpa effort sanity-check dari eng — itu wishful thinking
+- ❌ Template fill-in without forcing questions — you're wasting AI capability
+- ❌ Override mode without reason — if you force-skip --review even though there's a blocker, write down the trade-off
+- ❌ Same stakeholder update copy-pasted to every audience — that's not comms, that's lazy
+- ❌ Retro without data — that's opinion, not retrospective
+- ❌ Prio without effort sanity-check from eng — that's wishful thinking
 
-## Integration dengan tools
+## Tools integration
 
-| Mode | Tool yang dipake (kalau connected) |
+| Mode | Tool used (if connected) |
 |------|--------------------------------------|
 | `--prio` | Notion (read backlog), BigQuery (reach numerator) |
-| `--review` | Notion (read PRD), kalau PRD di Notion |
-| `--stakeholder` | Notion (push update ke status page), Slack/Gmail (kalau MCP ada) — tapi gak auto-send, draft only |
-| `--retro` | BigQuery (pull metric), Notion (push retro page) |
+| `--review` | Notion (read PRD), if PRD is in Notion |
+| `--stakeholder` | Notion (push update to a status page), Slack/Gmail (if MCP exists) — but no auto-send, draft only |
+| `--retro` | BigQuery (pull metrics), Notion (push retro page) |
 
-## Handoff downstream
+## Downstream handoff
 
-- `priority.md` → input sprint planning (eng), bisa di-feed ke `engineer-manager` skill untuk capacity check
-- `review.md` → kalau ada Blocker, balik ke `/pm-works` for revision
+- `priority.md` → input to sprint planning (eng), can be fed into `engineer-manager` skill for capacity check
+- `review.md` → if there's a Blocker, back to `/pm-works` for revision
 - `update.md` → ready to send / paste, audience-specific
-- `retro.md` → input untuk next discovery loop (`/pm-discover`)
+- `retro.md` → input for the next discovery loop (`/pm-discover`)

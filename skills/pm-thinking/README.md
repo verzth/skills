@@ -2,29 +2,29 @@
 
 > **AI-First Product Management — opinionated workflow for tech-literate Product PMs.**
 
-A bundle yang turns Claude into a virtual PM team. **One install** → langsung dapet 3 skill: `/pm-discover` (researcher), `/pm-works` (senior PM), `/pm-decide` (strategist).
+A bundle that turns Claude into a virtual PM team. **One install** → you get 3 skills: `/pm-discover` (researcher), `/pm-works` (senior PM), `/pm-decide` (strategist).
 
 Inspired by [gstack](https://github.com/garrytan/gstack) (Garry Tan, YC). Where gstack turns Claude into an engineering team for builders, **pm-thinking turns Claude into a PM team for product thinkers.**
 
 ## Philosophy
 
-PM yang AI-First **bukan PM yang nulis lebih cepet pake AI**. PM yang AI-First adalah **orchestrator**: AI yang sintesis raw input, AI yang draft, AI yang challenge balik — PM yang ambil keputusan akhir.
+An AI-First PM **isn't a PM who writes faster with AI**. An AI-First PM is an **orchestrator**: AI synthesizes raw input, AI drafts, AI pushes back — the PM makes the final call.
 
-Empat prinsip inti:
+Four core principles:
 
-1. **Forcing questions, bukan template.** Setiap skill nge-push lo jawab pertanyaan tajam — gak kasih form kosong buat di-isi.
-2. **Output Markdown yang feed skill berikutnya.** `discovery.md` jadi input `/pm-works`. `prd.md` jadi input `/pm-decide --review`. Gak ada yang kelewat.
-3. **Tech-aware, bukan tech-decide.** PM harus ngerti dampak teknis (schema, API, backward compat) tapi gak ngambil keputusan engineering. Boundary jelas ke `engineer-manager` skill.
-4. **Numbered questions, anti-ambiguity.** Setiap question ke user di-label (1/2/3 atau a/b/c). User respond "1a, 2c" — done. Hemat effort, audit trail bersih.
+1. **Forcing questions, not templates.** Every skill pushes you to answer sharp questions — it doesn't hand you an empty form to fill out.
+2. **Markdown output that feeds the next skill.** `discovery.md` becomes input to `/pm-works`. `prd.md` becomes input to `/pm-decide --review`. Nothing falls through the cracks.
+3. **Tech-aware, not tech-decide.** The PM must understand the technical impact (schema, API, backward compat) but doesn't make engineering decisions. Clear boundary to the `engineer-manager` skill.
+4. **Numbered questions, anti-ambiguity.** Every question to the user is labeled (1/2/3 or a/b/c). User responds "1a, 2c" — done. Saves effort, keeps audit trail clean.
 
-Detail lengkap di [ETHOS.md](./ETHOS.md).
+Full detail in [ETHOS.md](./ETHOS.md).
 
 ## The 3 skills
 
-| Skill | Peran spesialis | Sprint stage |
+| Skill | Specialist role | Sprint stage |
 |-------|----------------|--------------|
-| [`/pm-discover`](./pm-discover/SKILL.md) | **User Researcher + Strategist** — sintesis raw user input, reframe pain → hypothesis | Discover |
-| [`/pm-works`](./pm-works/SKILL.md) | **Senior Product PM (tech-literate)** — tulis PRD lengkap dengan Tech Implications section, siap handoff ke engineer-manager | Define |
+| [`/pm-discover`](./pm-discover/SKILL.md) | **User Researcher + Strategist** — synthesizes raw user input, reframes pain → hypothesis | Discover |
+| [`/pm-works`](./pm-works/SKILL.md) | **Senior Product PM (tech-literate)** — writes a complete PRD with a Tech Implications section, ready for handoff to engineer-manager | Define |
 | [`/pm-decide`](./pm-decide/SKILL.md) | **Product Lead + Reviewer + Comms + Reflective PM** — `--prio` / `--review` / `--stakeholder` / `--retro` modes | Decide / Communicate / Reflect |
 
 ## Sprint flow
@@ -32,14 +32,14 @@ Detail lengkap di [ETHOS.md](./ETHOS.md).
 ```
                                                            ┌──────────────────────────┐
                                                            │ /pm-decide --prio        │
-                                                           │   (lintas item, kapan aja)│
+                                                           │   (across items, anytime) │
                                                            └──────────────────────────┘
                                                                        ↑
 /pm-discover ──→ /pm-works ──→ /pm-decide --review ──→ [HANDOFF ENG-MANAGER]
                                                                        ↓
                                                            ┌──────────────────────────┐
                                                            │ /pm-decide --stakeholder │
-                                                           │   (selama build)          │
+                                                           │   (during build)          │
                                                            └──────────────────────────┘
                                                                        ↓
                                                                     [SHIP]
@@ -50,35 +50,35 @@ Detail lengkap di [ETHOS.md](./ETHOS.md).
                                                            └──────────────────────────┘
 ```
 
-## Install — sekali, langsung dapet 3 skill
+## Install — once, get 3 skills
 
 ### Claude Code (per-user)
 
 ```bash
-# Clone repo verzth/skills, taruh pm-thinking di skills directory Claude Code
+# Clone the verzth/skills repo, place pm-thinking in Claude Code's skills directory
 git clone https://github.com/verzth/skills.git ~/.verzth-skills
 ln -s ~/.verzth-skills/pm-thinking ~/.claude/skills/pm-thinking
 ```
 
-Habis itu, restart Claude Code. Ketiga skill akan muncul:
+After that, restart Claude Code. All three skills will appear:
 - `/pm-discover`
 - `/pm-works`
 - `/pm-decide`
 
 ### Cowork (Claude desktop app)
 
-Drop folder `pm-thinking/` ke `~/.claude/skills/`. Karena setiap subfolder yang punya `SKILL.md` dianggap satu skill oleh Claude, install pm-thinking otomatis dapet 3 skill di dalemnya.
+Drop the `pm-thinking/` folder into `~/.claude/skills/`. Since Claude treats every subfolder containing a `SKILL.md` as a skill, installing pm-thinking automatically gives you the 3 skills inside.
 
-### Per-project (tim sharing)
+### Per-project (team sharing)
 
-Dari root repo project lo:
+From the root of your project repo:
 
 ```bash
 mkdir -p .claude/skills && ln -s ~/.verzth-skills/pm-thinking .claude/skills/pm-thinking
 git add .claude && git commit -m "add pm-thinking skill bundle"
 ```
 
-Tim lo yang clone repo bakal otomatis dapet ketiga skill begitu mereka set up `.verzth-skills` lokal-nya.
+Teammates who clone the repo will automatically get all 3 skills once they set up `.verzth-skills` locally.
 
 ### Update
 
@@ -86,31 +86,31 @@ Tim lo yang clone repo bakal otomatis dapet ketiga skill begitu mereka set up `.
 cd ~/.verzth-skills && git pull
 ```
 
-Sekali pull, ketiga skill ikut update.
+One pull, all 3 skills update.
 
 ## Tools integration
 
-pm-thinking opportunistically calls connected MCP tools — **kalau ada, dipake; kalau gak ada, fallback ke manual**:
+pm-thinking opportunistically calls connected MCP tools — **if available, used; if not, fall back to manual**:
 
-| Tool | Dipake oleh | Untuk apa |
+| Tool | Used by | For what |
 |------|-------------|-----------|
 | **Notion** | discover, works, decide | Read user research notes, write PRD/update/retro pages |
 | **BigQuery** | discover, decide (--prio, --retro) | Query support tickets, NPS, post-launch metrics |
-| **Pencil Dev** | works | Read mockup links, embed di PRD |
+| **Pencil Dev** | works | Read mockup links, embed in PRD |
 
-Skill gak akan minta lo connect tools yang gak ada — straight ke manual mode.
+The skill won't ask you to connect tools that aren't there — straight to manual mode.
 
 ## Boundary: pm-thinking vs engineer-manager
 
-pm-thinking **TIDAK** ngambil keputusan teknis dalam berikut:
-- Pilih database / framework / arsitektur
-- Trade-off performance vs cost
-- Service boundary / API design (di-level implementasi)
+pm-thinking does **NOT** make technical decisions in the following:
+- Choice of database / framework / architecture
+- Performance vs cost trade-offs
+- Service boundary / API design (at the implementation level)
 - Infra / deployment strategy
 
-Untuk semua itu, hand-off ke `engineer-manager` skill (separate, dibangun terpisah).
+For all of those, hand off to the `engineer-manager` skill (separate, built independently).
 
-`pm-thinking` cukup **sadar** dampaknya (schema baru? backward compat? data privacy?) — biar engineer gak surprise pas kickoff. Detail di [references/handoff-to-eng-manager.md](./references/handoff-to-eng-manager.md).
+`pm-thinking` only needs to be **aware** of the impact (new schema? backward compat? data privacy?) — so the engineer isn't surprised at kickoff. Detail in [references/handoff-to-eng-manager.md](./references/handoff-to-eng-manager.md).
 
 ## License
 

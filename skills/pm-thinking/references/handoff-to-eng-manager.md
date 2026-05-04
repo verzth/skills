@@ -1,28 +1,28 @@
 # Handoff Contract: pm-thinking → engineer-manager
 
-Dokumen ini ngedefine kontrak antara `pm-thinking` skill bundle dan `engineer-manager` skill (terpisah, dibangun setelah pm-thinking).
+This doc defines the contract between the `pm-thinking` skill bundle and the `engineer-manager` skill (separate, built after pm-thinking).
 
-**Tujuan:** PM stop nge-tres-pass ke engineering territory, eng gak surprise pas kickoff.
+**Purpose:** PM stops trespassing into engineering territory, eng isn't surprised at kickoff.
 
 ---
 
 ## What pm-thinking writes (PRD section "Handoff to Engineer Manager")
 
-Setiap PRD yang dihasilkan `/pm-works` punya section **wajib**:
+Every PRD produced by `/pm-works` has a **mandatory** section:
 
 ```markdown
 ## Handoff to Engineer Manager
 
 **Hypothesis to validate:**
-[Dari discovery.md hypothesis statement]
+[From discovery.md hypothesis statement]
 
 **Constraints (locked by PM):**
-- [User-facing constraint, e.g., "harus support SSO via SAML 2.0"]
-- [Business constraint, e.g., "ship sebelum Q3 review"]
+- [User-facing constraint, e.g., "must support SSO via SAML 2.0"]
+- [Business constraint, e.g., "ship before Q3 review"]
 - [Compliance constraint, e.g., "data residency US-only"]
 
 **Decisions delegated to eng:**
-- [Decision area — e.g., "tech stack untuk SSO library"]
+- [Decision area — e.g., "tech stack for SSO library"]
 - [Decision area — e.g., "session storage strategy"]
 - [Decision area — e.g., "rollout architecture"]
 
@@ -35,29 +35,29 @@ Setiap PRD yang dihasilkan `/pm-works` punya section **wajib**:
 
 ---
 
-## What engineer-manager skill picks up
+## What the engineer-manager skill picks up
 
-`engineer-manager` skill akan baca section ini dan otomatis:
+The `engineer-manager` skill will read this section and automatically:
 
-1. **Honor constraints** — gak override apa yang PM lock
-2. **Take delegated decisions** — pilih tech stack, library, dll. dengan rationale
-3. **Surface hidden trade-offs** — kalau ada tension antar constraint, flag balik ke PM
-4. **Generate technical design doc** — turunan dari PRD, bukan ulang dari nol
+1. **Honor constraints** — won't override what the PM locked
+2. **Take delegated decisions** — pick tech stack, library, etc., with rationale
+3. **Surface hidden trade-offs** — if there's tension between constraints, flag back to the PM
+4. **Generate technical design doc** — derived from the PRD, not from scratch
 
 ---
 
 ## Boundary rules
 
-### PM **boleh** specify (di PRD):
+### PM **may** specify (in the PRD):
 - User outcome / behavior change
 - Success metric (target + time window)
 - Compliance / legal constraint
 - Hard deadline / dependency
-- User-facing API contract (input/output user perspective)
+- User-facing API contract (input/output from user perspective)
 - Audience / segment
 
-### PM **tidak boleh** specify (delegate ke eng):
-- Tech stack pilihan (DB, framework, language)
+### PM **may not** specify (delegate to eng):
+- Tech stack choice (DB, framework, language)
 - Internal API design
 - Service boundary
 - Caching strategy
@@ -65,9 +65,9 @@ Setiap PRD yang dihasilkan `/pm-works` punya section **wajib**:
 - Deployment / infra strategy
 - Test framework
 
-### PM **boleh observe** (Tech Implications section):
-- "Schema baru di table X" (observation, bukan how)
-- "API contract berubah, breaking" (flag, bukan strategy)
+### PM **may observe** (Tech Implications section):
+- "New schema in table X" (observation, not how)
+- "API contract changes, breaking" (flag, not strategy)
 - "Touches PII" (compliance flag)
 - "Effort ballpark: 2-3 weeks (PM guess)"
 
@@ -75,14 +75,14 @@ Setiap PRD yang dihasilkan `/pm-works` punya section **wajib**:
 
 ## Conflict resolution
 
-Kalau eng (via engineer-manager skill) detect bahwa constraint PM **gak bisa di-honor** (e.g., deadline gak realistic, tech approach yang PM lock gak feasible), eng wajib:
+If eng (via the engineer-manager skill) detects that a PM constraint **can't be honored** (e.g., deadline isn't realistic, the tech approach the PM locked in isn't feasible), eng must:
 
-1. Flag kembali ke PM via `engineer-manager` skill output
-2. Propose 2-3 alternatif (relax constraint, extend deadline, reduce scope)
-3. PM run `/pm-decide --review` lagi atau `/pm-works` revision
+1. Flag back to the PM via the `engineer-manager` skill output
+2. Propose 2-3 alternatives (relax constraint, extend deadline, reduce scope)
+3. PM runs `/pm-decide --review` again or `/pm-works` revision
 4. Loop until alignment
 
-PM gak boleh override eng technical assessment tanpa rationale tertulis.
+The PM may not override an eng technical assessment without written rationale.
 
 ---
 
@@ -93,7 +93,7 @@ PM gak boleh override eng technical assessment tanpa rationale tertulis.
                                                           ↓
                                               [eng flags constraint conflict]
                                                           ↓
-                                              PM revisit /pm-works → /pm-decide --review
+                                              PM revisits /pm-works → /pm-decide --review
                                                           ↓
                                               engineer-manager (re-design)
                                                           ↓
@@ -104,9 +104,9 @@ PM gak boleh override eng technical assessment tanpa rationale tertulis.
 
 ---
 
-## Status saat ini
+## Current status
 
-- ✅ pm-thinking: built, di-host di `verzth/skills/pm-thinking`
-- ⏳ engineer-manager: planned, akan dibangun terpisah di `verzth/skills/engineer-manager`
+- ✅ pm-thinking: built, hosted at `verzth/skills/pm-thinking`
+- ⏳ engineer-manager: planned, will be built separately at `verzth/skills/engineer-manager`
 
-Sampai engineer-manager skill ada, **section "Handoff to Engineer Manager" di PRD bisa di-baca manual oleh tech lead lo**. Format-nya dirancang biar human-readable juga.
+Until the engineer-manager skill exists, **the "Handoff to Engineer Manager" section in the PRD can be read manually by your tech lead**. The format is designed to be human-readable too.

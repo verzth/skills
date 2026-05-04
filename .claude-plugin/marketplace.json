@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Verzth's curated Claude Code skills — humanoid-thinking framework, Go microservices, AI-First Product Management, AI-First Engineering Management, and more. Available via npm and Claude Code plugin marketplace.",
-    "version": "1.4.0"
+    "version": "1.5.0"
   },
   "plugins": [
     {
@@ -33,8 +33,8 @@
     {
       "name": "pm-thinking",
       "source": "./skills/pm-thinking",
-      "description": "AI-First Product Management bundle — pm-discover (synthesize research), pm-works (write PRD with Tech Implications), pm-decide (multi-mode: prio/review/stakeholder/retro). Tech-literate, with explicit handoff to engineer-manager.",
-      "version": "0.1.0",
+      "description": "AI-First Product Management bundle — pm-discover (synthesize research), pm-works (write PRD with Tech Implications), pm-decide (multi-mode: prio/review/stakeholder/retro). Tech-literate, with explicit handoff to engineer-manager. English-only since v1.5.0.",
+      "version": "0.2.0",
       "author": {"name": "Dodi (Verzth)"},
       "category": "product-management",
       "tags": ["pm", "ai-first", "prd", "discovery", "prioritization", "retro", "stakeholder-update"],
@@ -43,8 +43,8 @@
     {
       "name": "em-thinking",
       "source": "./skills/em-thinking",
-      "description": "AI-First Engineering Management bundle — em-plan (architectural plan with risk tier T0-T3, scope challenge, invariants, failure modes, test strategy, dual output edd.md + edd.html), em-works (execution-ready handoff: atomic tickets, worktree lanes, env/secrets spec, deploy plan artifact), em-review (Mode A code review with dual .md + .html output + Mode B hypothesis-driven debug). Companion to pm-thinking. Role-based handoff (engineer/security-reviewer/qa-reviewer/release-engineer/devops).",
-      "version": "0.2.0",
+      "description": "AI-First Engineering Management bundle — em-plan (architectural plan with risk tier T0-T3, scope challenge, invariants, failure modes, test strategy, dual output edd.md + edd.html), em-works (execution-ready handoff: atomic tickets, worktree lanes, env/secrets spec, deploy plan artifact), em-review (Mode A code review with dual .md + .html output + Mode B hypothesis-driven debug). Companion to pm-thinking. Role-based handoff (engineer/security-reviewer/qa-reviewer/release-engineer/devops). English-only since v1.5.0.",
+      "version": "0.3.0",
       "author": {"name": "Dodi (Verzth)"},
       "category": "engineering-management",
       "tags": ["em", "engineering-management", "ai-first", "architecture", "edd", "code-review", "debug", "risk-tiering", "cognitive-patterns", "deployment-prep"],

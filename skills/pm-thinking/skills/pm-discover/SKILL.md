@@ -5,15 +5,15 @@ description: Synthesize raw user input (interviews, support tickets, NPS, feedba
 
 # /pm-discover
 
-Sintesis user research mentah → theme map. Lalu reframe: pain yang dilaporkan vs pain sebenarnya.
+Synthesize raw user research → theme map. Then reframe: reported pain vs actual pain.
 
-Output: `discovery.md` yang siap di-feed ke `/pm-works` untuk nulis PRD.
+Output: `discovery.md` ready to feed into `/pm-works` for writing the PRD.
 
-## ⚠ Question Format Rule (wajib semua skill di pm-thinking)
+## ⚠ Question Format Rule (mandatory for every skill in pm-thinking)
 
-**Setiap question ke user wajib di-tag label unik** (1/2/3 atau a/b/c) supaya user bisa respond by pointing — anti-ambigu, hemat user effort.
+**Every question to the user must be tagged with a unique label** (1/2/3 or a/b/c) so the user can respond by pointing — anti-ambiguous, saves user effort.
 
-Pake `AskUserQuestion` MCP kalau available. Fallback ke numbered text:
+Use the `AskUserQuestion` MCP when available. Fall back to numbered text:
 
 ```
 1. [Q]?
@@ -24,87 +24,87 @@ Pake `AskUserQuestion` MCP kalau available. Fallback ke numbered text:
    b) ...
 ```
 
-User: "1a, 2b" — done. Detail di [references/ai-first-principles.md](../../references/ai-first-principles.md) prinsip #8.
+User: "1a, 2b" — done. Detail in [references/ai-first-principles.md](../../references/ai-first-principles.md) principle #8.
 
-## Kapan trigger skill ini
+## When to trigger this skill
 
-- "Aku punya 25 transcript interview, perlu disintesis"
-- "Customer minta feature X, gue mau validasi dulu sebelum nulis PRD"
-- "Tim debat terus soal problem-nya apa — gue mau structured approach"
-- "Ada NPS comment + support ticket numpuk, mau cari theme"
-- "Sebelum prio backlog, mau sure dulu top user pain yang mana"
+- "I have 25 interview transcripts that need synthesis"
+- "Customer is asking for feature X, I want to validate before writing a PRD"
+- "Team keeps debating what the actual problem is — I want a structured approach"
+- "NPS comments + support tickets piling up, want to find themes"
+- "Before prioritizing the backlog, I want to be sure which user pain is on top"
 
-## Workflow — 2 phase
+## Workflow — 2 phases
 
-### Phase 1 — Synthesize (sintesis raw input → theme)
+### Phase 1 — Synthesize (raw input → theme)
 
-#### Step 1: Tangkap raw input
+#### Step 1: Capture raw input
 
-Tanya user salah satu (atau kombinasi):
+Ask the user one of (or a combination of):
 
 a) **File / URL** — interview transcript, NPS export, support ticket dump, feedback form result
-b) **Notion page** — kalau user kasih link Notion, baca via MCP `mcp__plugin_operations_notion__*` (kalau connected)
-c) **BigQuery query** — untuk support volume / NPS distribution / feature request frequency, kalau MCP `mcp__plugin_data_bigquery__*` connected
-d) **Verbal dump** — user paste raw notes / quote langsung di chat
+b) **Notion page** — if the user gives a Notion link, read via the `mcp__plugin_operations_notion__*` MCP (if connected)
+c) **BigQuery query** — for support volume / NPS distribution / feature request frequency, if the `mcp__plugin_data_bigquery__*` MCP is connected
+d) **Verbal dump** — user pastes raw notes / quotes directly in chat
 
-Kalau gak ada satu pun, **berhenti**. Skill ini gak buat speculate — butuh real user signal. Kasih tau user untuk balik dengan minimum 5 data point user-asli (interview snippet, ticket, NPS verbatim, dll.).
+If none of these is available, **stop**. This skill isn't for speculation — it needs real user signal. Tell the user to come back with at least 5 actual user data points (interview snippet, ticket, NPS verbatim, etc.).
 
-#### Step 2: Ekstrak — JTBD (Jobs To Be Done) bukan feature
+#### Step 2: Extract — JTBD (Jobs To Be Done) not features
 
-Untuk setiap data point, jangan catat "user mau X". Catat:
+For each data point, don't write down "user wants X". Capture:
 
-- **Job:** Apa yang user lagi coba achieve? (bukan tools-nya, outcome-nya)
-- **Trigger:** Kapan job ini muncul? (event / situasi)
-- **Current solution / workaround:** Mereka sekarang ngakalin gimana?
-- **Pain point:** Apa yang bikin current solution gak cukup?
-- **Quote verbatim:** Kutipan asli user — keep it raw, jangan dirapihin
+- **Job:** What is the user trying to achieve? (not the tools, the outcome)
+- **Trigger:** When does this job arise? (event / situation)
+- **Current solution / workaround:** How do they get by today?
+- **Pain point:** What makes the current solution insufficient?
+- **Verbatim quote:** The user's actual words — keep it raw, don't clean it up
 
 Output table:
 
 | Source | Job | Trigger | Workaround | Pain | Quote |
 |--------|-----|---------|------------|------|-------|
 
-#### Step 3: Cluster theme
+#### Step 3: Cluster themes
 
-Group berdasarkan **kesamaan job + pain**, bukan kesamaan feature request. Contoh:
+Group by **shared job + pain**, not by shared feature request. Example:
 
-❌ **Bad cluster:** "Users yang minta CSV export"
-✅ **Good cluster:** "Users yang stuck di reporting workflow karena harus copy-paste data ke spreadsheet eksternal"
+❌ **Bad cluster:** "Users requesting CSV export"
+✅ **Good cluster:** "Users stuck in reporting workflow because they have to copy-paste data into an external spreadsheet"
 
-Untuk tiap theme, hitung:
-- **Frequency:** Berapa data point yang nge-mention?
-- **Severity:** Workaround mereka cost-nya tinggi atau ringan?
-- **Recency:** Recent (3 bulan terakhir) atau old?
+For each theme, calculate:
+- **Frequency:** How many data points mention it?
+- **Severity:** Is the workaround cost high or light?
+- **Recency:** Recent (last 3 months) or old?
 
-### Phase 2 — Reframe (push back pada framing)
+### Phase 2 — Reframe (push back on framing)
 
-Setelah theme clustered, **AI ganti hat jadi Strategist** dan tanyain forcing questions ke PM.
+Once themes are clustered, **AI swaps hat to Strategist** and asks the PM forcing questions.
 
-#### Forcing questions — wajib di-RAISE, baik live atau di-log di output
+#### Forcing questions — must be RAISED, either live or logged in output
 
-Saat live session: tanyain satu-satu pake AskUserQuestion. Saat batch / async: **log eksplisit di output** sebagai section "Forcing Questions Raised" — supaya PM tau apa yang skill challenge dan bisa reflect.
+In a live session: ask one by one via AskUserQuestion. In batch / async mode: **log explicitly in the output** as a "Forcing Questions Raised" section — so the PM knows what the skill challenged and can reflect on it.
 
-**Question categories (rephrase per scenario, jangan copy-paste literal):**
+**Question categories (rephrase per scenario, don't copy-paste literally):**
 
-1. **Data quality challenge:** "Lo bilang [klaim, e.g. '8 interview']. Tapi data konkret yang lo paste cuma [N]. Selisihnya signifikan? Bias / gap di sample?"
+1. **Data quality challenge:** "You said [claim, e.g., '8 interviews']. But the concrete data you pasted is only [N]. Is the gap significant? Bias / gap in the sample?"
 
-2. **Reframe symptom vs cause:** "Theme `[X]` punya quote `[Y]`. Apakah itu beneran tentang `[X]`, atau symptom dari masalah lain (`[Z]`)?"
+2. **Reframe symptom vs cause:** "Theme `[X]` has quote `[Y]`. Is that really about `[X]`, or a symptom of another problem (`[Z]`)?"
 
-3. **Opportunity sizing:** "Frequency × severity theme ini cukup justify dibangun? Atau vocal minority?"
+3. **Opportunity sizing:** "Is the frequency × severity of this theme enough to justify building? Or vocal minority?"
 
-4. **Success criteria force:** "Kalau lo solve theme ini, behavior change-nya apa? Metric specific yang bakal gerak?"
+4. **Success criteria force:** "If you solve this theme, what behavior change happens? Specific metric that will move?"
 
-5. **Red team:** "Apa kemungkinan SALAH-nya? Kalau lo build dan gak gerak, apa yang lo missed?"
+5. **Red team:** "What might be WRONG with this? If you build it and it doesn't move the needle, what did you miss?"
 
-6. **Cluster validity:** "Theme ini distinct atau overlap sama theme lain?"
+6. **Cluster validity:** "Is this theme distinct, or does it overlap with another theme?"
 
-**SETIAP question yang skill raise WAJIB muncul di section "Forcing Questions Raised" di discovery.md** — bukan disembunyiin di chat history. PM butuh trail audit-nya buat self-reflect dan share ke tim.
+**EVERY question the skill raises MUST appear in the "Forcing Questions Raised" section in discovery.md** — not buried in chat history. The PM needs the audit trail to self-reflect and share with the team.
 
-Why important: forcing question yang invisible = lo PM gak tau apa yang skill bantu push back. Visibility = trust + auditability.
+Why important: an invisible forcing question = the PM doesn't know what the skill helped push back on. Visibility = trust + auditability.
 
 #### Output reframing
 
-Tiap theme di-rewrite jadi **Hypothesis Statement**:
+Each theme gets rewritten as a **Hypothesis Statement**:
 
 ```
 We believe that [user segment] is struggling with [job] because [pain].
@@ -114,7 +114,7 @@ We're confident in this because [evidence: quote refs + frequency].
 
 ## Output: `discovery.md`
 
-Tulis file `discovery.md` di working dir, atau push ke Notion via MCP kalau connected. Struktur **wajib persis** di bawah — section ordering matter buat downstream skill consumption.
+Write `discovery.md` in the working dir, or push to Notion via MCP if connected. The structure below is **strictly required** — section ordering matters for downstream skill consumption.
 
 ```markdown
 # Discovery: [topic]
@@ -128,11 +128,11 @@ Tulis file `discovery.md` di working dir, atau push ke Notion via MCP kalau conn
 
 ## TL;DR — Pursue Hypothesis
 
-> **Lead with the one to pursue.** PM yang lagi sibuk butuh tau dalam 30 detik mana yang harus di-PRD-in.
+> **Lead with the one to pursue.** A busy PM needs to know in 30 seconds which one to PRD.
 
 **Recommended pursue:** Hypothesis #[X] — [1-line statement]
-**Why this one:** [Bukti utama: deal value / frequency / severity yang menang]
-**Next skill:** `/pm-works --spec "[hypothesis #X]"` — spec stub di section akhir
+**Why this one:** [Main evidence: deal value / frequency / severity that wins]
+**Next skill:** `/pm-works --spec "[hypothesis #X]"` — spec stub in the final section
 
 ---
 
@@ -140,18 +140,18 @@ Tulis file `discovery.md` di working dir, atau push ke Notion via MCP kalau conn
 
 - Source mix: X interviews + Y tickets + Z NPS verbatims
 - Time range: [from – to]
-- Notable bias / gap: [e.g. "skewed enterprise, no SMB voice"]
-- Data quality flags: [e.g. "PM klaim 8 interview tapi quote konkret cuma 4 — sample size lebih kecil dari yang dilaporkan"]
+- Notable bias / gap: [e.g., "skewed enterprise, no SMB voice"]
+- Data quality flags: [e.g., "PM claims 8 interviews but concrete quotes are only 4 — sample size smaller than reported"]
 
 ---
 
 ## Forcing Questions Raised
 
-> Visible audit trail — apa yang skill push back / challenge ke PM.
+> Visible audit trail — what the skill pushed back on / challenged the PM on.
 
 | # | Category | Question | PM response | Resolution |
 |---|----------|----------|-------------|------------|
-| 1 | Data quality | "[Q raised]" | "[user response, atau 'assumed [X]' kalau async]" | "[how it shaped the output]" |
+| 1 | Data quality | "[Q raised]" | "[user response, or 'assumed [X]' if async]" | "[how it shaped the output]" |
 | 2 | Reframe | "[Q]" | "[response]" | "[resolution]" |
 | ... | | | | |
 
@@ -168,10 +168,10 @@ Tulis file `discovery.md` di working dir, atau push ke Notion via MCP kalau conn
   - "..." — [source ref]
 
 #### JTBD Analysis
-- **Job:** [Outcome user mau achieve, BUKAN tools/feature]
-- **Trigger:** [Event / situasi]
-- **Workaround:** [Cara mereka ngakalin sekarang]
-- **Pain:** [Apa yang bikin workaround gak cukup]
+- **Job:** [Outcome the user wants to achieve, NOT tool/feature]
+- **Trigger:** [Event / situation]
+- **Workaround:** [How they get by today]
+- **Pain:** [What makes the workaround insufficient]
 
 #### Hypothesis #1
 **We believe that** [segment] is struggling with [job] **because** [pain].
@@ -179,12 +179,12 @@ Tulis file `discovery.md` di working dir, atau push ke Notion via MCP kalau conn
 **which we'll measure by** [metric, target, time window].
 **Confidence:** [High / Med / Low].
 **Evidence:**
-- [Quote ref + frequency / severity bukti]
-- [Industry / market signal kalau ada]
+- [Quote ref + frequency / severity evidence]
+- [Industry / market signal if any]
 
-#### Open questions (untuk validate / strengthen)
-- [Q yang lo gak yakin, perlu more research]
-- *Suggest follow-up:* [specific action — interview siapa, query apa]
+#### Open questions (to validate / strengthen)
+- [Q you're not sure about, needs more research]
+- *Suggest follow-up:* [specific action — interview who, query what]
 
 ### Theme 2: ...
 
@@ -192,7 +192,7 @@ Tulis file `discovery.md` di working dir, atau push ke Notion via MCP kalau conn
 
 ## Tech Implications (For Eng Kickoff)
 
-> Wajib pake **7-section format** dari `references/tech-literacy-checklist.md`. Bukan freeform observation. Ini buat eng-manager skill konsumsi langsung.
+> Must use the **7-section format** from `references/tech-literacy-checklist.md`. Not freeform observation. This is for the engineer-manager skill to consume directly.
 
 ### 1. Data layer
 - Schema impact: [None / New table X / Add column Y to table Z]
@@ -224,7 +224,7 @@ Tulis file `discovery.md` di working dir, atau push ke Notion via MCP kalau conn
 - *To be confirmed by engineer-manager skill*
 
 ### 7. Open technical questions for eng
-- [Q1 — yang PM gak bisa jawab]
+- [Q1 — what the PM can't answer]
 - [Q2 — ...]
 
 ---
@@ -240,10 +240,10 @@ Tulis file `discovery.md` di working dir, atau push ke Notion via MCP kalau conn
 
 ## Spec stub for `/pm-works --spec`
 
-Copy-paste ready buat skill berikutnya:
+Copy-paste ready for the next skill:
 
 \`\`\`
-Problem: [problem statement dari hypothesis terpilih]
+Problem: [problem statement from chosen hypothesis]
 Success metric: [metric + target + time window]
 Constraints:
 - [User-facing constraint]
@@ -257,25 +257,25 @@ Constraints:
 **Ready for:** /pm-works --spec
 ```
 
-## Integration dengan tools
+## Tools integration
 
-| Kondisi | Behavior |
+| Condition | Behavior |
 |---------|----------|
-| Notion MCP connected | Tawarin push `discovery.md` ke Notion page (default: ke folder PM Discovery yang user tunjuk) |
-| BigQuery MCP connected | Tawarin pull support ticket / NPS aggregate untuk validasi frequency theme |
-| Pencil MCP connected | Skip — discover gak butuh design |
-| Tidak ada MCP | File saved as local `discovery.md`, user copy manual |
+| Notion MCP connected | Offer to push `discovery.md` to a Notion page (default: the PM Discovery folder the user points to) |
+| BigQuery MCP connected | Offer to pull support ticket / NPS aggregates to validate theme frequency |
+| Pencil MCP connected | Skip — discover doesn't need design |
+| No MCP available | File saved as local `discovery.md`, user copies manually |
 
-## Anti-pattern (jangan dilakuin)
+## Anti-pattern (don't do this)
 
-- ❌ Ngerangkum interview tanpa cluster theme — itu summary, bukan discovery
-- ❌ Pake feature request user as-is jadi theme — selalu reframe ke job/pain
-- ❌ Skip forcing questions kalau theme keliatan obvious — justru theme obvious yang sering paling lemah
-- ❌ Recommend "build all themes" — discovery harus berani prio top 1-2 theme
-- ❌ Asumsi user pake "AI tools" / "Notion AI" — kita yang sintesis raw, bukan delegasiin
+- ❌ Summarizing interviews without clustering themes — that's a summary, not discovery
+- ❌ Using a user feature request as-is as a theme — always reframe to job/pain
+- ❌ Skipping forcing questions when a theme looks obvious — the obvious themes are often the weakest
+- ❌ Recommending "build all themes" — discovery has to be brave enough to prioritize the top 1-2 themes
+- ❌ Assuming the user uses "AI tools" / "Notion AI" — we synthesize the raw data ourselves, not delegate it
 
 ## Handoff
 
-Output `discovery.md` jadi **input wajib** untuk `/pm-works --spec`. Hypothesis statement yang lo hasilkan akan jadi Problem Statement di PRD.
+The `discovery.md` output is a **mandatory input** for `/pm-works --spec`. The hypothesis statement you produce becomes the Problem Statement in the PRD.
 
-Kalau hasil discovery menunjukkan **theme yang gak worth dibangun**, output juga valid — itu artinya `/pm-decide --prio` akan dapet input "park theme ini" yang berharga.
+If discovery shows a **theme not worth building**, the output is still valid — it means `/pm-decide --prio` gets a valuable "park this theme" input.

@@ -5,9 +5,9 @@ description: Review what comes back from engineers — Mode A code review (PR re
 
 # /em-review
 
-Review what comes back. Skill ini multi-mode:
+Review what comes back. This skill is multi-mode:
 
-- **Mode A — Review:** PR code review, bug-first, grounded di `edd.md` + `eng-works.md`
+- **Mode A — Review:** PR code review, bug-first, grounded in `edd.md` + `eng-works.md`
 - **Mode B — Debug:** Root cause investigation when bug emerges, hypothesis-driven
 
 **Pick mode in this priority order:**
@@ -16,105 +16,105 @@ Review what comes back. Skill ini multi-mode:
 2. **Auto-detect from input** — fallback when no flag:
    - Input contains PR ref (diff, link, SHA, "PR #N", patch file) → **Mode A (review)**
    - Input contains stack trace, error log, "bug", "error", "crashed", "failing", "production issue" → **Mode B (debug)**
-3. **Ask user** — only if input ambiguous (both signals or neither). Use AskUserQuestion: "Pilih mode: a) Review (PR diff) b) Debug (bug investigation)"
+3. **Ask user** — only if input is ambiguous (both signals or neither). Use AskUserQuestion: "Pick mode: a) Review (PR diff) b) Debug (bug investigation)"
 
 ## ⚠ Question Format Rule
 
-Lihat [../../ETHOS.md](../../ETHOS.md) prinsip #8. Numbered questions, AskUserQuestion kalau available.
+See [../../ETHOS.md](../../ETHOS.md) principle #8. Numbered questions, AskUserQuestion if available.
 
-## Kapan trigger skill ini
+## When to trigger this skill
 
 **Mode A (review):**
-- "PR dari engineer Y udah ready, mau review"
-- "Batch review end-of-lane (3 PR yang related)"
-- "Mau audit apakah PR sesuai dengan edd invariant"
+- "PR from engineer Y is ready, want to review"
+- "Batch review end-of-lane (3 related PRs)"
+- "Want to audit whether the PR matches the edd invariants"
 
 **Mode B (debug):**
-- "Production error spike di endpoint X, gue investigate"
-- "Bug recurring di test, mau root cause"
-- "CI flaky, gak yakin underlying cause"
-- "Customer report bug yang gak bisa di-repro internal"
+- "Production error spike in endpoint X, I'm investigating"
+- "Recurring bug in tests, want root cause"
+- "CI flaky, not sure of underlying cause"
+- "Customer reported a bug we can't repro internally"
 
 ## Mode A — Code Review
 
 ### Input
-- PR diff (link atau patch file)
-- `edd.md` + `eng-works.md` (untuk grounding review)
+- PR diff (link or patch file)
+- `edd.md` + `eng-works.md` (for grounding the review)
 - CI run output
 
-Kalau plan/works files gak ada → **flag explicitly**. Review tetep bisa jalan tapi grounding lemah. Tanya user: "PR ini punya plan reference? a) Yes (path) b) No, review ungrounded c) Generate plan retroaktif via /em-plan"
+If plan/works files are missing → **flag explicitly**. Review can still run but grounding is weak. Ask the user: "Does this PR have a plan reference? a) Yes (path) b) No, ungrounded review c) Generate a retroactive plan via /em-plan"
 
-### Workflow — 4 section review
+### Workflow — 4-section review
 
-**Anti-skip rule:** Semua 4 section wajib evaluated, walaupun "no issues found". Skip = anti-pattern.
+**Anti-skip rule:** All 4 sections must be evaluated, even if "no issues found". Skipping = anti-pattern.
 
 #### Section 1: Architecture conformance
 
-Cognitive patterns aktif:
-- **Match plan:** PR architecture sesuai dengan edd? Deviation justified?
-- **Boundary integrity:** Trust boundary dari plan dipertahankan?
-- **Conway's Law:** Module ownership clear?
+Active cognitive patterns:
+- **Match plan:** Does PR architecture match the edd? Are deviations justified?
+- **Boundary integrity:** Are the trust boundaries from the plan preserved?
+- **Conway's Law:** Is module ownership clear?
 
 Forcing questions per issue (one issue = one AskUserQuestion):
-1. "PR introduce new module X yang gak ada di edd. a) Justified deviation (rationale) b) Out of scope, harus dipisah jadi PR terpisah c) Plan harus di-update dulu lewat /em-plan"
-2. "Trust boundary di [file Y line Z] — ada validation yang missing. a) Add validation (block merge) b) Defer ke ticket follow-up (justify) c) Out of scope, parking lot"
+1. "PR introduces new module X that wasn't in the edd. a) Justified deviation (rationale) b) Out of scope, must be a separate PR c) Plan must be updated first via /em-plan"
+2. "Trust boundary at [file Y line Z] — validation is missing. a) Add validation (block merge) b) Defer to follow-up ticket (justify) c) Out of scope, parking lot"
 
 #### Section 2: Code quality
 
-Cognitive patterns aktif:
+Active cognitive patterns:
 - **DRY aggressive** — flag repetition
 - **Edge cases over speed** — flag missing edge cases explicitly
-- **Right-sized diff** — diff terlalu besar (>500 line tanpa rationale)? Terlalu compressed (necessary rewrite squeezed)?
+- **Right-sized diff** — diff too large (>500 lines without rationale)? Too compressed (necessary rewrite squeezed)?
 - **Make change easy + make easy change** — refactor + behavior bundled? Block.
-- **Stale diagram check** — touched code dengan ASCII diagram inline? Update or flag.
+- **Stale diagram check** — touched code with inline ASCII diagram? Update or flag.
 
 Forcing questions:
-1. "Pattern duplikasi di [file A] dan [file B] — extract atau leave? a) Extract (recommend, DRY) b) Leave (justify — premature abstraction) c) TODO follow-up"
-2. "Diff size: N line. Smell besar. a) Justified (single logical change) b) Split jadi 2-3 PR c) Backfill commit history with smaller commits"
+1. "Pattern duplication in [file A] and [file B] — extract or leave? a) Extract (recommend, DRY) b) Leave (justify — premature abstraction) c) TODO follow-up"
+2. "Diff size: N lines. Smell large. a) Justified (single logical change) b) Split into 2-3 PRs c) Backfill commit history with smaller commits"
 
 #### Section 3: Test coverage
 
-Cognitive patterns aktif:
-- **Failure modes from plan** — covered di test?
+Active cognitive patterns:
+- **Failure modes from plan** — covered in tests?
 - **Tests > too few** — better over-test
 - **Boundary tests** — empty, max, concurrent, partial-failure
 
 Forcing questions:
-1. "Failure mode #X dari edd — test coverage? a) Yes (test name) b) No (block) c) Deferred (justify)"
+1. "Failure mode #X from the edd — test coverage? a) Yes (test name) b) No (block) c) Deferred (justify)"
 2. "Edge case [empty input / null / max value / concurrent] — covered? a) Yes b) Subset c) No (block T0/T1, allow T2/T3 with note)"
 
-Detail rubric di [../../references/code-review-rubric.md](../../references/code-review-rubric.md).
+Detail rubric in [../../references/code-review-rubric.md](../../references/code-review-rubric.md).
 
 #### Section 4: Performance
 
-Cognitive patterns aktif:
+Active cognitive patterns:
 - **N+1 query check** — DB access pattern
 - **Memory concerns** — large allocation, leak risk
 - **Caching opportunity** — flagged opportunity, not mandatory
 - **High-complexity hotspot** — algorithm complexity
 
 Forcing questions:
-1. "Loop di [file] iterates over [N items] dengan DB query inside — N+1 risk. a) Refactor ke batch query (block) b) Acceptable (N small, justify) c) TODO with index/cache plan"
+1. "Loop in [file] iterates over [N items] with DB query inside — N+1 risk. a) Refactor to batch query (block) b) Acceptable (N small, justify) c) TODO with index/cache plan"
 
 ### Decision routing (Mode A)
 
 After all 4 sections:
 
-1. **Approve** — all blockers resolved, ready to merge → handoff ke `release-engineer` role atau direct merge
-2. **Request changes** — blockers listed, fix loop → engineer fix → loop balik ke `/em-review`
-3. **Comment** — minor suggestions, not blocking → engineer can merge tanpa loop
+1. **Approve** — all blockers resolved, ready to merge → handoff to `release-engineer` role or direct merge
+2. **Request changes** — blockers listed, fix loop → engineer fix → loop back to `/em-review`
+3. **Comment** — minor suggestions, not blocking → engineer can merge without loop
 
 Forcing question:
-- "Decision untuk PR ini: a) Approve (no blockers) b) Request changes (list di output) c) Comment (suggestions, mergeable)"
+- "Decision for this PR: a) Approve (no blockers) b) Request changes (list in output) c) Comment (suggestions, mergeable)"
 
 ### Output: `pr-review-<sha>.md` + `pr-review-<sha>.html` (dual output)
 
-**WAJIB tulis 2 file**:
+**Must write 2 files**:
 
-1. **`pr-review-<sha>.md`** — source markdown (struktur di bawah)
+1. **`pr-review-<sha>.md`** — source markdown (structure below)
 2. **`pr-review-<sha>.html`** — human-readable review version, self-contained (severity badges colored Block/Major/Minor/Info, TOC + breadcrumb, code refs styled, decision summary card)
 
-HTML render pakai template + full CSS spec dari [`../../references/html-template.md`](../../references/html-template.md). `<sha>` adalah short SHA (7 chars) dari PR head commit. Konten konsisten 1:1 antara `.md` dan `.html`.
+HTML render uses the template + full CSS spec from [`../../references/html-template.md`](../../references/html-template.md). `<sha>` is the short SHA (7 chars) of the PR head commit. Content must be 1:1 consistent between `.md` and `.html`.
 
 #### MD Structure
 
@@ -168,9 +168,9 @@ HTML render pakai template + full CSS spec dari [`../../references/html-template
 - **Blockers (must fix):** [list with file:line]
 - **Suggestions (nice to have):** [list]
 - **Routing:**
-  - Approve → `release-engineer` role atau direct merge
+  - Approve → `release-engineer` role or direct merge
   - Request changes → `engineer` role (fix) → `/em-review` again
-  - Comment → `engineer` role (merge dengan FYI, no loop)
+  - Comment → `engineer` role (merge with FYI, no loop)
 
 ---
 
@@ -182,33 +182,33 @@ HTML render pakai template + full CSS spec dari [`../../references/html-template
 
 ### Input
 - Bug repro / stack trace / log
-- Optional: `edd.md` (kalau bug menyentuh area yang udah di-plan)
+- Optional: `edd.md` (if the bug touches an area already planned)
 - Optional: production telemetry
 
-### Workflow — 5 step (mirror investigate skill, EM-flavored)
+### Workflow — 5 steps (mirror investigate skill, EM-flavored)
 
-Detail playbook di [../../references/debug-playbook.md](../../references/debug-playbook.md).
+Detail playbook in [../../references/debug-playbook.md](../../references/debug-playbook.md).
 
 #### Step 1: Reproduce
 
-Gak bisa repro = gak bisa debug. Stop kalau cuma 1 anecdotal report tanpa repro path.
+Can't repro = can't debug. Stop if there's only 1 anecdotal report without a repro path.
 
 Forcing questions:
-1. "Bug ini: a) Repro consistent (langkah-langkah jelas) b) Repro intermittent (perlu observability tambahan) c) Anecdotal saja (single report, gak bisa repro) → kalau (c), stop dan instrument dulu"
+1. "This bug: a) Repro consistent (clear steps) b) Repro intermittent (need additional observability) c) Anecdotal only (single report, can't repro) → if (c), stop and instrument first"
 
 #### Step 2: Isolate
 
-Narrow surface ke minimum repro case.
+Narrow the surface to the minimum repro case.
 
-- Disable feature flag yang gak related → masih repro?
-- Test dengan input subset → mana yang trigger?
-- Run di env berbeda (staging vs local) → consistent?
+- Disable an unrelated feature flag → still repro?
+- Test with input subset → which one triggers it?
+- Run in different env (staging vs local) → consistent?
 
-Output: minimum repro case (smallest input + state yang reproduce bug).
+Output: minimum repro case (smallest input + state that reproduces the bug).
 
 #### Step 3: Hypothesize
 
-List 3 hypothesis, rank by likelihood.
+List 3 hypotheses, rank by likelihood.
 
 Format:
 - **Hypothesis 1 (likely):** [statement]. Evidence supporting: [log/metric/code]. Evidence against: [—]. Test plan: [how to verify].
@@ -216,7 +216,7 @@ Format:
 - **Hypothesis 3 (long shot):** ...
 
 Forcing question:
-1. "Top hypothesis confidence: a) High (evidence strong, test plan clear) b) Medium (need more data) c) Low (still guessing — keep observing)"
+1. "Top hypothesis confidence: a) High (strong evidence, clear test plan) b) Medium (need more data) c) Low (still guessing — keep observing)"
 
 #### Step 4: Test
 
@@ -229,17 +229,17 @@ Per hypothesis:
 
 #### Step 5: Diagnose & propose fix
 
-Root cause stated explicit. Symptom ≠ root cause.
+Root cause stated explicitly. Symptom ≠ root cause.
 
 Fix scope decision:
-- **Local fix** (1-3 file, contained) → proposal handoff ke `engineer` role
-- **Architectural fix** (cross-module, design issue) → loop balik ke `/em-plan` dengan flag "rooted in production bug X"
-- **Process fix** (CI gap, test gap, observability gap) → ticket via `/em-works` next sprint (route ke `engineer` / `qa-reviewer` / `devops` role per gap type)
+- **Local fix** (1-3 files, contained) → proposal handoff to `engineer` role
+- **Architectural fix** (cross-module, design issue) → loop back to `/em-plan` with flag "rooted in production bug X"
+- **Process fix** (CI gap, test gap, observability gap) → ticket via `/em-works` next sprint (route to `engineer` / `qa-reviewer` / `devops` role per gap type)
 
 Forcing questions:
-1. "Sebelum patch, root cause confirmed? a) Yes (evidence: ...) b) Strong hypothesis c) Guessing (continue investigation)"
-2. "Fix scope: a) Local (handoff engineer) b) Architectural (loop ke /em-plan) c) Process (CI/test/observability gap → ticket)"
-3. "Test buat regression — udah ada? a) Yes (test name) b) Akan ditambah di fix PR c) Belum decide"
+1. "Before patching, is the root cause confirmed? a) Yes (evidence: ...) b) Strong hypothesis c) Guessing (continue investigation)"
+2. "Fix scope: a) Local (handoff engineer) b) Architectural (loop to /em-plan) c) Process (CI/test/observability gap → ticket)"
+3. "Test for regression — does it exist? a) Yes (test name) b) Will be added in fix PR c) Not yet decided"
 
 ### Output: `debug-<bug-id>.md`
 
@@ -321,8 +321,8 @@ Forcing questions:
 ## Routing
 
 - **Local fix:** Handoff to `engineer` role (skill matched per env)
-- **Architectural fix:** Loop balik ke `/em-plan` dengan flag "production-driven re-plan"
-- **Process fix:** Ticket via `/em-works` next sprint (route ke `engineer` / `qa-reviewer` / `devops` role per gap type)
+- **Architectural fix:** Loop back to `/em-plan` with flag "production-driven re-plan"
+- **Process fix:** Ticket via `/em-works` next sprint (route to `engineer` / `qa-reviewer` / `devops` role per gap type)
 
 ---
 
@@ -330,41 +330,41 @@ Forcing questions:
 **Status:** [Root cause identified / Investigation ongoing]
 ```
 
-## Integration dengan tools
+## Integration with tools
 
-| Kondisi | Behavior |
+| Condition | Behavior |
 |---------|----------|
 | GitHub MCP connected (Mode A) | Auto-fetch PR diff, post review comments inline |
-| Linear / GitHub Issues MCP (Mode B) | Auto-create issue untuk regression / process gap |
-| BigQuery MCP (Mode B) | Pull production telemetry untuk evidence |
-| Notion MCP | Push debug-trace.md / pr-review.md ke Notion |
-| Tidak ada MCP | File saved local, user paste manual |
+| Linear / GitHub Issues MCP (Mode B) | Auto-create issue for regression / process gap |
+| BigQuery MCP (Mode B) | Pull production telemetry for evidence |
+| Notion MCP | Push debug-trace.md / pr-review.md to Notion |
+| No MCP | File saved local, user pastes manually |
 
-## Anti-pattern (jangan dilakuin)
+## Anti-pattern (don't do this)
 
 ### Mode A
-- ❌ **Skip `pr-review-<sha>.html` output.** Dual output mandatory — user review via HTML.
-- ❌ **"LGTM" tanpa annotation di T0/T1 PR.** Review unmoored.
-- ❌ **Approve PR tanpa baca edd reference.** Grounding lemah.
-- ❌ **Skip section.** Anti-skip rule berlaku.
+- ❌ **Skip `pr-review-<sha>.html` output.** Dual output mandatory — user reviews via HTML.
+- ❌ **"LGTM" without annotation on T0/T1 PR.** Review unmoored.
+- ❌ **Approve PR without reading the edd reference.** Grounding weak.
+- ❌ **Skip a section.** Anti-skip rule applies.
 - ❌ **Batch multiple issues into one AskUserQuestion.** One issue = one question.
-- ❌ **"Add tests later" sebagai blocker negosiable di T0/T1.** Block harus block.
+- ❌ **"Add tests later" as a negotiable blocker on T0/T1.** A block must block.
 
 ### Mode B
-- ❌ **Patch sebelum hypothesis confirmed.** Blind fix masking root cause.
-- ❌ **Stop di symptom.** "Restart fix it" bukan diagnosis.
-- ❌ **Skip regression test.** Bug yang fix-nya gak punya test bakal recur.
-- ❌ **Architectural fix dilempar ke engineer ticket tanpa loop ke /em-plan.** EM bypass own job.
-- ❌ **"Cannot reproduce, closing"** tanpa instrument observability dulu. Anecdotal yang dipencet hilang = bug yang akan kembali.
+- ❌ **Patch before the hypothesis is confirmed.** Blind fix masking root cause.
+- ❌ **Stop at the symptom.** "Restart fixes it" is not a diagnosis.
+- ❌ **Skip regression test.** A bug whose fix has no test will recur.
+- ❌ **Architectural fix tossed to engineer ticket without looping to /em-plan.** EM bypasses own job.
+- ❌ **"Cannot reproduce, closing"** without instrumenting observability first. An anecdotal that gets dismissed = a bug that will return.
 
 ## Handoff
 
 ### Mode A
-- **Approve** → `release-engineer` role (skill matched per env) atau direct merge
+- **Approve** → `release-engineer` role (skill matched per env) or direct merge
 - **Request changes** → `engineer` role fix loop → `/em-review --review` again
-- **Comment** → `engineer` role merge dengan FYI, tanpa loop
+- **Comment** → `engineer` role merge with FYI, no loop
 
 ### Mode B
 - **Local fix** → `engineer` role (per fix PR) → `/em-review --review` per fix PR
-- **Architectural fix** → `/em-plan` dengan re-frame ("production bug X drove re-plan")
-- **Process fix** → `/em-works` next sprint dengan ticket "process improvement: [CI gap / test gap / observability]" (route ke `engineer` / `qa-reviewer` / `devops` role per gap type)
+- **Architectural fix** → `/em-plan` with re-frame ("production bug X drove re-plan")
+- **Process fix** → `/em-works` next sprint with ticket "process improvement: [CI gap / test gap / observability]" (route to `engineer` / `qa-reviewer` / `devops` role per gap type)

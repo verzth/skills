@@ -1,30 +1,30 @@
-# Tech Literacy Checklist (untuk Product PM)
+# Tech Literacy Checklist (for Product PM)
 
-Checklist ini di-pake oleh `/pm-works` saat ngisi section **Technical Implications** di PRD, dan oleh `/pm-decide --review` saat audit PRD.
+This checklist is used by `/pm-works` when filling in the **Technical Implications** section in a PRD, and by `/pm-decide --review` when auditing a PRD.
 
-**Tujuan:** PM **sadar** dampak teknis spec-nya — supaya engineer gak surprise pas kickoff. PM **gak ambil keputusan** engineering — itu domain `engineer-manager`.
+**Purpose:** PM is **aware** of the technical impact of their spec — so the engineer isn't surprised at kickoff. PM **doesn't make** engineering decisions — that's the `engineer-manager` domain.
 
 ---
 
 ## 1. Data layer
 
-| Question | Why penting | Decision domain |
+| Question | Why it matters | Decision domain |
 |----------|-------------|-----------------|
-| Schema baru? | Eng butuh allocate DB work + migration plan | Eng |
-| Migration di table existing? | Risk downtime, rollback complexity | Eng |
-| Volume data baru — small (<1GB) / medium / large? | Storage cost, query performance | Eng |
+| New schema? | Eng needs to allocate DB work + migration plan | Eng |
+| Migration on an existing table? | Risk of downtime, rollback complexity | Eng |
+| New data volume — small (<1GB) / medium / large? | Storage cost, query performance | Eng |
 | Sensitive data? PII, payment, health, biometric? | Compliance review timeline | PM flag, Legal/Sec decide |
-| Retention rule? Berapa lama disimpan? | GDPR / regulatory | PM flag, Legal decide |
+| Retention rule? How long is it kept? | GDPR / regulatory | PM flag, Legal decide |
 
 **PM output:** observation. e.g., "Add column `sso_enabled` to `organizations` table. ~5K rows. No PII change."
 
-**PM jangan output:** "Pake Postgres / pake DynamoDB" — itu eng decide.
+**PM should not output:** "Use Postgres / use DynamoDB" — that's an eng decision.
 
 ---
 
 ## 2. API / Integration
 
-| Question | Why penting | Decision domain |
+| Question | Why it matters | Decision domain |
 |----------|-------------|-----------------|
 | New endpoint? | API surface area expansion | Eng |
 | Existing endpoint changed? | Backward compat strategy | Eng |
@@ -34,25 +34,25 @@ Checklist ini di-pake oleh `/pm-works` saat ngisi section **Technical Implicatio
 
 **PM output:** "New endpoint `POST /api/sso/configure`. No breaking change. Auth: existing org-admin scope."
 
-**PM jangan output:** "Pake REST atau gRPC, gimana request body schema-nya."
+**PM should not output:** "REST or gRPC, what's the request body schema."
 
 ---
 
 ## 3. Existing components affected
 
-| Question | Why penting | Decision domain |
+| Question | Why it matters | Decision domain |
 |----------|-------------|-----------------|
-| Component A bakal kena? | Regression risk | PM flag, Eng test |
-| Reusable component yang bisa di-leverage? | Speed up build, consistency | Eng decide reuse |
-| Owned by team lain? | Cross-team coordination needed | PM coordinate |
+| Will Component A be affected? | Regression risk | PM flag, Eng test |
+| Reusable component to leverage? | Speed up build, consistency | Eng decides reuse |
+| Owned by another team? | Cross-team coordination needed | PM coordinate |
 
-**PM output:** "Login flow component bakal modifikasi — currently owned by Auth team."
+**PM output:** "Login flow component will be modified — currently owned by the Auth team."
 
 ---
 
 ## 4. Compliance / Privacy / Security
 
-| Question | Why penting | Decision domain |
+| Question | Why it matters | Decision domain |
 |----------|-------------|-----------------|
 | Touches PII? | GDPR / CCPA review | Legal / Privacy |
 | Touches payment / financial? | PCI-DSS scope | Sec / Legal |
@@ -66,7 +66,7 @@ Checklist ini di-pake oleh `/pm-works` saat ngisi section **Technical Implicatio
 
 ## 5. Performance / Scale awareness
 
-| Question | Why penting | Decision domain |
+| Question | Why it matters | Decision domain |
 |----------|-------------|-----------------|
 | Realistic concurrent user? | Capacity planning | Eng |
 | Latency-sensitive? (sub-second UX) | Architecture choice | Eng |
@@ -75,7 +75,7 @@ Checklist ini di-pake oleh `/pm-works` saat ngisi section **Technical Implicatio
 
 **PM output:** "Expected ~500 concurrent SSO logins at peak. Acceptable login latency: <2s."
 
-**PM jangan output:** "Pake Redis atau Memcached untuk session storage."
+**PM should not output:** "Use Redis or Memcached for session storage."
 
 ---
 
@@ -89,27 +89,27 @@ Checklist ini di-pake oleh `/pm-works` saat ngisi section **Technical Implicatio
 | **1 quarter** | Cross-team initiative — coordination heavy |
 | **>1 quarter** | Strategic bet — needs phased approach |
 
-**PM rule:** Selalu confirmed-by-eng sebelum lock deadline. Ballpark dari PM = guess; ballpark dari engineer-manager skill = commitment-able.
+**PM rule:** Always confirmed-by-eng before locking the deadline. Ballpark from PM = guess; ballpark from the engineer-manager skill = commitment-able.
 
 ---
 
 ## 7. Open technical questions for eng
 
-Section ini di PRD = list pertanyaan yang **PM gak bisa jawab** dan butuh eng input. Examples:
+This section in the PRD = a list of questions that **the PM can't answer** and needs eng input on. Examples:
 
-- "Login session — share dengan existing session store atau separate?"
-- "SAML 2.0 vs OIDC — recommend yang mana untuk v1?"
-- "Backward compat untuk legacy login — gimana strategy?"
+- "Login session — share with the existing session store or separate?"
+- "SAML 2.0 vs OIDC — which do you recommend for v1?"
+- "Backward compat for legacy login — what's the strategy?"
 
-Engineer-manager skill bakal pick up section ini saat handoff.
+The engineer-manager skill will pick up this section at handoff.
 
 ---
 
 ## Anti-pattern PM tech-literacy
 
-❌ **Decide engineering:** "Pake Postgres, schema X, index di kolom Y."
+❌ **Decide engineering:** "Use Postgres, schema X, index on column Y."
 ❌ **Vague:** "Might affect database. Eng figure out."
 ❌ **Commitment as PM:** "Eng confirmed it's 2 weeks."
-❌ **Skip section:** Tech Implications kosong / "TBD" semua.
+❌ **Skip section:** Tech Implications empty / "TBD" everywhere.
 
 ✅ **Aware + observe:** "Schema impact: new table. Existing components: Login API. Compliance: PII via OAuth token storage. Effort ballpark: 2-3 weeks (PM guess, pending eng confirm)."

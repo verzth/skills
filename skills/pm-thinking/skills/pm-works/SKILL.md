@@ -6,15 +6,15 @@ argument-hint: "<feature topic or path to discovery.md>"
 
 # /pm-works
 
-Tulis PRD lengkap dari discovery output atau hypothesis. Output siap di-handoff ke `engineer-manager` skill (atau eng team langsung).
+Write a complete PRD from a discovery output or hypothesis. Output is ready to hand off to the `engineer-manager` skill (or directly to the eng team).
 
-Skill ini **draft-only**. Untuk audit / red-team, run `/pm-decide --review` setelah PRD selesai.
+This skill is **draft-only**. For audit / red-team, run `/pm-decide --review` after the PRD is done.
 
-## ⚠ Question Format Rule (wajib semua skill di pm-thinking)
+## ⚠ Question Format Rule (mandatory for every skill in pm-thinking)
 
-**Setiap question ke user wajib di-tag label unik** (1/2/3 atau a/b/c) supaya user bisa respond by pointing — anti-ambigu, hemat user effort.
+**Every question to the user must be tagged with a unique label** (1/2/3 or a/b/c) so the user can respond by pointing — anti-ambiguous, saves user effort.
 
-Pake `AskUserQuestion` MCP kalau available. Fallback ke numbered text:
+Use the `AskUserQuestion` MCP when available. Fall back to numbered text:
 
 ```
 1. [Q]?
@@ -25,67 +25,67 @@ Pake `AskUserQuestion` MCP kalau available. Fallback ke numbered text:
    b) ...
 ```
 
-User: "1a, 2b" — done. Detail di [references/ai-first-principles.md](../../references/ai-first-principles.md) prinsip #8.
+User: "1a, 2b" — done. Detail in [references/ai-first-principles.md](../../references/ai-first-principles.md) principle #8.
 
-## Kapan trigger skill ini
+## When to trigger this skill
 
-- "Hypothesis udah ke-validasi, sekarang gue mau tulis PRD"
-- "Tulis spec untuk feature X, baca dari `discovery.md`"
-- "Buatin PRD untuk SSO enterprise, deadline 2 minggu"
-- "Convert ide ini jadi spec yang bisa di-eksekusi eng"
-- "Aku punya rough Notion page, perlu di-rapihin jadi PRD format"
+- "Hypothesis is validated, now I want to write the PRD"
+- "Write a spec for feature X, read from `discovery.md`"
+- "Build a PRD for enterprise SSO, deadline 2 weeks"
+- "Convert this idea into a spec eng can execute on"
+- "I have a rough Notion page, need to clean it up into PRD format"
 
 ## Workflow
 
-### Step 1: Tangkap input
+### Step 1: Capture input
 
-Tanya user:
+Ask the user:
 
-a) **Path ke `discovery.md`** dari `/pm-discover` (preferred — best context)
-b) **Notion page link** dengan hypothesis / rough draft (kalau Notion MCP connected, baca via `mcp__plugin_operations_notion__*`)
-c) **Hypothesis statement langsung** — paste di chat
-d) **Argument langsung** — `$ARGUMENTS` dari skill invocation
+a) **Path to `discovery.md`** from `/pm-discover` (preferred — best context)
+b) **Notion page link** with hypothesis / rough draft (if Notion MCP is connected, read via `mcp__plugin_operations_notion__*`)
+c) **Hypothesis statement directly** — paste in chat
+d) **Direct argument** — `$ARGUMENTS` from skill invocation
 
-Kalau gak ada satu pun, **berhenti**. PRD tanpa hypothesis = solution looking for a problem. Kasih tau user untuk run `/pm-discover` dulu, atau minimal kasih hypothesis statement.
+If none is available, **stop**. PRD without hypothesis = solution looking for a problem. Tell the user to run `/pm-discover` first, or at minimum provide a hypothesis statement.
 
-### Step 2: Gather context (tanya satu per satu, jangan dump)
+### Step 2: Gather context (ask one at a time, don't dump)
 
-Tanya hal-hal ini secara conversational. Pake **AskUserQuestion** kalau available untuk jawaban cepat:
+Ask these things conversationally. Use **AskUserQuestion** if available for fast answers:
 
-#### Wajib (jangan skip)
+#### Mandatory (don't skip)
 
-1. **Target user segment** — siapa specific-nya? ("enterprise admin" bukan "user")
-2. **Success metric (north star)** — gimana lo tau ini berhasil? Specific number, time window
-3. **Hard deadline / dependency** — ada commitment date? Locked stakeholder?
-4. **Scope boundary** — ini v1 atau full vision?
+1. **Target user segment** — who specifically? ("enterprise admin" not "user")
+2. **Success metric (north star)** — how will you know this worked? Specific number, time window
+3. **Hard deadline / dependency** — is there a commitment date? Locked stakeholder?
+4. **Scope boundary** — is this v1 or full vision?
 
-#### Kalau ada signal
+#### When there's signal
 
-5. **Existing component** — apakah ada feature / API / component existing yang bisa di-reuse atau bakal kena?
-6. **Compliance / legal** — touch personal data, regulated industry, region-specific?
-7. **Mockup link** — ada Pencil / Figma link? (kalau Pencil MCP connected, fetch via `mcp__pencil__*`)
+5. **Existing component** — is there an existing feature / API / component to reuse or that will be affected?
+6. **Compliance / legal** — touches personal data, regulated industry, region-specific?
+7. **Mockup link** — a Pencil / Figma link? (if Pencil MCP is connected, fetch via `mcp__pencil__*`)
 
-### Step 3: Drive Tech Implications (CORE differentiator skill ini)
+### Step 3: Drive Tech Implications (CORE differentiator of this skill)
 
-**Ini yang ngebedain pm-works dari skill PRD generic.** Sebelum nulis, push PM jawab:
+**This is what differentiates pm-works from a generic PRD skill.** Before writing, push the PM to answer:
 
-> Lihat [references/tech-literacy-checklist.md](../../references/tech-literacy-checklist.md) untuk full checklist.
+> See [references/tech-literacy-checklist.md](../../references/tech-literacy-checklist.md) for the full checklist.
 
-**Force PM mikir (bukan PM ngambil keputusan):**
+**Force the PM to think (not the PM to make the decision):**
 
-| Question | Why PM perlu jawab |
+| Question | Why the PM needs to answer |
 |----------|---------------------|
-| Schema baru? Migration di table existing? | Eng butuh tau scope database work |
-| API contract berubah? Breaking change? | Backward compat strategy harus di-planning |
-| Touch data sensitif? PII / payment / health? | Compliance review timeline harus di-allocate |
-| Existing component yang bakal kena? | Risk regression di area lain |
-| Realistic effort — week, month, atau quarter? | Sanity check sebelum commit deadline |
+| New schema? Migration on an existing table? | Eng needs to know the scope of database work |
+| API contract change? Breaking change? | Backward compat strategy needs planning |
+| Touches sensitive data? PII / payment / health? | Compliance review timeline must be allocated |
+| Existing component that will be affected? | Risk of regression in another area |
+| Realistic effort — week, month, or quarter? | Sanity check before committing to a deadline |
 
-PM **gak ambil keputusan** — PM cuma flag awareness. Output PRD bakal punya section "Technical Implications" yang isinya **observasi**, bukan **prescription**.
+The PM **doesn't make decisions** — the PM only flags awareness. The output PRD will have a "Technical Implications" section that contains **observations**, not **prescriptions**.
 
-### Step 4: Tulis PRD
+### Step 4: Write the PRD
 
-Output ke file `prd.md` (atau Notion page kalau MCP connected). Gunakan template ini **persis**:
+Output to a `prd.md` file (or Notion page if MCP is connected). Use this template **exactly**:
 
 ```markdown
 # PRD: [Feature Name]
@@ -93,20 +93,20 @@ Output ke file `prd.md` (atau Notion page kalau MCP connected). Gunakan template
 **Author:** [PM]
 **Status:** Draft → Review → Approved → Building → Shipped
 **Date:** YYYY-MM-DD
-**Discovery source:** [link ke discovery.md atau Notion]
-**Engineering lead:** TBD (akan di-assign via /pm-decide --prio)
+**Discovery source:** [link to discovery.md or Notion]
+**Engineering lead:** TBD (will be assigned via /pm-decide --prio)
 
 ---
 
 ## TL;DR
 
-[2-3 kalimat. Apa yang dibangun, untuk siapa, kenapa sekarang.]
+[2-3 sentences. What's being built, for whom, why now.]
 
 ---
 
 ## Problem Statement
 
-[Dari discovery.md hypothesis. Pain → segment → cost-of-not-solving.]
+[From the discovery.md hypothesis. Pain → segment → cost-of-not-solving.]
 
 **Evidence:**
 - [Quote / data point #1] — [source]
@@ -116,7 +116,7 @@ Output ke file `prd.md` (atau Notion page kalau MCP connected). Gunakan template
 
 ## Goals (3-5)
 
-Outcome yang measurable. Bukan output (feature shipped), tapi behavior change.
+Measurable outcomes. Not output (feature shipped), but behavior change.
 
 1. [Goal] — measurable by [metric, target, time window]
 2. ...
@@ -125,9 +125,9 @@ Outcome yang measurable. Bukan output (feature shipped), tapi behavior change.
 
 ## Non-Goals (3-5)
 
-Apa yang explicitly OUT of scope, plus rationale.
+What is explicitly OUT of scope, plus rationale.
 
-1. [Thing] — out of scope karena [reason]
+1. [Thing] — out of scope because [reason]
 2. ...
 
 ---
@@ -147,7 +147,7 @@ Group by persona. Format: As a [user type], I want [capability] so that [benefit
 ## Requirements
 
 ### Must-Have (P0)
-- [ ] [Requirement] — acceptance: [Given/When/Then atau checklist]
+- [ ] [Requirement] — acceptance: [Given/When/Then or checklist]
 - [ ] ...
 
 ### Nice-to-Have (P1)
@@ -158,9 +158,9 @@ Group by persona. Format: As a [user type], I want [capability] so that [benefit
 
 ---
 
-## Technical Implications (CORE — wajib diisi)
+## Technical Implications (CORE — must be filled in)
 
-> PM observasi, bukan prescription. Engineering decide implementasi.
+> PM observation, not prescription. Engineering decides implementation.
 
 ### Data layer
 - Schema impact: [None / New table X / Add column Y to table Z]
@@ -184,7 +184,7 @@ Group by persona. Format: As a [user type], I want [capability] so that [benefit
 - [Days / Weeks / Months] — full eng commitment to be confirmed by engineer-manager skill
 
 ### Open technical questions for eng
-- [Q1 — yang PM gak bisa jawab, butuh eng input]
+- [Q1 — what the PM can't answer, needs eng input]
 - [Q2 — ...]
 
 ---
@@ -220,17 +220,17 @@ Group by persona. Format: As a [user type], I want [capability] so that [benefit
 
 ## Handoff to Engineer Manager
 
-Section ini buat di-konsumsi `engineer-manager` skill (atau eng tech lead langsung). PM stop di sini, eng take over.
+This section is for the `engineer-manager` skill (or eng tech lead directly) to consume. PM stops here, eng takes over.
 
 **Hypothesis to validate:**
-[Dari discovery.md]
+[From discovery.md]
 
 **Constraints (locked by PM):**
-- [User-facing constraint, e.g., "harus support SSO via SAML 2.0"]
-- [Business constraint, e.g., "ship sebelum Q3 review"]
+- [User-facing constraint, e.g., "must support SSO via SAML 2.0"]
+- [Business constraint, e.g., "ship before Q3 review"]
 
 **Decisions delegated to eng:**
-- [Decision area — e.g., "tech stack untuk SSO library"]
+- [Decision area — e.g., "tech stack for SSO library"]
 - [Decision area — e.g., "session storage strategy"]
 
 **Don't decide engineering:**
@@ -243,46 +243,46 @@ Section ini buat di-konsumsi `engineer-manager` skill (atau eng tech lead langsu
 
 ## Appendix
 
-- Mockup: [Pencil link kalau ada]
+- Mockup: [Pencil link if any]
 - Discovery source: [link]
 - Related PRDs: [link]
 ```
 
-### Step 5: Push ke Notion (kalau connected)
+### Step 5: Push to Notion (if connected)
 
-Kalau `mcp__plugin_operations_notion__*` connected, **tawarin** push PRD ke Notion page. Default lokasi: PRD database / folder yang user tunjuk. Tanya konfirmasi sekali, lalu push.
+If `mcp__plugin_operations_notion__*` is connected, **offer to** push the PRD to a Notion page. Default location: the PRD database / folder the user points to. Ask for confirmation once, then push.
 
 ### Step 6: Suggest next step
 
-Setelah PRD selesai, kasih saran ke user:
+Once the PRD is done, suggest to the user:
 
-> "PRD draft selesai. Next: run `/pm-decide --review` untuk red-team audit sebelum handoff ke eng. Mau gue trigger sekarang?"
+> "PRD draft is complete. Next: run `/pm-decide --review` for a red-team audit before handing off to eng. Want me to trigger it now?"
 
-## Integration dengan tools
+## Tools integration
 
-| Kondisi | Behavior |
+| Condition | Behavior |
 |---------|----------|
-| Notion MCP connected | Push PRD ke Notion, ambil discovery dari Notion link |
-| Pencil MCP connected | Embed mockup link di Appendix |
-| BigQuery MCP connected | Auto-fill baseline metric kalau PM kasih SQL hint |
-| Tidak ada MCP | Output ke local `prd.md`, copy manual |
+| Notion MCP connected | Push the PRD to Notion, pull discovery from a Notion link |
+| Pencil MCP connected | Embed the mockup link in the Appendix |
+| BigQuery MCP connected | Auto-fill baseline metrics if the PM provides a SQL hint |
+| No MCP available | Output to local `prd.md`, copy manually |
 
 ## Anti-pattern
 
-- ❌ Tulis PRD tanpa discovery / hypothesis upstream — itu wishful thinking
-- ❌ "Technical Implications" kosong / vague ("might affect database") — minimum: list specific component, schema impact
-- ❌ Goal output-based ("ship onboarding wizard") bukan outcome-based ("reduce time-to-first-value 50%")
-- ❌ P0 yang isinya 15 item — ruthless prio, P0 max 5-7
-- ❌ "Skip Tech Implications, eng yang figure out" — itu yang bikin eng surprise pas kickoff
-- ❌ Decide tech stack di PRD — itu domain engineer-manager
+- ❌ Writing a PRD without upstream discovery / hypothesis — that's wishful thinking
+- ❌ "Technical Implications" empty / vague ("might affect database") — minimum: list specific component, schema impact
+- ❌ Output-based goal ("ship onboarding wizard") instead of outcome-based ("reduce time-to-first-value 50%")
+- ❌ P0 with 15 items — ruthless prio, P0 max 5-7
+- ❌ "Skip Tech Implications, eng will figure it out" — that's what makes eng surprised at kickoff
+- ❌ Deciding the tech stack in the PRD — that's the engineer-manager domain
 
-## Handoff downstream
+## Downstream handoff
 
-- `prd.md` → `/pm-decide --review` untuk red-team audit
-- Setelah review approved → `engineer-manager` skill ngambil section "Handoff to Engineer Manager" buat technical design
-- Section "Success Metrics" → di-feed ke `/pm-decide --retro` post-launch
+- `prd.md` → `/pm-decide --review` for red-team audit
+- After review approves → `engineer-manager` skill takes the "Handoff to Engineer Manager" section for technical design
+- "Success Metrics" section → fed into `/pm-decide --retro` post-launch
 
 ## Reference
 
-- [tech-literacy-checklist.md](../../references/tech-literacy-checklist.md) — full checklist Tech Implications
-- [handoff-to-eng-manager.md](../../references/handoff-to-eng-manager.md) — kontrak antara pm-thinking dan engineer-manager
+- [tech-literacy-checklist.md](../../references/tech-literacy-checklist.md) — full Tech Implications checklist
+- [handoff-to-eng-manager.md](../../references/handoff-to-eng-manager.md) — contract between pm-thinking and engineer-manager
