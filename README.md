@@ -192,10 +192,10 @@ A bundle that turns Claude into a virtual PM team. **One install → 3 sub-skill
 A bundle that turns Claude into a virtual EM team. **One install → 3 sub-skills**: `/em-plan` (architect), `/em-works` (delivery prep), `/em-review` (reviewer + debugger). Companion to pm-thinking — picks up where PRD ends.
 
 **What it does:**
-- **EDD as PRD's parallel** — `/em-plan` produces `edd.md` (Engineering Design Document) with risk tier (T0-T3), scope challenge, invariants, failure modes table, test strategy, and ASCII diagrams for component boundaries / data flow / state machine
+- **EDD as PRD's parallel (dual `.md` + `.html` output)** — `/em-plan` produces `edd.md` + `edd.html` (Engineering Design Document) with risk tier (T0-T3), scope challenge, invariants, failure modes table, test strategy, and ASCII diagrams for component boundaries / data flow / state machine. HTML is self-contained (inline CSS, color-coded T0-T3 risk badges, ASCII diagram styling, TOC + breadcrumb, print-friendly) for human review
 - **15 cognitive patterns from canonical sources** — State Diagnosis (Larson), Boring by Default (McKinley), Failure is Information (Allspaw/SRE), Make Change Easy (Beck), Conway's Law (Skelton/Pais), and more — applied as lens, not checklist
 - **Execution-ready handoff** — `/em-works` translates EDD into atomic tickets + worktree parallelization lanes + env/secrets spec + deploy plan artifact (artifact-only, doesn't execute — devops/release skill handles execution)
-- **Auto-detect mode in /em-review** — input contains PR ref → Mode A (code review); stack trace / "bug" / "error" → Mode B (debug, hypothesis-driven, no blind fixes); ambiguous → asks
+- **Auto-detect mode in /em-review** — input contains PR ref → Mode A (code review, **dual `.md` + `.html` output** with severity-coded findings); stack trace / "bug" / "error" → Mode B (debug, hypothesis-driven, no blind fixes); ambiguous → asks
 - **Role-based handoff (not skill-specific)** — outputs reference role names (`engineer`, `security-reviewer`, `qa-reviewer`, `release-engineer`/`devops`, `pm`) so they work across env conventions (verzth, soekarno, gstack, generic)
 - **Numbered questions, anti-ambiguity** — same pattern as pm-thinking
 

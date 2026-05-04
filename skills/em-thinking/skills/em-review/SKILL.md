@@ -107,7 +107,16 @@ After all 4 sections:
 Forcing question:
 - "Decision untuk PR ini: a) Approve (no blockers) b) Request changes (list di output) c) Comment (suggestions, mergeable)"
 
-### Output: `pr-review-<sha>.md`
+### Output: `pr-review-<sha>.md` + `pr-review-<sha>.html` (dual output)
+
+**WAJIB tulis 2 file**:
+
+1. **`pr-review-<sha>.md`** — source markdown (struktur di bawah)
+2. **`pr-review-<sha>.html`** — human-readable review version, self-contained (severity badges colored Block/Major/Minor/Info, TOC + breadcrumb, code refs styled, decision summary card)
+
+HTML render pakai template + full CSS spec dari [`../../references/html-template.md`](../../references/html-template.md). `<sha>` adalah short SHA (7 chars) dari PR head commit. Konten konsisten 1:1 antara `.md` dan `.html`.
+
+#### MD Structure
 
 ```markdown
 # PR Review: [PR title or ID]
@@ -334,6 +343,7 @@ Forcing questions:
 ## Anti-pattern (jangan dilakuin)
 
 ### Mode A
+- ❌ **Skip `pr-review-<sha>.html` output.** Dual output mandatory — user review via HTML.
 - ❌ **"LGTM" tanpa annotation di T0/T1 PR.** Review unmoored.
 - ❌ **Approve PR tanpa baca edd reference.** Grounding lemah.
 - ❌ **Skip section.** Anti-skip rule berlaku.

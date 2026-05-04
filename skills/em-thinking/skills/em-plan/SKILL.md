@@ -173,9 +173,18 @@ Forcing questions:
 1. "Failure mode #X — accept gap atau block? a) Accept (rationale) b) Block c) Defer ke ticket follow-up"
 2. "Test-first untuk T0 surface — apply 100% atau partial dengan justifikasi? a) Full b) Partial X% c) No (justify)"
 
-## Output: `edd.md`
+## Output: `edd.md` + `edd.html` (dual output)
 
-Tulis file `edd.md` di working dir, atau push ke Notion via MCP kalau connected. Struktur **wajib persis** di bawah — section ordering matter buat downstream skill consumption.
+**WAJIB tulis 2 file** di working dir:
+
+1. **`edd.md`** — source markdown (struktur di bawah, wajib persis untuk downstream skill consumption)
+2. **`edd.html`** — human-readable review version, self-contained dengan inline CSS (badge T0-T3 colored, ASCII diagram styled, failure modes table critical-gap highlighted, TOC + breadcrumb)
+
+HTML render pakai template + full CSS spec dari [`../../references/html-template.md`](../../references/html-template.md). Konten harus konsisten 1:1 dengan markdown — same data, beda rendering. Skip HTML = anti-pattern (user explicitly review via HTML).
+
+Push opsional: kalau Notion MCP connected, tawarin push `edd.md` ke Notion (markdown render native di Notion). HTML keep local buat browser review.
+
+### MD Structure (wajib persis)
 
 ```markdown
 # EDD: [topic]
@@ -311,14 +320,15 @@ Tulis file `edd.md` di working dir, atau push ke Notion via MCP kalau connected.
 
 | Kondisi | Behavior |
 |---------|----------|
-| Notion MCP connected | Tawarin push `edd.md` ke Notion engineering page |
+| Notion MCP connected | Tawarin push `edd.md` ke Notion engineering page (HTML keep local) |
 | BigQuery MCP connected | Tawarin pull metric data buat validate scale assumption (concurrent users, query volume) |
 | Pencil MCP connected | Tawarin generate diagram dari ASCII (kalau user prefer visual) |
 | WebSearch tool available | Auto-search built-in check di Phase 2 step 4 |
-| Tidak ada MCP | File saved as local `edd.md`, user copy manual |
+| Tidak ada MCP | Files saved as local `edd.md` + `edd.html`, user open `edd.html` di browser |
 
 ## Anti-pattern (jangan dilakuin)
 
+- ❌ **Skip `edd.html` output.** Dual output (`.md` + `.html`) mandatory — user review via HTML.
 - ❌ **Skip risk tier.** Bikin downstream gak punya gate yang bener.
 - ❌ **Jumping ke implementation.** "Pake Postgres + Kafka" di Phase 3 tanpa state diagnosis = anti-pattern.
 - ❌ **Skip "what already exists" search.** Bikin tim rebuild parallel infrastructure.

@@ -29,9 +29,9 @@ Detail lengkap di [ETHOS.md](./ETHOS.md).
 
 | Skill | Peran spesialis | EM lifecycle stage |
 |-------|----------------|---------------------|
-| [`/em-plan`](./skills/em-plan/SKILL.md) | **Architect + Risk Classifier** — receive PRD/design/bug → produce edd.md (risk tier T0-T3, scope challenge, invariants, failure modes, test strategy) | Plan |
+| [`/em-plan`](./skills/em-plan/SKILL.md) | **Architect + Risk Classifier** — receive PRD/design/bug → produce **`edd.md` + `edd.html`** (dual: source + review-ready HTML) with risk tier T0-T3, scope challenge, invariants, failure modes, test strategy | Plan |
 | [`/em-works`](./skills/em-works/SKILL.md) | **Delivery Lead** — translate plan → execution-ready package (atomic tickets, worktree lanes, env/secrets spec, deploy plan artifact) | Prep |
-| [`/em-review`](./skills/em-review/SKILL.md) | **Code Reviewer + Debugger** — Mode A PR review (4-section, against plan), Mode B hypothesis-driven debug (5-step, root-cause-first) | Review / Debug |
+| [`/em-review`](./skills/em-review/SKILL.md) | **Code Reviewer + Debugger** — Mode A PR review (4-section, against plan, **dual `.md` + `.html` output**), Mode B hypothesis-driven debug (5-step, root-cause-first) | Review / Debug |
 
 ## EM lifecycle flow
 
