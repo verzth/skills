@@ -241,7 +241,14 @@ Forcing questions:
 2. "Fix scope: a) Local (handoff engineer) b) Architectural (loop to /em-plan) c) Process (CI/test/observability gap → ticket)"
 3. "Test for regression — does it exist? a) Yes (test name) b) Will be added in fix PR c) Not yet decided"
 
-### Output: `debug-<bug-id>.md`
+### Output: `debug-<bug-id>.md` + `debug-<bug-id>.html` (dual output)
+
+**Must write 2 files**:
+
+1. **`debug-<bug-id>.md`** — source markdown (structure below)
+2. **`debug-<bug-id>.html`** — human-readable review version, self-contained (severity badge colored, hypothesis table, root cause card highlighted, TOC + breadcrumb)
+
+HTML render uses the template + full CSS spec from [`../../references/html-template.md`](../../references/html-template.md). Content must be 1:1 consistent. `<bug-id>` is a short slug (issue number or brief description, e.g. `debug-auth-timeout.html`).
 
 ```markdown
 # Debug Trace: [bug ID or short description]
@@ -351,6 +358,7 @@ Forcing questions:
 - ❌ **"Add tests later" as a negotiable blocker on T0/T1.** A block must block.
 
 ### Mode B
+- ❌ **Skip `debug-<bug-id>.html` output.** Dual output mandatory — prompter reviews via HTML.
 - ❌ **Patch before the hypothesis is confirmed.** Blind fix masking root cause.
 - ❌ **Stop at the symptom.** "Restart fixes it" is not a diagnosis.
 - ❌ **Skip regression test.** A bug whose fix has no test will recur.

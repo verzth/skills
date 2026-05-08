@@ -33,13 +33,29 @@ Read from working dir or the path the user provides. If missing → **stop**. em
 
 Break the edd scope into atomic tickets. Per ticket:
 
-- **What:** 1 deliverable, measurable, ≤ 2 days work (smaller is better)
+- **What:** 1 deliverable, measurable, ≤ Large compute class (smaller is better)
 - **Why:** Connect to a specific edd invariant or failure mode #
 - **Acceptance criteria:** Test cases + behavioral expectations + observability check
 - **Dependencies:** Other tickets that must be done first (be explicit, not implicit)
-- **Owner suggestion:** Based on module ownership if the team has context, or "any IC"
+- **Owner suggestion:** Based on module ownership if the team has context, or "any AI agent"
 - **Touched modules:** Directories (controllers/, models/) — not specific files
-- **Estimate ballpark:** Hour / Day / >2 days (if >2 days, split again)
+- **Compute class:** Nano / Small / Medium / Large / XL (if XL → split)
+- **Est. tokens:** ~Xk in / ~Xk out
+- **AI clock:** ~X min (single agent, sequential calls)
+
+#### Compute class reference
+
+| Class | AI clock | Total tokens | When to use | Rule |
+|-------|----------|--------------|-------------|------|
+| **Nano** | < 1 min | < 2k | Config, doc, 1-liner, rename | — |
+| **Small** | 1–5 min | 2k–8k | Isolated function, small fix, single file | — |
+| **Medium** | 5–20 min | 8k–25k | Module-level feature, multi-file change | — |
+| **Large** | 20–60 min | 25k–80k | Cross-module feature, migration, multi-lane | Consider splitting |
+| **XL** | > 60 min | > 80k | — | **Must split** |
+
+Token budget = sum of all ticket `Est. tokens`. Report in TL;DR as sprint token budget. Helps prompter scope the AI compute cost upfront.
+
+Prompt count estimate: assume 1 prompt per agent call. Medium ticket ≈ 2–4 prompts (plan + impl + review). Large ≈ 5–10 prompts.
 
 #### Step 3: Apply the Beck principle
 
@@ -201,7 +217,16 @@ Before handoff to engineer, validate:
 
 If any item isn't READY → flag explicitly. Engineers can start tickets that don't depend on the missing item.
 
-## Output: `eng-works.md`
+## Output: `eng-works.md` + `eng-works.html` (dual output)
+
+**Must write 2 files** in working dir:
+
+1. **`eng-works.md`** — source markdown (structure below, handoff to engineer role + version control)
+2. **`eng-works.html`** — human-readable review version, self-contained with inline CSS (compute class badges colored, lane table highlighted, token budget summary card, TOC + breadcrumb)
+
+HTML render uses the template + full CSS spec from [`../../references/html-template.md`](../../references/html-template.md). Content must be 1:1 consistent with markdown. Skipping HTML = anti-pattern (prompter explicitly reviews via HTML).
+
+Optional push: if Notion MCP is connected, offer to push `eng-works.md` to Notion engineering page. HTML stays local for browser review.
 
 ```markdown
 # Eng Works: [topic]
@@ -218,6 +243,8 @@ If any item isn't READY → flag explicitly. Engineers can start tickets that do
 - **Total tickets:** N
 - **Lanes:** A (sequential) | B (parallel A) | C (after A done)
 - **Deploy strategy:** [feature-flag / canary / blue-green / big-bang]
+- **Sprint token budget:** ~Xk total (sum across all tickets) — ~Xk in / ~Xk out
+- **AI clock:** ~X min sequential / ~X min optimal parallel
 - **Pre-handoff blockers:** N (must clear before engineer starts)
 - **Handoff status:** READY / BLOCKED (reason)
 
@@ -235,8 +262,10 @@ If any item isn't READY → flag explicitly. Engineers can start tickets that do
   - [ ] [observability check — log/metric emitted]
 - **Dependencies:** —
 - **Modules:** controllers/, models/
-- **Owner suggestion:** [name / "any IC"]
-- **Estimate:** ~1 day
+- **Owner suggestion:** [name / "any AI agent"]
+- **Compute class:** Small
+- **Est. tokens:** ~4k in / ~2k out
+- **AI clock:** ~3 min (single agent)
 - **Glue work:** [yes — what type / no]
 
 ### T2 — [name]
@@ -363,15 +392,17 @@ If any item isn't READY → flag explicitly. Engineers can start tickets that do
 
 ## Anti-pattern (don't do this)
 
+- ❌ **Skip `eng-works.html` output.** Dual output (`.md` + `.html`) mandatory — prompter reviews via HTML.
 - ❌ **"Implementation: TBD"** — no ticket-level breakdown. Output isn't handoff-able.
-- ❌ **Skip env/secrets spec.** Engineer gets stuck in local setup, loses 2 days of cycle time.
+- ❌ **Skip env/secrets spec.** Engineer gets stuck in local setup, loses cycle time.
 - ❌ **Bundle refactor + feature in 1 ticket.** Anti-Beck principle.
 - ❌ **Big bang deploy for T0/T1.** Sin. Always feature-flag or canary.
 - ❌ **Rollback = "git revert" without data consideration.** Migration rollback needs a data plan.
-- ❌ **Ticket >2 day estimate that isn't split.** Atomicity broken.
-- ❌ **Glue work invisible.** Causes 1 person to get stuck doing only glue, anti-pattern Reilly.
+- ❌ **Ticket XL compute class that isn't split.** Atomicity broken — AI agent will drift or lose context.
+- ❌ **Glue work invisible.** Causes 1 agent to get stuck doing only glue, anti-pattern Reilly.
 - ❌ **Lane plan with 2 lanes sharing a module without conflict flag.** There will be merge hell.
 - ❌ **Execute deployment in em-works.** Out of scope. Hand off to devops skill.
+- ❌ **Skip sprint token budget in TL;DR.** Prompter needs cost visibility before committing to the plan.
 
 ## Handoff
 

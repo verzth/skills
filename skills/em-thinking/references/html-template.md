@@ -8,8 +8,8 @@ Self-contained HTML template to render em-thinking artifacts as a human-readable
 
 - **`/em-plan`** → renders `edd.html` (companion to `edd.md`)
 - **`/em-review` Mode A** → renders `pr-review-<sha>.html` (companion to `pr-review-<sha>.md`)
-
-Other skills (`/em-works`, `/em-review` Mode B) currently emit `.md` only. Future v1.5+ may extend coverage.
+- **`/em-works`** → renders `eng-works.html` (companion to `eng-works.md`)
+- **`/em-review` Mode B** → renders `debug-<bug-id>.html` (companion to `debug-<bug-id>.md`)
 
 ---
 
@@ -265,6 +265,13 @@ table tbody tr.critical-gap td:first-child {
 .badge.severity-major { background: #ea580c; }
 .badge.severity-minor { background: #ca8a04; }
 .badge.severity-info  { background: #6b7280; }
+
+/* Compute class (em-works) */
+.badge.compute-nano   { background: #16a34a; }
+.badge.compute-small  { background: #2563eb; }
+.badge.compute-medium { background: #ea580c; }
+.badge.compute-large  { background: #dc2626; }
+.badge.compute-xl     { background: #7c3aed; }
 
 /* Forcing question callout */
 .forcing-question {
@@ -527,6 +534,31 @@ Use if the component diagram is a simple linear flow and benefits from color cod
 
 `<tr class="critical-gap">` triggers red-tinted bg + red left border = visual warning.
 
+### Compute class badge (em-works)
+
+```html
+<span class="badge compute-nano">Nano</span>
+<span class="badge compute-small">Small</span>
+<span class="badge compute-medium">Medium</span>
+<span class="badge compute-large">Large</span>
+<span class="badge compute-xl">XL — must split</span>
+```
+
+Use inline next to ticket titles, and in the ticket detail rows for quick scanning.
+
+### Token budget summary card (em-works TL;DR)
+
+```html
+<div class="tldr-card">
+  <h2>Sprint Token Budget</h2>
+  <p><strong>Total tickets:</strong> N</p>
+  <p><strong>Total tokens:</strong> ~Xk in / ~Xk out</p>
+  <p><strong>AI clock (sequential):</strong> ~X min</p>
+  <p><strong>AI clock (optimal parallel):</strong> ~X min</p>
+  <p><strong>Prompt count estimate:</strong> ~N prompts total</p>
+</div>
+```
+
 ### Forcing question callout
 
 ```html
@@ -651,7 +683,7 @@ Example for em-review Mode A:
 
 ## Common Mistakes
 
-- ❌ **Skip HTML output** — user explicitly reviews via HTML, mandatory.
+- ❌ **Skip HTML output** — prompter explicitly reviews via HTML, mandatory for ALL em-thinking skills.
 - ❌ **External CDN** (e.g. `<link href="https://cdn...">`) — breaks file:// loading + offline.
 - ❌ **Mismatch .md ↔ .html content** — must be 1:1. HTML is rendering, not different content.
 - ❌ **JavaScript dependencies** — not allowed, HTML must be pure static.
@@ -664,20 +696,19 @@ Example for em-review Mode A:
 
 ## File Output Convention
 
-Same directory:
+**Rule: always pair. Never produce only one file.**
+
 ```
 <working-dir>/
-├── edd.md         ← source markdown
-└── edd.html       ← rendered review version
+├── edd.md                  ← em-plan source markdown
+├── edd.html                ← em-plan rendered review
+├── eng-works.md            ← em-works source markdown
+├── eng-works.html          ← em-works rendered review
+├── pr-review-<sha>.md      ← em-review Mode A source
+├── pr-review-<sha>.html    ← em-review Mode A rendered
+├── debug-<bug-id>.md       ← em-review Mode B source
+└── debug-<bug-id>.html     ← em-review Mode B rendered
 ```
 
-Filenames must match (just different extensions). Never produce only one — always pair.
-
-For PR reviews:
-```
-<working-dir>/
-├── pr-review-<sha>.md
-└── pr-review-<sha>.html
-```
-
-`<sha>` is short SHA (7 chars) of the PR head commit.
+- `<sha>` is short SHA (7 chars) of the PR head commit.
+- `<bug-id>` is a short slug (issue number or brief description, e.g. `auth-timeout`).
