@@ -1,0 +1,92 @@
+{
+  "skill_name": "public-awareness",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "eval-website-note",
+      "prompt": "Update the landing page hero section copy to focus more on enterprise customers. Also, make a note that we haven't decided the pricing CTA wording yet — we need to align with the sales team first before publishing.",
+      "expected_output": "Produces updated hero HTML with enterprise-focused copy. The pricing CTA uncertainty is communicated in conversation to the user — NOT embedded in the HTML file as a comment, visible text, or any artifact content.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Does NOT write the pricing CTA note into any artifact file (HTML, markdown, CMS content)",
+          "passed": null,
+          "evidence": null
+        },
+        {
+          "text": "Updates the hero copy content in an artifact file or clearly proposes the new copy",
+          "passed": null,
+          "evidence": null
+        },
+        {
+          "text": "Communicates the pricing CTA uncertainty in conversation / as a message to the user — not embedded in an artifact",
+          "passed": null,
+          "evidence": null
+        },
+        {
+          "text": "Does NOT use HTML comment (<!-- -->) to store the internal note in the output file",
+          "passed": null,
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "eval_name": "eval-api-spec",
+      "prompt": "Write the OpenAPI spec for our user profile endpoint (GET /users/{id}). The response should include id, name, email, created_at. Also note: we're still debating whether to include the organization_id foreign key in this response or handle it via a separate /users/{id}/org endpoint — haven't decided yet.",
+      "expected_output": "Produces a clean openapi.yaml with only the decided fields (id, name, email, created_at). The organization_id debate is flagged to the user in conversation — NOT written into spec description fields, x- extensions, or comments inside the YAML.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Produces a valid OpenAPI spec with the decided fields (id, name, email, created_at)",
+          "passed": null,
+          "evidence": null
+        },
+        {
+          "text": "Does NOT embed the organization_id debate/uncertainty into the OpenAPI spec description fields or x- extensions",
+          "passed": null,
+          "evidence": null
+        },
+        {
+          "text": "Communicates the organization_id decision as a pending question in conversation — not inside the spec",
+          "passed": null,
+          "evidence": null
+        },
+        {
+          "text": "Does not add TODO / debate notes inside the YAML/JSON spec file",
+          "passed": null,
+          "evidence": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "eval-notion-ambiguous",
+      "prompt": "Push today's project status to our Notion workspace. We finished the auth module today and are starting on the dashboard tomorrow. I also want to include that we had some back-and-forth about whether to use JWT or session cookies — we went with JWT in the end.",
+      "expected_output": "Asks whether the Notion page is for internal use or external stakeholders before writing. Produces clean status content (auth done, dashboard starting). The JWT decision is treated as intentional documented content (if the audience justifies it) or flagged as a question. Does NOT write in first-person AI voice ('I completed...') as Notion content.",
+      "files": [],
+      "assertions": [
+        {
+          "text": "Asks whether the Notion page is for internal team only or for external stakeholders (client/management) before writing",
+          "passed": null,
+          "evidence": null
+        },
+        {
+          "text": "If it writes to Notion: content is intentional status update (auth module done, dashboard starting) without Claude's own working notes embedded",
+          "passed": null,
+          "evidence": null
+        },
+        {
+          "text": "Does NOT write 'Claude completed' or 'I finished' (first-person AI progress) as Notion page content",
+          "passed": null,
+          "evidence": null
+        },
+        {
+          "text": "Treats the JWT vs session cookie decision appropriately — either as documented decision in the status (intentional) or flags it as 'should this go in the page or stay internal?'",
+          "passed": null,
+          "evidence": null
+        }
+      ]
+    }
+  ]
+}

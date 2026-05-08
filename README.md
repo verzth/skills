@@ -33,6 +33,7 @@ Both methods install the same content. Pick whichever fits your workflow.
 | `golang-developer` | single | Go microservices development (Clean Architecture, gRPC, Wire DI) |
 | `pm-thinking` | bundle | AI-First Product Management — pm-discover, pm-works, pm-decide |
 | `em-thinking` | bundle | AI-First Engineering Management — em-plan, em-works, em-review |
+| `public-awareness` | single | Artifact integrity guardrail — keeps internal working context out of public-facing artifacts |
 
 > Want something else? [Request a skill →](https://github.com/verzth/skills/issues/new)
 
