@@ -2,9 +2,10 @@
 # ============================================================
 # verzth/skills — Installer
 #
-# Install all:   curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash
-# Install one:   curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- humanoid-thinking
-# Install many:  curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- humanoid-thinking another-skill
+# Install all:        curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash
+# Install one:        curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- humanoid-thinking
+# Install many:       curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- humanoid-thinking public-awareness
+# Install (OpenClaw): curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- --openclaw public-awareness
 # ============================================================
 
 set -e
@@ -13,28 +14,55 @@ REPO="verzth/skills"
 REPO_URL="https://github.com/$REPO"
 RAW_BASE="https://raw.githubusercontent.com/$REPO/main"
 
-# All available skills (update this list when adding new skills)
+# All available skills (update when adding new skills)
 ALL_SKILLS=(
     "humanoid-thinking"
+    "golang-developer"
+    "pm-thinking"
+    "em-thinking"
+    "public-awareness"
 )
 
-# Parse arguments
-REQUESTED_SKILLS=("$@")
+# Parse flags
+OPENCLAW=false
+REMAINING_ARGS=()
+for arg in "$@"; do
+    if [ "$arg" = "--openclaw" ] || [ "$arg" = "-o" ]; then
+        OPENCLAW=true
+    else
+        REMAINING_ARGS+=("$arg")
+    fi
+done
+
+# Detect target directory
+if [ "$OPENCLAW" = true ]; then
+    if [ -d ".openclaw/skills" ]; then
+        BASE_TARGET=".openclaw/skills"
+    elif [ -d "$HOME/.openclaw/skills" ]; then
+        BASE_TARGET="$HOME/.openclaw/skills"
+    else
+        BASE_TARGET="$HOME/.openclaw/skills"
+        mkdir -p "$BASE_TARGET"
+    fi
+    echo "🦅 OpenClaw mode — installing to $BASE_TARGET/"
+else
+    if [ -d ".claude/skills" ]; then
+        BASE_TARGET=".claude/skills"
+    elif [ -d "$HOME/.claude/skills" ]; then
+        BASE_TARGET="$HOME/.claude/skills"
+    else
+        BASE_TARGET=".claude/skills"
+        mkdir -p "$BASE_TARGET"
+    fi
+fi
+
+# Determine which skills to install
+REQUESTED_SKILLS=("${REMAINING_ARGS[@]}")
 if [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
     REQUESTED_SKILLS=("${ALL_SKILLS[@]}")
     echo "📦 Installing ALL skills from $REPO..."
 else
     echo "📦 Installing selected skills from $REPO..."
-fi
-
-# Detect target directory
-if [ -d ".claude/skills" ]; then
-    BASE_TARGET=".claude/skills"
-elif [ -d "$HOME/.claude/skills" ]; then
-    BASE_TARGET="$HOME/.claude/skills"
-else
-    BASE_TARGET=".claude/skills"
-    mkdir -p "$BASE_TARGET"
 fi
 
 echo "   Target: $BASE_TARGET/"
@@ -153,4 +181,8 @@ echo "════════════════════════�
 echo "  ✅ Installed: $SUCCESS"
 [ $FAIL -gt 0 ] && echo "  ❌ Failed: $FAIL"
 echo "  📁 Location: $BASE_TARGET/"
+if [ "$OPENCLAW" = true ]; then
+    echo "  Note: For full content adaptation (tool rewrites), use:"
+    echo "        npx @verzth/skills install <skill> --openclaw"
+fi
 echo "════════════════════════════════════"

@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">@verzth/skills</h1>
   <p align="center">
-    Curated collection of custom skills for Claude Code &amp; Cowork
+    Curated collection of custom skills for Claude Code, Cowork &amp; OpenClaw
     <br />
     <a href="https://www.npmjs.com/package/@verzth/skills"><strong>npm</strong></a> · <a href="https://github.com/verzth/skills/issues"><strong>Issues</strong></a>
   </p>
@@ -17,13 +17,12 @@
 
 ## What is this?
 
-A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Cowork](https://claude.ai). Each skill extends Claude's behavior with domain-specific frameworks, workflows, and personality — installed with a single command.
+A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cowork](https://claude.ai), and [OpenClaw](https://openclaw.ai). Each skill extends the AI's behavior with domain-specific frameworks, workflows, and personality — installed with a single command.
 
-**Two install paths supported:**
-- **npm CLI** (legacy, simple) — `npx @verzth/skills install <name>`
-- **Claude Code plugin marketplace** (newer, native) — `/plugin install <name>@verzth-skills`
-
-Both methods install the same content. Pick whichever fits your workflow.
+**Three install paths supported:**
+- **npm CLI** — `npx @verzth/skills install <name>`
+- **Claude Code plugin marketplace** — `/plugin install <name>@verzth-skills`
+- **OpenClaw** — `npx @verzth/skills install <name> --openclaw`
 
 ## Available skills
 
@@ -82,8 +81,11 @@ npx @verzth/skills list
 |------|-------|-------------|
 | `--global` | `-g` | Install to `~/.claude/skills/` — available across all projects |
 | `--project` | `-p` | Install to `./.claude/skills/` — scoped to current project only |
+| `--openclaw` | `-o` | Install for OpenClaw with adapted content |
 
-When no flag is provided and the session is interactive, the CLI prompts you to choose. In non-interactive environments (CI/CD, piped input), it auto-detects based on whether `.claude/` exists in the current directory.
+Flags can be combined: `--openclaw --global` installs adapted skill to `~/.openclaw/skills/`.
+
+When no scope flag is provided and the session is interactive, the CLI prompts you to choose. In non-interactive environments (CI/CD, piped input), it auto-detects based on whether `.claude/` (or `.openclaw/`) exists in the current directory.
 
 ## Install via Claude Code plugin marketplace
 
@@ -108,10 +110,26 @@ Update later:
 
 Marketplace catalog: [`.claude-plugin/marketplace.json`](./.claude-plugin/marketplace.json)
 
+### Install for OpenClaw
+
+```bash
+# Global (recommended)
+npx @verzth/skills install public-awareness --openclaw --global
+
+# Project-scoped
+npx @verzth/skills install public-awareness --openclaw --project
+```
+
+The `--openclaw` flag adapts skill content at install time:
+- Installs to `~/.openclaw/skills/` or `.openclaw/skills/`
+- Rewrites tool names: `Bash` → `exec`, `Write` → `write`, `Agent` → `sessions_spawn`, `TodoWrite` → `task tracker`
+- Rewrites paths: `.claude/` → `.openclaw/`, `CLAUDE.md` → `AGENTS.md`
+- Normalizes frontmatter: only `name`, `description`, and `version` are kept
+
 ### Alternative Install Methods
 
 <details>
-<summary><strong>curl</strong></summary>
+<summary><strong>curl (Claude Code)</strong></summary>
 
 ```bash
 # Install all
@@ -120,6 +138,17 @@ curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bas
 # Install specific skill
 curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- humanoid-thinking
 ```
+</details>
+
+<details>
+<summary><strong>curl (OpenClaw)</strong></summary>
+
+```bash
+# Install specific skill for OpenClaw
+curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- --openclaw public-awareness
+```
+
+> Note: curl installs change the install path but skip content adaptation (tool name rewrites). For fully adapted content, use `npx @verzth/skills install <name> --openclaw`.
 </details>
 
 <details>
@@ -209,7 +238,7 @@ A bundle that turns Claude into a virtual EM team. **One install → 3 sub-skill
 ## Requirements
 
 - **Node.js** 14+ (for `npx`)
-- **Claude Code** or **Cowork** by Anthropic
+- **Claude Code** or **Cowork** by Anthropic, or **OpenClaw**
 
 ## FAQ
 
@@ -223,7 +252,7 @@ Your personalized settings (like `personality.md`) are automatically backed up a
 Use **global** if you want the skill everywhere. Use **project** if you only want it in a specific repo, or if different projects need different configurations.
 
 **Can I uninstall a skill?**
-Just delete the skill folder from `.claude/skills/` (project) or `~/.claude/skills/` (global).
+Just delete the skill folder from `.claude/skills/` (project) or `~/.claude/skills/` (global). For OpenClaw, same pattern under `.openclaw/skills/`.
 
 ## License
 

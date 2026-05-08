@@ -22,10 +22,6 @@ const c = {
 
 // ── Helpers ─────────────────────────────────────────────
 
-// Detect skill type:
-//   "single"  → folder with SKILL.md at top level (humanoid-thinking, golang-developer)
-//   "bundle"  → folder with .claude-plugin/plugin.json (multi-skill plugin like pm-thinking)
-//   null      → not a recognized skill
 function detectSkillType(skillName) {
   const skillRoot = path.join(SKILLS_DIR, skillName);
   if (!fs.existsSync(skillRoot)) return null;
@@ -62,7 +58,6 @@ function getSkillDescription(skillName) {
   }
 
   if (type === "bundle") {
-    // Bundle: read description from .claude-plugin/plugin.json
     const pluginJson = path.join(
       SKILLS_DIR,
       skillName,
@@ -71,7 +66,6 @@ function getSkillDescription(skillName) {
     );
     try {
       const manifest = JSON.parse(fs.readFileSync(pluginJson, "utf-8"));
-      // Count sub-skills inside bundle's skills/ subfolder
       const subSkillsDir = path.join(SKILLS_DIR, skillName, "skills");
       let subSkillCount = 0;
       if (fs.existsSync(subSkillsDir)) {
@@ -103,16 +97,116 @@ function getProjectDir() {
   return path.join(process.cwd(), ".claude", "skills");
 }
 
-function resolveTargetDir(args) {
-  // Explicit flags take priority
-  if (args.includes("-g") || args.includes("--global")) {
-    return { target: getGlobalDir(), scope: "global" };
+function getOpenClawGlobalDir() {
+  return path.join(
+    process.env.HOME || process.env.USERPROFILE || "~",
+    ".openclaw",
+    "skills"
+  );
+}
+
+function getOpenClawProjectDir() {
+  return path.join(process.cwd(), ".openclaw", "skills");
+}
+
+// ── OpenClaw content transformer ────────────────────────
+
+// Applied longest-first to avoid partial replacements.
+const TOOL_REWRITES = [
+  ["use the Bash tool", "use the exec tool"],
+  ["use the Write tool", "use the write tool"],
+  ["use the Read tool", "use the read tool"],
+  ["use the Edit tool", "use the edit tool"],
+  ["use the Agent tool", "use sessions_spawn"],
+  ["Use AskUserQuestion", "Ask the user directly"],
+  ["use AskUserQuestion", "ask the user directly"],
+  ["the Bash tool", "the exec tool"],
+  ["the Write tool", "the write tool"],
+  ["the Read tool", "the read tool"],
+  ["the Edit tool", "the edit tool"],
+  ["the Agent tool", "sessions_spawn"],
+  ["Agent tool", "sessions_spawn"],
+  ["AskUserQuestion", "ask the user directly in chat"],
+  ["subagent_type", "task parameter"],
+  ["TodoWrite", "task tracker"],
+  ["CLAUDE.md", "AGENTS.md"],
+];
+
+const PATH_REWRITES = [
+  ["~/.claude/skills", "~/.openclaw/skills"],
+  ["~/.claude/projects", "~/.openclaw/projects"],
+  ["~/.claude/", "~/.openclaw/"],
+  [".claude/skills", ".openclaw/skills"],
+  [".claude/", ".openclaw/"],
+];
+
+function transformFrontmatter(fmContent, version) {
+  // Parse top-level YAML fields by tracking indentation.
+  // A new field starts when a line matches /^\w+:/ (no leading whitespace).
+  const lines = fmContent.split("\n");
+  const fields = {};
+  let currentField = null;
+  let currentLines = [];
+
+  const flush = () => {
+    if (currentField) fields[currentField] = currentLines.join("\n");
+  };
+
+  for (const line of lines) {
+    const topLevel = line.match(/^(\w[\w-]*):/);
+    if (topLevel && !line.startsWith(" ") && !line.startsWith("\t")) {
+      flush();
+      currentField = topLevel[1];
+      currentLines = [line];
+    } else if (currentField) {
+      currentLines.push(line);
+    }
   }
-  if (args.includes("-p") || args.includes("--project")) {
-    return { target: getProjectDir(), scope: "project" };
+  flush();
+
+  const parts = [];
+  if (fields.name) parts.push(fields.name);
+  if (fields.description) parts.push(fields.description);
+  parts.push(`version: ${version}`);
+  return parts.join("\n");
+}
+
+function transformForOpenClaw(content, version) {
+  let result = content;
+
+  // 1. Tool + keyword rewrites (applied to full content incl. frontmatter description)
+  for (const [from, to] of TOOL_REWRITES) {
+    result = result.split(from).join(to);
   }
 
-  // Interactive prompt if stdin is TTY and no flag given
+  // 2. Path rewrites
+  for (const [from, to] of PATH_REWRITES) {
+    result = result.split(from).join(to);
+  }
+
+  // 3. Frontmatter: strip extra fields, add version
+  result = result.replace(/^(---\n)([\s\S]*?)(\n---)/, (_match, open, fmContent, close) => {
+    return open + transformFrontmatter(fmContent, version) + close;
+  });
+
+  return result;
+}
+
+// ── Directory resolution ─────────────────────────────────
+
+function resolveTargetDir(args, isOpenClaw) {
+  const globalDir = isOpenClaw ? getOpenClawGlobalDir() : getGlobalDir();
+  const projectDir = isOpenClaw ? getOpenClawProjectDir() : getProjectDir();
+  const host = isOpenClaw ? "OpenClaw" : "Claude";
+  const dotDir = isOpenClaw ? ".openclaw" : ".claude";
+
+  if (args.includes("-g") || args.includes("--global")) {
+    return { target: globalDir, scope: "global" };
+  }
+  if (args.includes("-p") || args.includes("--project")) {
+    return { target: projectDir, scope: "project" };
+  }
+
   if (process.stdin.isTTY) {
     const readline = require("readline");
     const rl = readline.createInterface({
@@ -121,30 +215,32 @@ function resolveTargetDir(args) {
     });
 
     return new Promise((resolve) => {
-      console.log(`${c.bold}Where do you want to install?${c.reset}`);
-      console.log(`  ${c.cyan}1)${c.reset} ${c.bold}Global${c.reset}  → ~/.claude/skills/ ${c.dim}(available in all projects)${c.reset}`);
-      console.log(`  ${c.cyan}2)${c.reset} ${c.bold}Project${c.reset} → ./.claude/skills/ ${c.dim}(current project only)${c.reset}`);
+      console.log(`${c.bold}Where do you want to install? (${host})${c.reset}`);
+      console.log(`  ${c.cyan}1)${c.reset} ${c.bold}Global${c.reset}  → ~/${dotDir}/skills/ ${c.dim}(available in all projects)${c.reset}`);
+      console.log(`  ${c.cyan}2)${c.reset} ${c.bold}Project${c.reset} → ./${dotDir}/skills/ ${c.dim}(current project only)${c.reset}`);
       console.log();
       rl.question(`${c.bold}Choose [1/2]:${c.reset} `, (answer) => {
         rl.close();
         const trimmed = answer.trim();
         if (trimmed === "1" || trimmed.toLowerCase() === "g" || trimmed.toLowerCase() === "global") {
-          resolve({ target: getGlobalDir(), scope: "global" });
+          resolve({ target: globalDir, scope: "global" });
         } else {
-          resolve({ target: getProjectDir(), scope: "project" });
+          resolve({ target: projectDir, scope: "project" });
         }
       });
     });
   }
 
   // Non-interactive fallback: auto-detect
-  if (fs.existsSync(path.join(process.cwd(), ".claude"))) {
-    return { target: getProjectDir(), scope: "project" };
+  if (fs.existsSync(path.join(process.cwd(), dotDir))) {
+    return { target: projectDir, scope: "project" };
   }
-  return { target: getGlobalDir(), scope: "global" };
+  return { target: globalDir, scope: "global" };
 }
 
-function copyDirSync(src, dest) {
+// ── File operations ──────────────────────────────────────
+
+function copyDirSync(src, dest, contentTransformer) {
   fs.mkdirSync(dest, { recursive: true });
   const entries = fs.readdirSync(src, { withFileTypes: true });
   for (const entry of entries) {
@@ -152,7 +248,10 @@ function copyDirSync(src, dest) {
     const destPath = path.join(dest, entry.name);
     if (entry.name === "MANIFEST") continue;
     if (entry.isDirectory()) {
-      copyDirSync(srcPath, destPath);
+      copyDirSync(srcPath, destPath, contentTransformer);
+    } else if (contentTransformer && entry.name.endsWith(".md")) {
+      const raw = fs.readFileSync(srcPath, "utf-8");
+      fs.writeFileSync(destPath, contentTransformer(raw));
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
@@ -187,11 +286,14 @@ function restorePersonality(targetSkillDir, backupPath) {
 // ── Commands ────────────────────────────────────────────
 
 async function cmdInstall(args) {
+  const isOpenClaw = args.includes("--openclaw") || args.includes("-o");
+  const cleanArgs = args.filter((a) => a !== "--openclaw" && a !== "-o");
+
   const available = getAvailableSkills();
-  const skillArgs = args.filter((a) => !a.startsWith("-"));
+  const skillArgs = cleanArgs.filter((a) => !a.startsWith("-"));
   let toInstall = [];
 
-  if (skillArgs.length === 0 || args.includes("--all")) {
+  if (skillArgs.length === 0 || cleanArgs.includes("--all")) {
     toInstall = available;
     console.log(
       `\n${c.cyan}${c.bold}📦 Installing ALL skills...${c.reset}\n`
@@ -211,18 +313,21 @@ async function cmdInstall(args) {
     );
   }
 
-  // Resolve target directory (may prompt user interactively)
-  const result = await resolveTargetDir(args);
+  if (isOpenClaw) {
+    console.log(`${c.magenta}${c.bold}   Host: OpenClaw${c.reset} ${c.dim}(content will be adapted for openclaw)${c.reset}`);
+  }
+
+  const result = await resolveTargetDir(cleanArgs, isOpenClaw);
   const targetBase = result.target;
   const scope = result.scope;
 
   fs.mkdirSync(targetBase, { recursive: true });
-  console.log(
-    `\n${c.dim}   Scope:  ${scope}${c.reset}`
-  );
-  console.log(
-    `${c.dim}   Target: ${targetBase}/${c.reset}\n`
-  );
+  console.log(`\n${c.dim}   Scope:  ${scope}${c.reset}`);
+  console.log(`${c.dim}   Target: ${targetBase}/${c.reset}\n`);
+
+  const transformer = isOpenClaw
+    ? (content) => transformForOpenClaw(content, VERSION)
+    : null;
 
   let success = 0;
   let fail = 0;
@@ -240,7 +345,7 @@ async function cmdInstall(args) {
         fs.rmSync(dest, { recursive: true, force: true });
       }
 
-      copyDirSync(src, dest);
+      copyDirSync(src, dest, transformer);
 
       if (restorePersonality(dest, backup)) {
         console.log(`${c.green}✅ installed${c.reset} ${c.dim}(personality restored)${c.reset}`);
@@ -254,10 +359,11 @@ async function cmdInstall(args) {
     }
   }
 
+  const hostLabel = isOpenClaw ? "OpenClaw" : (scope === "global" ? "Global" : "Project");
   console.log(`\n${"═".repeat(40)}`);
   console.log(`  ${c.green}✅ Installed: ${success}${c.reset}`);
   if (fail > 0) console.log(`  ${c.red}❌ Failed: ${fail}${c.reset}`);
-  console.log(`  ${c.dim}📁 ${scope === "global" ? "Global" : "Project"}: ${targetBase}/${c.reset}`);
+  console.log(`  ${c.dim}📁 ${hostLabel}: ${targetBase}/${c.reset}`);
   console.log(`${"═".repeat(40)}\n`);
 }
 
@@ -284,7 +390,7 @@ function cmdList() {
 function cmdHelp() {
   console.log(`
 ${c.cyan}${c.bold}@verzth/skills${c.reset} v${VERSION}
-Custom Claude skills by verzth
+Custom skills for Claude Code and OpenClaw
 
 ${c.bold}USAGE${c.reset}
   npx @verzth/skills <command> [options]
@@ -298,17 +404,28 @@ ${c.bold}COMMANDS${c.reset}
 ${c.bold}FLAGS${c.reset}
   -g, --global          Install to ~/.claude/skills/ (all projects)
   -p, --project         Install to ./.claude/skills/ (current project)
-  ${c.dim}If no flag given, you'll be prompted to choose.${c.reset}
+  -o, --openclaw        Install for OpenClaw (~/.openclaw/skills/)
+  ${c.dim}Combine: --openclaw --global or --openclaw --project${c.reset}
+  ${c.dim}If no scope flag given, you'll be prompted to choose.${c.reset}
 
 ${c.bold}EXAMPLES${c.reset}
-  npx @verzth/skills install humanoid-thinking
-  npx @verzth/skills install humanoid-thinking --global
+  npx @verzth/skills install public-awareness
+  npx @verzth/skills install public-awareness --global
+  npx @verzth/skills install public-awareness --openclaw
+  npx @verzth/skills install public-awareness --openclaw --global
   npx @verzth/skills install --all --project
   npx @verzth/skills list
 
+${c.bold}OPENCLAW${c.reset}
+  The --openclaw flag adapts skill content for OpenClaw:
+  • Installs to ~/.openclaw/skills/ or .openclaw/skills/
+  • Rewrites tool names (Bash→exec, Write→write, Agent→sessions_spawn)
+  • Rewrites paths (.claude/→.openclaw/)
+  • Normalizes frontmatter (name + description + version only)
+
 ${c.bold}NOTES${c.reset}
   - Personality settings are preserved on upgrade
-  - Global skills apply to all Claude Code / Cowork projects
+  - Global skills apply to all projects
   - Project skills only apply to the current project
 `);
 }
