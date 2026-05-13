@@ -316,7 +316,7 @@
         <button id="btn-add-edge" title="Connect two nodes with an edge">+ Edge</button>
         <button id="btn-delete-sel" title="Delete selected (Del)">✕ Delete</button>
         <div class="toolbar-sep"></div>
-        <button id="btn-save" title="Save — download updated HTML">💾 Save</button>
+        <button id="btn-save" title="Save (Ctrl+S) — overwrites current file">💾 Save</button>
         <button id="btn-autosave" class="btn-active" title="Auto-save ON — saves after 5s of inactivity (click to toggle)">⏱ Auto</button>
       </div>
     </div>
@@ -423,6 +423,7 @@
   let autosaveEnabled = true;
   let autosaveTimer = null;
   const STORAGE_KEY = 'arch-diagram:' + (DIAGRAM_DATA.title || 'untitled');
+  let fileHandle = null;   // File System Access API handle (cached after first pick)
   // Summary panel
   let summaryVisible = true;
 
@@ -962,12 +963,28 @@
     } catch (e) { console.warn('Autosave failed:', e); }
   }
 
-  // Manual save: download an updated standalone HTML file
-  function saveAsHtml() {
+  // Manual save: overwrite the current file via File System Access API,
+  // or fall back to a download. Always fetches the original HTML source
+  // (not outerHTML) to avoid browser-serialisation breakage.
+  async function saveAsHtml() {
     if (!cy) return;
     const payload = buildSavePayload();
     const jsonStr = JSON.stringify(payload, null, 2);
-    let html = document.documentElement.outerHTML;
+
+    // ── 1. Get the original HTML source ──────────────────────────────
+    // fetch() retrieves the actual file bytes, not the browser-parsed DOM,
+    // so the saved file is guaranteed to be structurally identical to the
+    // original (DOCTYPE, attribute order, CDN URLs, etc. all preserved).
+    let html;
+    try {
+      const resp = await fetch(window.location.href);
+      html = await resp.text();
+    } catch (_) {
+      // Fallback when fetch is blocked (e.g. strict file:// security policies)
+      html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    }
+
+    // ── 2. Splice updated DIAGRAM_DATA into the source ───────────────
     const marker = 'const DIAGRAM_DATA = ';
     const markerIdx = html.indexOf(marker);
     if (markerIdx !== -1) {
@@ -975,7 +992,34 @@
       const jsonEnd   = findJsonEnd(html, jsonStart);
       if (jsonEnd !== -1) html = html.slice(0, jsonStart) + jsonStr + html.slice(jsonEnd + 1);
     }
-    download(new Blob([html], { type: 'text/html' }), (DIAGRAM_DATA.title || 'diagram') + '.html');
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const filename = (DIAGRAM_DATA.title || 'diagram') + '.html';
+
+    // ── 3. Write via File System Access API (overwrite in place) ─────
+    if ('showSaveFilePicker' in window) {
+      try {
+        if (!fileHandle) {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{ description: 'HTML file', accept: { 'text/html': ['.html'] } }],
+          });
+        }
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        clearDirty();
+        showSaveToast('Saved ✓');
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return; // user cancelled picker — do nothing
+        fileHandle = null;                   // handle gone stale, reset for next attempt
+        // fall through to download fallback
+      }
+    }
+
+    // ── 4. Fallback: trigger a browser download ───────────────────────
+    download(blob, filename);
     clearDirty();
     showSaveToast('Saved ✓');
   }
