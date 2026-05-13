@@ -25,6 +25,28 @@ The template has **two rendering modes** selected by `DIAGRAM_DATA.type`:
 | `"er"`, `"state"`, `"class"` | Mermaid | Read-only |
 | `"sequence"` | Standalone SVG HTML | Read-only (see section below — do NOT use template) |
 
+## Built-in features (no setup needed)
+
+Everything below works automatically in every generated HTML file:
+
+| Feature | How |
+|---|---|
+| Zoom / pan | Scroll wheel + drag (Cytoscape handles it natively) |
+| Dark / light theme | ◑ button in toolbar |
+| Export | SVG / PNG / PDF buttons |
+| Click node → details panel | Slides in from the right; shows title, description, tech stack, links |
+| Highlight neighbors | Click a node: direct neighbors stay full color, non-connected nodes dim to 0.35 opacity. Click canvas or press `Esc` to reset |
+| **Flowchart only** | |
+| Drag nodes | Click + drag any node |
+| Add node | `+ Node` button |
+| Add edge | `+ Edge` button → click source → click target |
+| Rename node / edge | Double-click the node or edge label |
+| Bend edges | Single-click an edge → drag the blue handle to curve it |
+| Delete | Select + `Del` / `Backspace`, or `✕ Delete` button |
+| 💾 Save | Downloads an updated self-contained HTML with current positions baked in (reloads without re-running ELK layout) |
+| ⏱ Auto | Autosaves to `localStorage` after 5 s of inactivity; toggle on/off; `Ctrl/Cmd+S` also triggers save |
+| ▾ Info | Collapses / expands the summary cards strip; keyboard shortcut `I` |
+
 ## Workflow
 
 1. Clarify what the user wants to diagram (or infer it confidently if context is clear)
@@ -290,7 +312,7 @@ For read-only Mermaid diagrams, `elements` is omitted. `nodes` and `connections`
 
 ## Summary cards
 
-The `summary` array (2–4 cards) renders below the diagram. Use it for context the diagram can't show: key tech choices, performance characteristics, cost notes, deployment strategy, or important caveats. Each card has a `title` and a short `items` list (3–5 bullets max). Omit `summary` or set to `[]` to hide the strip.
+The `summary` array (2–4 cards) renders below the diagram as a collapsible strip. Use it for context the diagram can't show: key tech choices, performance characteristics, cost notes, deployment strategy, or important caveats. Each card has a `title` and a short `items` list (3–5 bullets max). Omit `summary` or set to `[]` to hide the strip entirely (the `▾ Info` toggle button also won't appear).
 
 ## Compound grouping (recommended for 10+ nodes)
 
