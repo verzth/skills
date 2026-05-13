@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Verzth's curated Claude Code skills — humanoid-thinking framework, Go microservices, AI-First Product Management, AI-First Engineering Management, and more. Available via npm and Claude Code plugin marketplace.",
-    "version": "1.6.0"
+    "version": "1.8.0"
   },
   "plugins": [
     {
@@ -49,6 +49,16 @@
       "category": "engineering-management",
       "tags": ["em", "engineering-management", "ai-first", "architecture", "edd", "code-review", "debug", "risk-tiering", "cognitive-patterns", "deployment-prep"],
       "homepage": "https://github.com/verzth/skills/tree/main/skills/em-thinking"
+    },
+    {
+      "name": "arch-diagram",
+      "source": "./skills/arch-diagram",
+      "description": "Interactive system diagram generator — self-contained HTML files with no build step. Flowchart/architecture diagrams use Cytoscape.js (fully editable: drag nodes, add/remove nodes and edges, rename labels, bend connection lines). Sequence diagrams are custom SVG with gradient actors, phase bands, numbered steps, and a legend. ER/state/class diagrams use Mermaid. All diagrams include zoom/pan, dark/light theme, click-to-explore node details, and SVG/PNG/PDF export.",
+      "version": "1.2.0",
+      "author": {"name": "Dodi (Verzth)"},
+      "category": "engineering",
+      "tags": ["diagram", "architecture", "visualization", "cytoscape", "mermaid", "interactive", "flowchart", "sequence-diagram", "er-diagram", "system-design", "editable"],
+      "homepage": "https://github.com/verzth/skills/tree/main/skills/arch-diagram"
     },
     {
       "name": "public-awareness",

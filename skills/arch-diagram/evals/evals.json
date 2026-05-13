@@ -1,0 +1,50 @@
+{
+  "skill_name": "arch-diagram",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Draw a diagram of a typical e-commerce microservices stack. Include: a React frontend, API gateway, auth service, product service, order service, notification service, and separate PostgreSQL databases for the product and order services. Show the request flow from frontend through to the databases. Use a left-to-right layout.",
+      "expected_output": "A self-contained HTML file with an interactive flowchart showing the e-commerce microservices architecture with all components, connections, dark/light theme toggle, zoom/pan, and clickable nodes that show a details panel.",
+      "files": [],
+      "assertions": [
+        {"name": "output_is_html", "description": "Output file is a valid HTML document", "type": "contains", "value": "<!DOCTYPE html"},
+        {"name": "has_mermaid_flowchart", "description": "File contains a Mermaid flowchart definition", "type": "contains_all", "values": ["MERMAID_SOURCE", "flowchart"]},
+        {"name": "has_all_six_services", "description": "All 6 required services are present in the diagram", "type": "contains_all", "values": ["Auth", "Product", "Order", "Notification", "Gateway", "React"]},
+        {"name": "has_two_databases", "description": "Two separate PostgreSQL database nodes present", "type": "min_count", "value": "[(", "min": 2},
+        {"name": "has_diagram_data_json", "description": "DIAGRAM_DATA JSON object is defined", "type": "contains", "value": "DIAGRAM_DATA"},
+        {"name": "has_click_directives", "description": "Mermaid click directives wired to handleNodeClick for interactivity", "type": "contains", "value": "handleNodeClick"},
+        {"name": "has_theme_toggle", "description": "Dark/light theme toggle button present", "type": "contains", "value": "btn-theme"},
+        {"name": "has_export_buttons", "description": "SVG/PNG/PDF export buttons present", "type": "contains", "value": "btn-export-svg"},
+        {"name": "has_summary_cards", "description": "Summary cards section populated in DIAGRAM_DATA", "type": "contains", "value": "\"summary\""}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Make an ER diagram for a social media app with these tables: users (id, username, email, bio, created_at), posts (id, user_id, content, image_url, created_at), comments (id, post_id, user_id, content, created_at), likes (id, post_id, user_id, created_at), follows (follower_id, following_id, created_at). Show the relationships between tables.",
+      "expected_output": "A self-contained HTML file with an interactive ER diagram showing all 5 tables with their columns, data types, and relationship lines between them.",
+      "files": [],
+      "assertions": [
+        {"name": "output_is_html", "description": "Output file is a valid HTML document", "type": "contains", "value": "<!DOCTYPE html"},
+        {"name": "has_er_diagram", "description": "File uses Mermaid erDiagram type", "type": "contains", "value": "erDiagram"},
+        {"name": "has_all_five_tables", "description": "All 5 tables are defined in the diagram", "type": "contains_all", "values": ["users", "posts", "comments", "likes", "follows"]},
+        {"name": "has_relationships", "description": "ER relationship notation is present", "type": "contains", "value": "||--"},
+        {"name": "has_diagram_data_json", "description": "DIAGRAM_DATA JSON object is defined", "type": "contains", "value": "DIAGRAM_DATA"},
+        {"name": "has_theme_toggle", "description": "Dark/light theme toggle button present", "type": "contains", "value": "btn-theme"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Diagram the OAuth2 authorization code flow. Show the interaction between these actors: Browser, My App (client), Authorization Server, and Resource Server. Include all the steps: user clicks login, redirect to auth server, user logs in and approves, authorization code returned to app, app exchanges code for access token, app uses token to fetch user data from resource server.",
+      "expected_output": "A self-contained HTML file with an interactive sequence diagram showing the full OAuth2 authorization code flow with all actors and message steps clearly labeled.",
+      "files": [],
+      "assertions": [
+        {"name": "output_is_html", "description": "Output file is a valid HTML document", "type": "contains", "value": "<!DOCTYPE html"},
+        {"name": "has_sequence_diagram", "description": "File uses Mermaid sequenceDiagram type", "type": "contains", "value": "sequenceDiagram"},
+        {"name": "has_all_four_actors", "description": "All 4 actors are present in the diagram", "type": "contains_all", "values": ["Browser", "Authorization", "Resource"]},
+        {"name": "has_key_oauth_steps", "description": "Authorization code and access token steps are present", "type": "contains_all", "values": ["authorization code", "access token"]},
+        {"name": "has_diagram_data_json", "description": "DIAGRAM_DATA JSON object is defined", "type": "contains", "value": "DIAGRAM_DATA"},
+        {"name": "has_theme_toggle", "description": "Dark/light theme toggle button present", "type": "contains", "value": "btn-theme"}
+      ]
+    }
+  ]
+}

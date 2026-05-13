@@ -33,6 +33,7 @@ A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/d
 | `pm-thinking` | bundle | AI-First Product Management — pm-discover, pm-works, pm-decide |
 | `em-thinking` | bundle | AI-First Engineering Management — em-plan, em-works, em-review |
 | `public-awareness` | single | Artifact integrity guardrail — keeps internal working context out of public-facing artifacts |
+| `arch-diagram` | single | Interactive diagram generator — editable flowcharts (Cytoscape.js), rich SVG sequence diagrams, ER/state/class via Mermaid |
 
 > Want something else? [Request a skill →](https://github.com/verzth/skills/issues/new)
 
@@ -234,6 +235,38 @@ A bundle that turns Claude into a virtual EM team. **One install → 3 sub-skill
 **Inspired by** [gstack](https://github.com/garrytan/gstack) (Garry Tan, YC) for cognitive patterns + scope challenge discipline, and [soekarno](https://github.com/verzth/soekarno) for multi-agent process + structured handoff philosophy.
 
 [Read full documentation →](./skills/em-thinking/README.md)
+
+## Skill: public-awareness
+
+A guardrail that keeps working context out of artifacts. Install it globally so every artifact-writing session automatically separates what's being built from how it's being built.
+
+**What it does:**
+- **Channel rule** — internal context (progress notes, uncertainty, process TODOs, session reasoning) belongs in conversation / TodoWrite / memory, never inside the artifact being built
+- **Covers all artifact types** — websites, API specs, technical docs, database records, design specs, shared documents (Notion, Confluence, Google Docs), deployed code
+- **Language rule** — the artifact's language follows the project audience, not the conversation language (e.g. prompter writes in Indonesian, product is an English website → content in English)
+- **Audience check** — before writing, asks: "Is this content *part of the artifact* or *about how we're building it*?" When the target's visibility is unclear, asks before writing
+
+**Example:**
+> *Without skill:* Writes `<!-- TODO: verify pricing with legal -->` inside published HTML, or `"_note": "still validating"` inside a production JSON payload
+>
+> *With skill:* Keeps those notes in conversation; writes only intentional, finished content into the artifact
+
+[Read full documentation →](./skills/public-awareness/SKILL.md)
+
+## Skill: arch-diagram
+
+Generates interactive system diagrams as self-contained `.html` files — open in any browser, no server, no build step.
+
+**What it does:**
+- **Flowchart / architecture** — fully editable Cytoscape.js canvas: drag nodes to rearrange, add/remove nodes and edges, rename labels inline, and drag any connection line to bend it into a curve. Auto-layout via dagre (LR/TD direction). Click any node to open a details sidebar with editable title, description, tech stack tags, and links
+- **Sequence diagrams** — standalone custom SVG: gradient actor boxes with colored lifelines, phase bands with letter labels, numbered step circles, solid vs dashed arrow styles, and a legend — no Mermaid involved
+- **ER / State / Class diagrams** — Mermaid-rendered with themed dark/light mode
+- **Export** — SVG, PNG, and PDF from the toolbar
+- **Category color system** — frontend (blue), backend (green), database (purple), cache (amber), queue (red), auth (pink), infra (cyan), external (gray)
+
+**When to use:** any time the user wants to diagram, visualize, or document a system — even casual phrasing like "draw this", "show me how these connect", "map out my stack", or "make a diagram of my app".
+
+[Read full documentation →](./skills/arch-diagram/SKILL.md)
 
 ## Requirements
 

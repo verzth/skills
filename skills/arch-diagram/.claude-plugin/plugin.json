@@ -1,0 +1,23 @@
+{
+  "name": "arch-diagram",
+  "version": "1.0.0",
+  "description": "Interactive system diagram generator — produces self-contained HTML files with automatic layout (Mermaid), zoom/pan, click-to-explore node details, dark/light theme toggle, and SVG/PNG/PDF export. Supports architecture, sequence, ER, flowchart, state machine, and class diagrams.",
+  "author": {
+    "name": "Dodi (Verzth)",
+    "url": "https://github.com/verzth"
+  },
+  "homepage": "https://github.com/verzth/skills/tree/main/skills/arch-diagram",
+  "repository": "https://github.com/verzth/skills",
+  "license": "MIT",
+  "keywords": [
+    "diagram",
+    "architecture",
+    "visualization",
+    "mermaid",
+    "interactive",
+    "flowchart",
+    "sequence-diagram",
+    "er-diagram",
+    "system-design"
+  ]
+}

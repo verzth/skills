@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>__DIAGRAM_TITLE__</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Theme tokens ─────────────────────────────────────────────── */
+    :root {
+      --radius: 8px;
+      --toolbar-h: 52px;
+      --panel-w: 340px;
+      --transition: 0.2s ease;
+    }
+    [data-theme="dark"] {
+      --bg:        #0F172A;
+      --bg2:       #1E293B;
+      --bg3:       #334155;
+      --text:      #F1F5F9;
+      --text2:     #94A3B8;
+      --border:    #334155;
+      --shadow:    0 4px 24px rgba(0,0,0,0.5);
+      --toolbar-bg: rgba(15,23,42,0.92);
+    }
+    [data-theme="light"] {
+      --bg:        #F8FAFC;
+      --bg2:       #FFFFFF;
+      --bg3:       #E2E8F0;
+      --text:      #0F172A;
+      --text2:     #64748B;
+      --border:    #CBD5E1;
+      --shadow:    0 4px 24px rgba(0,0,0,0.12);
+      --toolbar-bg: rgba(248,250,252,0.92);
+    }
+
+    /* ── Layout ───────────────────────────────────────────────────── */
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+    #app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* ── Toolbar ──────────────────────────────────────────────────── */
+    #toolbar {
+      flex-shrink: 0;
+      height: var(--toolbar-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; gap: 12px;
+      background: var(--toolbar-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: relative; z-index: 10;
+    }
+    #diagram-title {
+      font-size: 14px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 260px;
+    }
+    .toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+    .toolbar-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
+    .btn-group { display: flex; gap: 1px; }
+
+    button {
+      cursor: pointer; border: none; outline: none;
+      background: var(--bg3); color: var(--text2);
+      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+      padding: 6px 10px; border-radius: var(--radius);
+      transition: background var(--transition), color var(--transition);
+      white-space: nowrap;
+    }
+    button:hover { background: var(--border); color: var(--text); }
+    button.btn-active { background: #3B82F6 !important; color: #fff !important; }
+    .btn-group button:not(:first-child):not(:last-child) { border-radius: 0; }
+    .btn-group button:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+    .btn-group button:last-child  { border-radius: 0 var(--radius) var(--radius) 0; }
+    .btn-group button:only-child  { border-radius: var(--radius); }
+    #btn-theme { font-size: 14px; padding: 6px 8px; }
+
+    /* Edit toolbar */
+    #edit-toolbar { display: flex; align-items: center; gap: 8px; }
+    #edit-toolbar.hidden { display: none; }
+    #btn-delete-sel { color: #F87171; }
+    #btn-delete-sel:hover { background: rgba(239,68,68,0.15); color: #EF4444; }
+
+    /* ── Main area ────────────────────────────────────────────────── */
+    #main { flex: 1; display: flex; overflow: hidden; position: relative; }
+
+    /* ── Diagram area ─────────────────────────────────────────────── */
+    #diagram-area {
+      flex: 1; overflow: hidden; position: relative;
+      cursor: grab; user-select: none;
+    }
+    #diagram-area.panning { cursor: grabbing; }
+    #diagram-area.cy-mode { cursor: default; user-select: none; }
+
+    #mermaid-container {
+      position: absolute; top: 0; left: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+    #mermaid-container svg { display: block; max-width: none !important; }
+
+    /* Cytoscape container */
+    #cy {
+      position: absolute; inset: 0;
+      display: none;
+    }
+
+    /* Edge add mode hint */
+    #edge-hint {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 7px 16px;
+      font-size: 12px; color: var(--text2);
+      pointer-events: none; z-index: 30;
+      box-shadow: var(--shadow);
+      display: none;
+    }
+    #edge-hint.visible { display: block; }
+
+    /* ── Node highlight states (Mermaid SVG) ──────────────────────── */
+    #mermaid-container svg g.hl-dimmed {
+      opacity: 0.15;
+      transition: opacity 0.22s ease;
+    }
+    #mermaid-container svg g.hl-active {
+      opacity: 1;
+      transition: opacity 0.22s ease;
+    }
+    #mermaid-container svg g.hl-selected {
+      filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.7));
+    }
+
+    /* ── Details panel ────────────────────────────────────────────── */
+    #details-panel {
+      position: absolute; top: 12px; right: 12px; bottom: 12px;
+      width: var(--panel-w);
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column;
+      transform: translateX(calc(var(--panel-w) + 24px));
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 20; overflow: hidden;
+    }
+    #details-panel.open { transform: translateX(0); }
+    #panel-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+    }
+    #panel-title { font-size: 16px; font-weight: 600; line-height: 1.3; }
+    #btn-close-panel {
+      flex-shrink: 0; width: 28px; height: 28px; padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; line-height: 1;
+    }
+    #panel-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    #panel-description { font-size: 13px; line-height: 1.6; color: var(--text2); }
+    .panel-section h3 {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text2); margin-bottom: 8px;
+    }
+    #panel-tech-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tech-tag {
+      background: var(--bg3); color: var(--text2);
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      padding: 3px 8px; border-radius: 4px;
+    }
+    #panel-links-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    #panel-links-list a {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: #3B82F6; text-decoration: none;
+      padding: 6px 8px; border-radius: var(--radius);
+      transition: background var(--transition);
+    }
+    #panel-links-list a:hover { background: var(--bg3); }
+    #panel-links-list a::before { content: '↗'; font-size: 11px; opacity: 0.7; }
+
+    /* ── Summary cards ────────────────────────────────────────────── */
+    #summary-section {
+      flex-shrink: 0;
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    #summary-cards { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 2px; }
+    #summary-cards::-webkit-scrollbar { height: 4px; }
+    #summary-cards::-webkit-scrollbar-track { background: transparent; }
+    #summary-cards::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .summary-card {
+      flex-shrink: 0; min-width: 180px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 14px;
+    }
+    .summary-card h4 {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text2); margin-bottom: 8px;
+    }
+    .summary-card ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+    .summary-card li { font-size: 12px; color: var(--text); display: flex; gap: 6px; }
+    .summary-card li::before { content: '·'; color: var(--text2); flex-shrink: 0; }
+
+    /* ── Loading ──────────────────────────────────────────────────── */
+    #loading {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg); color: var(--text2); font-size: 13px;
+      pointer-events: none; z-index: 5;
+    }
+    #loading.hidden { display: none; }
+
+
+    /* ── Rename input overlay ─────────────────────────────────────── */
+    .cy-rename-input {
+      position: fixed;
+      border: 2px solid #3B82F6; border-radius: 4px;
+      padding: 4px 8px;
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+      background: var(--bg2); color: var(--text);
+      outline: none; z-index: 200; text-align: center;
+      min-width: 80px;
+    }
+
+    /* ── Edge bend handle ────────────────────────────────────────── */
+    .edge-bend-handle {
+      position: fixed;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #3B82F6;
+      border: 2.5px solid #fff;
+      cursor: grab;
+      z-index: 150;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+      pointer-events: auto;
+      transform: translate(0,0); /* GPU layer */
+    }
+    .edge-bend-handle:active { cursor: grabbing; }
+
+    /* ── Editable panel fields (Cytoscape mode) ─────────────────── */
+    [contenteditable="true"] {
+      outline: none; border-radius: 4px; padding: 2px 4px; margin: -2px -4px;
+      transition: background var(--transition); cursor: text;
+    }
+    [contenteditable="true"]:hover { background: rgba(59,130,246,0.07); }
+    [contenteditable="true"]:focus { background: rgba(59,130,246,0.12); box-shadow: 0 0 0 1px rgba(59,130,246,0.35); }
+    [contenteditable="true"]:empty::before {
+      content: attr(data-placeholder); color: var(--text2);
+      pointer-events: none; font-style: italic;
+    }
+
+    /* ── Scrollbar ────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Toolbar -->
+  <header id="toolbar">
+    <h1 id="diagram-title">__DIAGRAM_TITLE__</h1>
+    <div class="toolbar-right">
+      <div class="btn-group">
+        <button id="btn-zoom-in"  title="Zoom in">+</button>
+        <button id="btn-zoom-fit" title="Fit to window">⊡</button>
+        <button id="btn-zoom-out" title="Zoom out">−</button>
+      </div>
+      <button id="btn-theme" title="Toggle theme">◑</button>
+      <div class="btn-group">
+        <button id="btn-export-svg" title="Export SVG">SVG</button>
+        <button id="btn-export-png" title="Export PNG">PNG</button>
+        <button id="btn-export-pdf" title="Export PDF">PDF</button>
+      </div>
+      <!-- Edit toolbar — only shown for editable (flowchart/graph) diagrams -->
+      <div id="edit-toolbar" class="hidden">
+        <div class="toolbar-sep"></div>
+        <button id="btn-add-node" title="Add a new node">+ Node</button>
+        <button id="btn-add-edge" title="Connect two nodes with an edge">+ Edge</button>
+        <button id="btn-delete-sel" title="Delete selected (Del)">✕ Delete</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <div id="main">
+    <div id="diagram-area">
+      <div id="loading">Rendering diagram…</div>
+      <!-- Mermaid mode -->
+      <div id="mermaid-container"></div>
+      <!-- Cytoscape mode -->
+      <div id="cy"></div>
+      <!-- Edge-add hint bar -->
+      <div id="edge-hint">Click the source node</div>
+    </div>
+
+    <!-- Details panel (shared between both renderers) -->
+    <aside id="details-panel" role="complementary" aria-label="Component details">
+      <div id="panel-header">
+        <h2 id="panel-title"></h2>
+        <button id="btn-close-panel" title="Close (Esc)">×</button>
+      </div>
+      <div id="panel-body">
+        <p id="panel-description"></p>
+        <div class="panel-section" id="panel-tech-section">
+          <h3>Tech Stack</h3>
+          <div id="panel-tech-tags"></div>
+        </div>
+        <div class="panel-section" id="panel-links-section">
+          <h3>Links</h3>
+          <ul id="panel-links-list"></ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Summary cards -->
+  <section id="summary-section">
+    <div id="summary-cards"></div>
+  </section>
+</div>
+
+
+<!-- ── Data (filled by Claude) ──────────────────────────────────────── -->
+<script>
+  const MERMAID_SOURCE = `__MERMAID_SOURCE__`;
+  const DIAGRAM_DATA = __DIAGRAM_DATA_JSON__;
+</script>
+
+<!-- ── Dependencies ─────────────────────────────────────────────────── -->
+<!-- Cytoscape + dagre layout (used for flowchart/graph diagrams) -->
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.29.2/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+<!-- Mermaid (used for sequence / ER / state / class diagrams) -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<!-- Export helpers -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<!-- ── Application ──────────────────────────────────────────────────── -->
+<script>
+(function () {
+  'use strict';
+
+  // ── Mode detection ─────────────────────────────────────────────────
+  // flowchart/graph → Cytoscape (editable). Everything else → Mermaid (read-only).
+  const USE_CYTOSCAPE = DIAGRAM_DATA.type === 'flowchart' || DIAGRAM_DATA.type === 'graph';
+
+  // ── Category colors for Cytoscape nodes ───────────────────────────
+  const CAT = {
+    frontend: { fill: '#3B82F6', border: '#2563EB' },
+    backend:  { fill: '#10B981', border: '#059669' },
+    database: { fill: '#8B5CF6', border: '#7C3AED' },
+    cache:    { fill: '#F59E0B', border: '#D97706' },
+    queue:    { fill: '#EF4444', border: '#DC2626' },
+    auth:     { fill: '#EC4899', border: '#DB2777' },
+    infra:    { fill: '#06B6D4', border: '#0891B2' },
+    external: { fill: '#64748B', border: '#475569' },
+  };
+
+  // ── State ──────────────────────────────────────────────────────────
+  let currentTheme = 'dark';
+  let panelNodeId = null;
+  let cy = null;
+  let addEdgeMode = false;
+  let edgeSourceNode = null;
+  let nodeCounter = 0;
+  // Mermaid pan/zoom
+  let scale = 1, tx = 0, ty = 0;
+  let isDragging = false, lastX = 0, lastY = 0;
+  // Edge bend handle
+  let bendHandleEl = null, bendEdge = null;
+
+  const $ = id => document.getElementById(id);
+
+  // ── Theme ──────────────────────────────────────────────────────────
+  function setTheme(t) {
+    currentTheme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    $('btn-theme').title = t === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  }
+
+  $('btn-theme').addEventListener('click', () => {
+    setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    if (USE_CYTOSCAPE && cy) {
+      $('cy').style.background = currentTheme === 'dark' ? '#0F172A' : '#F8FAFC';
+      cy.style(buildCyStyles()).update();
+    } else {
+      renderDiagram();
+    }
+  });
+
+  // ── Cytoscape styles ───────────────────────────────────────────────
+  function buildCyStyles() {
+    const dark = currentTheme === 'dark';
+    const edgeColor  = dark ? '#64748B' : '#94A3B8';
+    const labelColor = dark ? '#F1F5F9' : '#0F172A';
+    const edgeLabelBg = dark ? '#1E293B' : '#FFFFFF';
+    const nodeFill   = dark ? '#334155' : '#E2E8F0';
+    const nodeBorder = dark ? '#475569' : '#CBD5E1';
+    const nodeText   = dark ? '#F1F5F9' : '#0F172A';
+
+    const styles = [
+      {
+        selector: 'node',
+        style: {
+          'shape': 'round-rectangle',
+          'width': 'label',
+          'height': 'label',
+          'padding': '10px 16px',
+          'label': 'data(label)',
+          'text-valign': 'center',
+          'text-halign': 'center',
+          'font-family': 'Inter, sans-serif',
+          'font-size': '13px',
+          'font-weight': '500',
+          'text-wrap': 'wrap',
+          'text-max-width': '160px',
+          'color': nodeText,
+          'background-color': nodeFill,
+          'border-width': '1.5px',
+          'border-color': nodeBorder,
+          'cursor': 'pointer',
+        }
+      },
+      {
+        selector: 'edge',
+        style: {
+          'width': 1.5,
+          'line-color': edgeColor,
+          'target-arrow-color': edgeColor,
+          'target-arrow-shape': 'triangle',
+          'curve-style': 'bezier',
+          'label': 'data(label)',
+          'font-size': '11px',
+          'color': labelColor,
+          'text-background-color': edgeLabelBg,
+          'text-background-opacity': 0.9,
+          'text-background-padding': '3px',
+          'text-rotation': 'autorotate',
+          'font-family': 'Inter, sans-serif',
+        }
+      },
+      {
+        selector: ':selected',
+        style: {
+          'border-width': '2.5px',
+          'border-color': '#3B82F6',
+          'line-color': '#3B82F6',
+          'target-arrow-color': '#3B82F6',
+        }
+      },
+      { selector: '.dimmed',      style: { 'opacity': 0.12 } },
+      { selector: '.highlighted', style: { 'opacity': 1 } },
+      {
+        selector: '.edge-src',
+        style: { 'border-color': '#F59E0B', 'border-width': '3px' }
+      },
+    ];
+
+    // Category colors always override default node fill
+    Object.entries(CAT).forEach(([cat, c]) => {
+      styles.push({
+        selector: `node[category="${cat}"]`,
+        style: { 'background-color': c.fill, 'border-color': c.border, 'color': '#ffffff' }
+      });
+    });
+
+    return styles;
+  }
+
+  // ── Cytoscape init ─────────────────────────────────────────────────
+  function initCytoscape() {
+    const container = $('cy');
+    container.style.display = 'block';
+    container.style.background = currentTheme === 'dark' ? '#0F172A' : '#F8FAFC';
+    $('mermaid-container').style.display = 'none';
+    $('loading').classList.add('hidden');
+
+    const dir = (DIAGRAM_DATA.layout && DIAGRAM_DATA.layout.direction) || 'LR';
+
+    cy = cytoscape({
+      container,
+      elements: DIAGRAM_DATA.elements || [],
+      style: buildCyStyles(),
+      layout: { name: 'preset' }, // layout run manually after init
+      minZoom: 0.08,
+      maxZoom: 5,
+      wheelSensitivity: 0.08,
+    });
+
+    // Run dagre layout (auto-registered by cytoscape-dagre CDN script)
+    cy.layout({ name: 'dagre', rankDir: dir, nodeSep: 50, rankSep: 120, padding: 50 }).run();
+
+    // ── Events ──────────────────────────────────────────────────────
+    cy.on('tap', 'node', (e) => {
+      removeBendHandle();
+      if (addEdgeMode) { handleEdgeNodeClick(e.target); return; }
+      const node = e.target;
+      if (!DIAGRAM_DATA.nodes) DIAGRAM_DATA.nodes = {};
+      const meta = DIAGRAM_DATA.nodes[node.id()] ||
+        { title: node.data('label') || node.id(), description: '', tech: [] };
+      DIAGRAM_DATA.nodes[node.id()] = meta;
+      showPanel(node.id(), meta);
+      highlightCyNode(node);
+    });
+
+    cy.on('tap', (e) => {
+      if (e.target !== cy) return;
+      removeBendHandle();
+      if (addEdgeMode) { exitEdgeMode(); return; }
+      closePanel();
+      clearCyHighlight();
+    });
+
+    // Single-click edge → show bend handle; double-click edge → rename label
+    cy.on('tap', 'edge', (e) => {
+      if (addEdgeMode) return;
+      showBendHandle(e.target);
+    });
+
+    // Double-click to rename node or edge label
+    cy.on('dblclick', 'node', (e) => startRename(e.target));
+    cy.on('dblclick', 'edge', (e) => startEdgeRename(e.target));
+
+    // Show edit toolbar
+    $('edit-toolbar').classList.remove('hidden');
+    $('btn-add-node').addEventListener('click', addNodeImmediate);
+    $('btn-add-edge').addEventListener('click', toggleEdgeMode);
+    $('btn-delete-sel').addEventListener('click', deleteSelected);
+  }
+
+  // ── Cytoscape highlight ────────────────────────────────────────────
+  function highlightCyNode(node) {
+    clearCyHighlight();
+    const neighborhood = node.closedNeighborhood();
+    cy.elements().not(neighborhood).addClass('dimmed');
+    neighborhood.addClass('highlighted');
+  }
+
+  function clearCyHighlight() {
+    cy && cy.elements().removeClass('dimmed highlighted');
+  }
+
+  // ── Add Node ───────────────────────────────────────────────────────
+  function addNodeImmediate() {
+    if (!cy) return;
+    const id = 'node_' + (++nodeCounter) + '_' + Date.now();
+    const pan = cy.pan(), zoom = cy.zoom();
+    const cx  = (cy.width()  / 2 - pan.x) / zoom;
+    const cy2 = (cy.height() / 2 - pan.y) / zoom;
+    const node = cy.add({
+      data: { id, label: 'New Node' },
+      position: { x: cx + (Math.random() - 0.5) * 80, y: cy2 + (Math.random() - 0.5) * 80 }
+    });
+    cy.elements().unselect();
+    node.select();
+    // Small delay so Cytoscape has laid out the node before we measure its bbox
+    setTimeout(() => startRename(node), 60);
+  }
+
+  // ── Add Edge ───────────────────────────────────────────────────────
+  function toggleEdgeMode() { addEdgeMode ? exitEdgeMode() : enterEdgeMode(); }
+
+  function enterEdgeMode() {
+    addEdgeMode = true;
+    edgeSourceNode = null;
+    $('btn-add-edge').classList.add('btn-active');
+    $('cy').style.cursor = 'crosshair';
+    $('edge-hint').textContent = 'Click the source node';
+    $('edge-hint').classList.add('visible');
+  }
+
+  function exitEdgeMode() {
+    addEdgeMode = false;
+    if (edgeSourceNode) { edgeSourceNode.removeClass('edge-src'); edgeSourceNode = null; }
+    $('btn-add-edge').classList.remove('btn-active');
+    $('cy').style.cursor = '';
+    $('edge-hint').classList.remove('visible');
+  }
+
+  function handleEdgeNodeClick(node) {
+    if (!edgeSourceNode) {
+      edgeSourceNode = node;
+      node.addClass('edge-src');
+      $('edge-hint').textContent = 'Now click the target node — Esc to cancel';
+    } else {
+      if (edgeSourceNode.id() === node.id()) {
+        // Clicked same node — reset source selection without exiting mode
+        edgeSourceNode.removeClass('edge-src');
+        edgeSourceNode = null;
+        $('edge-hint').textContent = 'Click the source node';
+        return;
+      }
+      const id = 'e_' + edgeSourceNode.id() + '_' + node.id() + '_' + Date.now();
+      cy.add({ data: { id, source: edgeSourceNode.id(), target: node.id() } });
+      // Stay in edge mode — reset source so user can chain more connections
+      edgeSourceNode.removeClass('edge-src');
+      edgeSourceNode = null;
+      $('edge-hint').textContent = 'Edge added — click next source node, or Esc to finish';
+    }
+  }
+
+  // ── Delete selected ────────────────────────────────────────────────
+  function deleteSelected() {
+    if (!cy) return;
+    const sel = cy.$(':selected');
+    if (!sel.length) return;
+    removeBendHandle();
+    sel.remove();
+    closePanel();
+  }
+
+  // ── Rename (double-click) ──────────────────────────────────────────
+  function startRename(node) {
+    const pos = node.renderedBoundingBox();
+    const rect = $('cy').getBoundingClientRect();
+    const nodeW = pos.x2 - pos.x1;
+    const inputW = Math.max(nodeW + 24, 100);
+    const vpX = rect.left + (pos.x1 + pos.x2) / 2;
+    const vpY = rect.top  + (pos.y1 + pos.y2) / 2;
+
+    const input = document.createElement('input');
+    input.className = 'cy-rename-input';
+    input.value = node.data('label') || '';
+    input.style.left  = (vpX - inputW / 2) + 'px';
+    input.style.top   = (vpY - 16) + 'px';
+    input.style.width = inputW + 'px';
+    document.body.appendChild(input);
+    input.focus();
+    input.select();
+
+    const finish = () => {
+      const v = input.value.trim();
+      if (v) node.data('label', v);
+      input.remove();
+    };
+    input.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key === 'Enter') finish();
+      if (e.key === 'Escape') input.remove();
+    });
+    input.addEventListener('blur', finish);
+  }
+
+  // ── Rename edge label (double-click on edge) ──────────────────────
+  function startEdgeRename(edge) {
+    const mp   = edge.renderedMidpoint();
+    const rect = $('cy').getBoundingClientRect();
+    const inputW = 150;
+    const input = document.createElement('input');
+    input.className = 'cy-rename-input';
+    input.value = edge.data('label') || '';
+    input.placeholder = 'Edge label…';
+    input.style.left  = (rect.left + mp.x - inputW / 2) + 'px';
+    input.style.top   = (rect.top  + mp.y - 14) + 'px';
+    input.style.width = inputW + 'px';
+    document.body.appendChild(input);
+    input.focus();
+    input.select();
+    const finish = () => { edge.data('label', input.value.trim()); input.remove(); };
+    input.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      if (e.key === 'Enter') finish();
+      if (e.key === 'Escape') input.remove();
+    });
+    input.addEventListener('blur', finish);
+  }
+
+  // ── Edge bend handle (drag to curve edges) ────────────────────────
+  function removeBendHandle() {
+    if (bendHandleEl) { bendHandleEl.remove(); bendHandleEl = null; }
+    bendEdge = null;
+  }
+
+  function showBendHandle(edge) {
+    removeBendHandle();
+    bendEdge = edge;
+
+    // Switch to unbundled-bezier so we can control the curve point
+    if (edge.style('curve-style') !== 'unbundled-bezier') {
+      edge.style({
+        'curve-style': 'unbundled-bezier',
+        'control-point-weights': [0.5],
+        'control-point-distances': [0],
+      });
+    }
+
+    const handle = document.createElement('div');
+    handle.className = 'edge-bend-handle';
+    document.body.appendChild(handle);
+    bendHandleEl = handle;
+
+    function updateHandlePos() {
+      const mp   = edge.renderedMidpoint();
+      const rect = $('cy').getBoundingClientRect();
+      handle.style.left = (rect.left + mp.x - 7) + 'px';
+      handle.style.top  = (rect.top  + mp.y - 7) + 'px';
+    }
+    updateHandlePos();
+
+    let dragging = false;
+
+    handle.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      dragging = true;
+      handle.style.cursor = 'grabbing';
+    });
+
+    function onMouseMove(e) {
+      if (!dragging) return;
+
+      const src  = edge.source().renderedPosition();
+      const tgt  = edge.target().renderedPosition();
+      const rect = $('cy').getBoundingClientRect();
+      const mx   = e.clientX - rect.left;
+      const my   = e.clientY - rect.top;
+
+      // Perpendicular normal to the edge direction
+      const dx = tgt.x - src.x;
+      const dy = tgt.y - src.y;
+      const len = Math.sqrt(dx * dx + dy * dy) || 1;
+      const nx = -dy / len;
+      const ny =  dx / len;
+
+      // Signed perpendicular distance from straight line to mouse (rendered space)
+      const perpRendered = (mx - src.x) * nx + (my - src.y) * ny;
+
+      // Convert to graph space (Cytoscape control-point-distances is in graph units)
+      edge.style('control-point-distances', [perpRendered / cy.zoom()]);
+      updateHandlePos();
+    }
+
+    function onMouseUp() {
+      dragging = false;
+      handle.style.cursor = 'grab';
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    }
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  }
+
+  // ── Mermaid rendering ──────────────────────────────────────────────
+  async function renderDiagram() {
+    const container = $('mermaid-container');
+    $('loading').classList.remove('hidden');
+    container.innerHTML = '';
+    clearHighlight();
+
+    const themeVars = (DIAGRAM_DATA.theme && DIAGRAM_DATA.theme[currentTheme]) || {};
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: currentTheme === 'dark' ? 'dark' : 'default',
+      themeVariables: themeVars,
+      flowchart: { curve: 'basis', padding: 20, useMaxWidth: false },
+      sequence: { useMaxWidth: false },
+      er: { useMaxWidth: false },
+    });
+
+    // Strip click directives (Mermaid 11 removed that syntax),
+    // then merge continuation lines starting with ( or [ back onto
+    // previous line with <br/> to fix sequence diagram multi-line labels.
+    const cleanSource = MERMAID_SOURCE.split('\n')
+      .filter(line => !/^\s*click\s+\S+\s+call\s+/.test(line))
+      .reduce((acc, line) => {
+        if (acc.length > 0 && line.trim() && /^\s*[([]/.test(line)) {
+          acc[acc.length - 1] += '<br/>' + line.trim();
+        } else { acc.push(line); }
+        return acc;
+      }, [])
+      .join('\n');
+
+    try {
+      const id = 'diagram-' + Date.now();
+      const { svg, bindFunctions } = await mermaid.render(id, cleanSource);
+      container.innerHTML = svg;
+      if (bindFunctions) bindFunctions(container);
+    } catch (err) {
+      container.innerHTML = `<pre style="color:#f87171;padding:16px;font-size:12px">Render error:\n${err.message}</pre>`;
+      $('loading').classList.add('hidden');
+      return;
+    }
+
+    // Set explicit pixel dimensions from viewBox so fitDiagram scales up correctly.
+    const svgEl = container.querySelector('svg');
+    if (svgEl) {
+      svgEl.removeAttribute('width');
+      svgEl.removeAttribute('height');
+      const vb = svgEl.viewBox.baseVal;
+      if (vb.width && vb.height) {
+        svgEl.style.width  = vb.width  + 'px';
+        svgEl.style.height = vb.height + 'px';
+      } else {
+        svgEl.style.minWidth = '400px';
+      }
+    }
+
+    attachClickListeners();
+    $('loading').classList.add('hidden');
+    setTimeout(fitDiagram, 100);
+  }
+
+  function attachClickListeners() {
+    const svg = $('mermaid-container').querySelector('svg');
+    if (!svg) return;
+    svg.querySelectorAll('g.node').forEach(el => {
+      const m = el.id.match(/flowchart-(.+)-\d+$/);
+      if (!m) return;
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', (e) => { e.stopPropagation(); handleNodeClick(m[1]); });
+    });
+  }
+
+  // ── Pan/Zoom (Mermaid mode) ────────────────────────────────────────
+  function applyTransform() {
+    $('mermaid-container').style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+  }
+
+  function fitDiagram() {
+    const area = $('diagram-area');
+    const svg = $('mermaid-container').querySelector('svg');
+    if (!svg) return;
+    const aw = area.clientWidth, ah = area.clientHeight;
+    const vb = svg.viewBox.baseVal;
+    let sw = vb.width, sh = vb.height;
+    if (!sw || !sh) {
+      try { const bb = svg.getBBox(); sw = bb.width; sh = bb.height; } catch (_) {}
+    }
+    if (!sw || !sh) return;
+    const fit = Math.min(aw * 0.88 / sw, ah * 0.88 / sh, 1.4);
+    scale = fit;
+    tx = (aw - sw * fit) / 2;
+    ty = (ah - sh * fit) / 2;
+    applyTransform();
+  }
+
+  function setupMermaidPanZoom() {
+    const area = $('diagram-area');
+    area.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) dy *= 30;
+      if (e.deltaMode === 2) dy *= 300;
+      const factor = Math.exp(-dy * 0.0015);
+      const rect = area.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      tx = mx - (mx - tx) * factor;
+      ty = my - (my - ty) * factor;
+      scale = Math.min(Math.max(scale * factor, 0.15), 6);
+      applyTransform();
+    }, { passive: false });
+
+    area.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      isDragging = true; lastX = e.clientX; lastY = e.clientY;
+      area.classList.add('panning');
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      tx += e.clientX - lastX; ty += e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      applyTransform();
+    });
+    window.addEventListener('mouseup', () => { isDragging = false; area.classList.remove('panning'); });
+
+    area.addEventListener('click', (e) => {
+      if (!e.target.closest('g.node') && panelNodeId) closePanel();
+    });
+  }
+
+  // ── Zoom buttons (shared) ──────────────────────────────────────────
+  $('btn-zoom-in').addEventListener('click', () => {
+    if (USE_CYTOSCAPE && cy) cy.zoom({ level: cy.zoom() * 1.25, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
+    else { scale = Math.min(scale * 1.25, 6); applyTransform(); }
+  });
+  $('btn-zoom-out').addEventListener('click', () => {
+    if (USE_CYTOSCAPE && cy) cy.zoom({ level: cy.zoom() / 1.25, renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 } });
+    else { scale = Math.max(scale / 1.25, 0.15); applyTransform(); }
+  });
+  $('btn-zoom-fit').addEventListener('click', () => {
+    if (USE_CYTOSCAPE && cy) cy.fit(undefined, 40);
+    else fitDiagram();
+  });
+
+  // ── Node click (Mermaid mode) ──────────────────────────────────────
+  window.handleNodeClick = function (nodeId) {
+    const meta = DIAGRAM_DATA.nodes && DIAGRAM_DATA.nodes[nodeId];
+    if (meta) showPanel(nodeId, meta);
+    highlightNode(nodeId);
+  };
+
+  // ── Details panel ──────────────────────────────────────────────────
+  function showPanel(nodeId, meta) {
+    panelNodeId = nodeId;
+
+    const titleEl = $('panel-title');
+    const descEl  = $('panel-description');
+
+    titleEl.textContent = meta.title || nodeId;
+    descEl.textContent  = meta.description || '';
+
+    if (USE_CYTOSCAPE) {
+      titleEl.contentEditable = 'true';
+      titleEl.setAttribute('data-placeholder', 'Component name…');
+      titleEl.onblur = () => {
+        const v = titleEl.textContent.trim();
+        meta.title = v;
+        // Keep the Cytoscape node label in sync
+        const node = cy.$('#' + CSS.escape(nodeId));
+        if (node.length && v) node.data('label', v);
+      };
+      descEl.contentEditable = 'true';
+      descEl.setAttribute('data-placeholder', 'Add a description…');
+      descEl.onblur = () => { meta.description = descEl.textContent.trim(); };
+      // Prevent panel close on Enter inside editable fields
+      titleEl.onkeydown = descEl.onkeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+      };
+    } else {
+      titleEl.contentEditable = 'false';
+      titleEl.onblur = titleEl.onkeydown = null;
+      descEl.contentEditable = 'false';
+      descEl.onblur = descEl.onkeydown = null;
+    }
+
+    const techTags = $('panel-tech-tags');
+    techTags.innerHTML = '';
+    const techSection = $('panel-tech-section');
+    if (meta.tech && meta.tech.length) {
+      meta.tech.forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'tech-tag'; span.textContent = t;
+        techTags.appendChild(span);
+      });
+      techSection.style.display = '';
+    } else { techSection.style.display = 'none'; }
+
+    const linksList = $('panel-links-list');
+    linksList.innerHTML = '';
+    const linksSection = $('panel-links-section');
+    if (meta.links && meta.links.length) {
+      meta.links.forEach(l => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = l.url; a.textContent = l.label;
+        a.target = '_blank'; a.rel = 'noopener noreferrer';
+        li.appendChild(a); linksList.appendChild(li);
+      });
+      linksSection.style.display = '';
+    } else { linksSection.style.display = 'none'; }
+
+    $('details-panel').classList.add('open');
+  }
+
+  function closePanel() {
+    $('details-panel').classList.remove('open');
+    panelNodeId = null;
+    if (USE_CYTOSCAPE) clearCyHighlight();
+    else clearHighlight();
+  }
+
+  $('btn-close-panel').addEventListener('click', closePanel);
+
+  // ── Mermaid highlighting ───────────────────────────────────────────
+  function getConnected(nodeId) {
+    const out = (DIAGRAM_DATA.connections && DIAGRAM_DATA.connections[nodeId]) || [];
+    const inc = Object.entries(DIAGRAM_DATA.connections || {})
+      .filter(([, targets]) => targets.includes(nodeId))
+      .map(([src]) => src);
+    return [...new Set([...out, ...inc])];
+  }
+
+  function highlightNode(nodeId) {
+    const svg = $('mermaid-container').querySelector('svg');
+    if (!svg) return;
+    clearHighlight();
+    const connected = new Set([nodeId, ...getConnected(nodeId)]);
+    svg.querySelectorAll('g.node').forEach(el => {
+      const m = el.id.match(/flowchart-(.+)-\d+$/);
+      if (!m) return;
+      const id = m[1];
+      if (connected.has(id)) {
+        el.classList.add('hl-active');
+        if (id === nodeId) el.classList.add('hl-selected');
+      } else { el.classList.add('hl-dimmed'); }
+    });
+    svg.querySelectorAll('path.flowchart-link, g.edgeLabel').forEach(el => {
+      const dataId = el.getAttribute('data-id') ||
+                     el.querySelector('[data-id]')?.getAttribute('data-id') || '';
+      const m = dataId.match(/^L_([^_]+)_([^_]+)_\d+$/);
+      if (m && connected.has(m[1]) && connected.has(m[2])) el.classList.add('hl-active');
+      else el.classList.add('hl-dimmed');
+    });
+  }
+
+  function clearHighlight() {
+    const svg = $('mermaid-container').querySelector('svg');
+    if (!svg) return;
+    svg.querySelectorAll('.hl-active,.hl-dimmed,.hl-selected').forEach(el => {
+      el.classList.remove('hl-active', 'hl-dimmed', 'hl-selected');
+    });
+  }
+
+  // ── Summary cards ──────────────────────────────────────────────────
+  function renderSummary() {
+    const cards = $('summary-cards');
+    cards.innerHTML = '';
+    if (!DIAGRAM_DATA.summary || !DIAGRAM_DATA.summary.length) {
+      $('summary-section').style.display = 'none'; return;
+    }
+    DIAGRAM_DATA.summary.forEach(card => {
+      const div = document.createElement('div');
+      div.className = 'summary-card';
+      div.innerHTML = `<h4>${card.title}</h4><ul>${card.items.map(i => `<li>${i}</li>`).join('')}</ul>`;
+      cards.appendChild(div);
+    });
+  }
+
+  // ── Export ─────────────────────────────────────────────────────────
+  function download(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = name; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadDataUrl(dataUrl, name) {
+    const a = document.createElement('a'); a.href = dataUrl; a.download = name; a.click();
+  }
+
+  const title = () => DIAGRAM_DATA.title || 'diagram';
+
+  $('btn-export-svg').addEventListener('click', () => {
+    if (USE_CYTOSCAPE && cy) {
+      const png = cy.png({ full: true, scale: 2, bg: currentTheme === 'dark' ? '#0F172A' : '#F8FAFC' });
+      const img = new Image();
+      img.onload = () => {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${img.naturalWidth}" height="${img.naturalHeight}"><image xlink:href="${png}" width="${img.naturalWidth}" height="${img.naturalHeight}"/></svg>`;
+        download(new Blob([svg], { type: 'image/svg+xml' }), title() + '.svg');
+      };
+      img.src = png;
+    } else {
+      const svg = $('mermaid-container').querySelector('svg');
+      if (!svg) return;
+      download(new Blob([svg.outerHTML], { type: 'image/svg+xml' }), title() + '.svg');
+    }
+  });
+
+  $('btn-export-png').addEventListener('click', async () => {
+    const btn = $('btn-export-png'); btn.textContent = '…';
+    try {
+      if (USE_CYTOSCAPE && cy) {
+        downloadDataUrl(cy.png({ full: true, scale: 2, bg: currentTheme === 'dark' ? '#0F172A' : '#F8FAFC' }), title() + '.png');
+      } else {
+        if (typeof html2canvas === 'undefined') return;
+        const canvas = await html2canvas($('mermaid-container'), { backgroundColor: currentTheme === 'dark' ? '#0F172A' : '#F8FAFC', scale: 2, logging: false });
+        canvas.toBlob(blob => download(blob, title() + '.png'));
+      }
+    } finally { btn.textContent = 'PNG'; }
+  });
+
+  $('btn-export-pdf').addEventListener('click', async () => {
+    const btn = $('btn-export-pdf'); btn.textContent = '…';
+    try {
+      let imgData, imgW, imgH;
+      if (USE_CYTOSCAPE && cy) {
+        imgData = cy.png({ full: true, scale: 2, bg: currentTheme === 'dark' ? '#0F172A' : '#F8FAFC' });
+        await new Promise(resolve => { const img = new Image(); img.onload = () => { imgW = img.naturalWidth; imgH = img.naturalHeight; resolve(); }; img.src = imgData; });
+      } else {
+        if (typeof html2canvas === 'undefined') return;
+        const canvas = await html2canvas($('mermaid-container'), { backgroundColor: currentTheme === 'dark' ? '#0F172A' : '#F8FAFC', scale: 2, logging: false });
+        imgData = canvas.toDataURL('image/png');
+        imgW = canvas.width; imgH = canvas.height;
+      }
+      if (typeof jspdf !== 'undefined') {
+        const { jsPDF } = jspdf;
+        const pdf = new jsPDF({ orientation: imgW > imgH ? 'l' : 'p', unit: 'px', format: [imgW / 2, imgH / 2] });
+        pdf.addImage(imgData, 'PNG', 0, 0, imgW / 2, imgH / 2);
+        pdf.save(title() + '.pdf');
+      }
+    } finally { btn.textContent = 'PDF'; }
+  });
+
+  // ── Global keyboard ────────────────────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    const inInput = document.activeElement && (
+      ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName) ||
+      document.activeElement.contentEditable === 'true'
+    );
+    if (inInput) return;
+
+    if (e.key === 'Escape') {
+      if (addEdgeMode) { exitEdgeMode(); return; }
+      if (panelNodeId) { closePanel(); return; }
+    }
+    if ((e.key === 'Delete' || e.key === 'Backspace') && USE_CYTOSCAPE) {
+      deleteSelected();
+    }
+  });
+
+  // ── Init ───────────────────────────────────────────────────────────
+  renderSummary();
+
+  if (USE_CYTOSCAPE) {
+    $('diagram-area').classList.add('cy-mode');
+    initCytoscape();
+  } else {
+    setupMermaidPanZoom();
+    renderDiagram();
+  }
+
+})();
+</script>
+</body>
+</html>

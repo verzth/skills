@@ -21,6 +21,7 @@ ALL_SKILLS=(
     "pm-thinking"
     "em-thinking"
     "public-awareness"
+    "arch-diagram"
 )
 
 # Parse flags
