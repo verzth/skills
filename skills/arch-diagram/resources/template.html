@@ -201,6 +201,23 @@
       padding: 12px 16px 16px;
       border-top: 1px solid var(--border);
       background: var(--bg);
+      overflow: hidden;
+      max-height: 300px;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  padding-top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  padding-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                  border-top-color 0.3s ease;
+    }
+    #summary-section.collapsed {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      border-top-color: transparent;
+    }
+    #info-chevron {
+      display: inline-block;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-style: normal;
     }
     #summary-cards { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 2px; }
     #summary-cards::-webkit-scrollbar { height: 4px; }
@@ -286,6 +303,7 @@
         <button id="btn-zoom-out" title="Zoom out">−</button>
       </div>
       <button id="btn-theme" title="Toggle theme">◑</button>
+      <button id="btn-toggle-info" title="Hide info panel (I)" style="display:none"><span id="info-chevron">▾</span> Info</button>
       <div class="btn-group">
         <button id="btn-export-svg" title="Export SVG">SVG</button>
         <button id="btn-export-png" title="Export PNG">PNG</button>
@@ -405,6 +423,8 @@
   let autosaveEnabled = true;
   let autosaveTimer = null;
   const STORAGE_KEY = 'arch-diagram:' + (DIAGRAM_DATA.title || 'untitled');
+  // Summary panel
+  let summaryVisible = true;
 
   const $ = id => document.getElementById(id);
 
@@ -1270,8 +1290,11 @@
   function renderSummary() {
     const cards = $('summary-cards');
     cards.innerHTML = '';
+    const btn = $('btn-toggle-info');
     if (!DIAGRAM_DATA.summary || !DIAGRAM_DATA.summary.length) {
-      $('summary-section').style.display = 'none'; return;
+      $('summary-section').style.display = 'none';
+      btn.style.display = 'none';
+      return;
     }
     DIAGRAM_DATA.summary.forEach(card => {
       const div = document.createElement('div');
@@ -1279,7 +1302,19 @@
       div.innerHTML = `<h4>${card.title}</h4><ul>${card.items.map(i => `<li>${i}</li>`).join('')}</ul>`;
       cards.appendChild(div);
     });
+    btn.style.display = '';
   }
+
+  function toggleSummary() {
+    summaryVisible = !summaryVisible;
+    $('summary-section').classList.toggle('collapsed', !summaryVisible);
+    const chevron = $('info-chevron');
+    chevron.style.transform = summaryVisible ? '' : 'rotate(-90deg)';
+    const btn = $('btn-toggle-info');
+    btn.title = summaryVisible ? 'Hide info panel (I)' : 'Show info panel (I)';
+  }
+
+  $('btn-toggle-info').addEventListener('click', toggleSummary);
 
   // ── Export ─────────────────────────────────────────────────────────
   function download(blob, name) {
@@ -1372,6 +1407,10 @@
     if (e.key === 'Escape') {
       if (addEdgeMode) { exitEdgeMode(); return; }
       if (panelNodeId) { closePanel(); return; }
+    }
+    if (e.key === 'i' || e.key === 'I') {
+      if ($('btn-toggle-info').style.display !== 'none') toggleSummary();
+      return;
     }
     if ((e.key === 'Delete' || e.key === 'Backspace') && USE_CYTOSCAPE) {
       deleteSelected();
