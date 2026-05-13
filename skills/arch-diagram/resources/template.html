@@ -506,8 +506,21 @@
           'target-arrow-color': '#3B82F6',
         }
       },
-      { selector: '.dimmed',      style: { 'opacity': 0.12 } },
-      { selector: '.highlighted', style: { 'opacity': 1 } },
+      { selector: '.dimmed',      style: { 'opacity': 0.35, 'text-opacity': 0.4 } },
+      {
+        selector: 'node.highlighted',
+        style: {
+          'opacity': 1,
+          'border-width': '2.5px',
+          'border-color': dark ? '#60A5FA' : '#3B82F6',
+          'shadow-blur': 12,
+          'shadow-color': dark ? '#3B82F6' : '#93C5FD',
+          'shadow-opacity': 0.55,
+          'shadow-offset-x': 0,
+          'shadow-offset-y': 0,
+        }
+      },
+      { selector: 'edge.highlighted', style: { 'opacity': 1, 'width': 2.5, 'line-color': dark ? '#60A5FA' : '#3B82F6', 'target-arrow-color': dark ? '#60A5FA' : '#3B82F6' } },
       {
         selector: '.edge-src',
         style: { 'border-color': '#F59E0B', 'border-width': '3px' }
@@ -577,6 +590,7 @@
       } catch (e2) {
         cy.layout({ name: 'dagre', rankDir: dir, nodeSep: 60, rankSep: 160, padding: 50 }).run();
       }
+    }
     } // end else (!_savedPositions)
 
     // ── Events ──────────────────────────────────────────────────────
