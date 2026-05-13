@@ -292,9 +292,48 @@ For read-only Mermaid diagrams, `elements` is omitted. `nodes` and `connections`
 
 The `summary` array (2–4 cards) renders below the diagram. Use it for context the diagram can't show: key tech choices, performance characteristics, cost notes, deployment strategy, or important caveats. Each card has a `title` and a short `items` list (3–5 bullets max). Omit `summary` or set to `[]` to hide the strip.
 
+## Compound grouping (recommended for 10+ nodes)
+
+For diagrams with more than ~10 nodes, group nodes into semantic compound parents. This dramatically reduces edge crossings and makes the diagram readable.
+
+### How to add parent groups
+
+1. Add parent nodes at the **top** of the `elements` array with `isParent: true`:
+
+```json
+{ "data": { "id": "g_clients",  "label": "FRONTEND CLIENTS",  "isParent": true } },
+{ "data": { "id": "g_engines",  "label": "MICROSERVICES",     "isParent": true } },
+{ "data": { "id": "g_data",     "label": "DATA LAYER",        "isParent": true } },
+{ "data": { "id": "g_external", "label": "EXTERNAL SERVICES", "isParent": true } }
+```
+
+2. Add a `parent` field to each child node:
+
+```json
+{ "data": { "id": "WebApp", "label": "Web App", "category": "frontend", "parent": "g_clients" } }
+```
+
+### Common grouping patterns
+
+| Group ID | Contains |
+|---|---|
+| `g_clients` | Frontends, mobile apps, CLI tools |
+| `g_gateways` | API gateways, load balancers, edge routers |
+| `g_engines` | Microservices, backend services (usually the largest group) |
+| `g_data` | Databases, caches, message queues |
+| `g_external` | Third-party APIs — sub-group further if >5 items (`g_pay`, `g_kyc`, `g_analytics`, …) |
+| `g_platform` | Observability, secrets, CI/CD, cloud infrastructure |
+
+**Rules of thumb:**
+- Aim for 4–9 parent groups; each parent should contain 2–10 children
+- Single-child parents add visual clutter — skip them
+- Parent labels: ALL CAPS, no abbreviations (letter-spacing is rendered automatically)
+
 ## Tips for good diagrams
 
 - Aim for 6–15 nodes per diagram; for larger systems, split into multiple focused diagrams
 - Edge labels should be concise: protocol (`HTTPS`, `SQL`, `gRPC`), action (`publish`, `query`), or role (`verify`)
 - For flowchart diagrams, `nodes` metadata is optional but highly recommended — it powers the click-to-details panel
 - For sequence/ER/state diagrams, `nodes` and `connections` can be `{}` — the highlight feature is Cytoscape-only
+- **Layout determinism**: the template uses ELK Layered with deterministic behavior — diagrams render identically on every reload. If you see layout drift, check that every child node has exactly one `parent` (no node can belong to two groups)
+- **Edge crossings on dense graphs**: ELK's `LAYER_SWEEP` + `NETWORK_SIMPLEX` placement handles most cases. If crossings remain on graphs with 30+ nodes, consider: (1) splitting into multiple focused diagrams per domain/flow, or (2) removing low-signal edges by representing shared infra as a single edge from a compound parent

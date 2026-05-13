@@ -83,6 +83,21 @@
     #btn-delete-sel { color: #F87171; }
     #btn-delete-sel:hover { background: rgba(239,68,68,0.15); color: #EF4444; }
 
+    /* ── Save / autosave ──────────────────────────────────────────── */
+    #btn-save.has-changes { color: #F59E0B; border-color: rgba(245,158,11,0.35); }
+    #btn-save.has-changes::after { content: ' ●'; font-size: 8px; vertical-align: middle; color: #F59E0B; }
+    #btn-autosave.btn-active { color: #34D399; border-color: rgba(52,211,153,0.35); }
+
+    .save-toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(8px);
+      background: var(--bg2); color: var(--text2);
+      border: 1px solid var(--border); border-radius: 20px;
+      padding: 5px 16px; font-size: 12px; white-space: nowrap;
+      opacity: 0; transition: opacity 0.18s ease, transform 0.18s ease;
+      pointer-events: none; z-index: 400;
+    }
+    .save-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
     /* ── Main area ────────────────────────────────────────────────── */
     #main { flex: 1; display: flex; overflow: hidden; position: relative; }
 
@@ -282,6 +297,9 @@
         <button id="btn-add-node" title="Add a new node">+ Node</button>
         <button id="btn-add-edge" title="Connect two nodes with an edge">+ Edge</button>
         <button id="btn-delete-sel" title="Delete selected (Del)">✕ Delete</button>
+        <div class="toolbar-sep"></div>
+        <button id="btn-save" title="Save — download updated HTML">💾 Save</button>
+        <button id="btn-autosave" class="btn-active" title="Auto-save ON — saves after 5s of inactivity (click to toggle)">⏱ Auto</button>
       </div>
     </div>
   </header>
@@ -336,6 +354,13 @@
 <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.29.2/dist/cytoscape.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+<!-- fcose: force-directed compound layout (fallback) -->
+<script src="https://cdn.jsdelivr.net/npm/layout-base@2.0.1/layout-base.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cose-base@2.2.0/cose-base.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-fcose@2.2.0/cytoscape-fcose.js"></script>
+<!-- ELK Layered: primary engine — deterministic, compound-aware, minimizes crossings -->
+<script src="https://cdn.jsdelivr.net/npm/elkjs@0.9.3/lib/elk.bundled.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-elk@2.2.0/dist/cytoscape-elk.js"></script>
 <!-- Mermaid (used for sequence / ER / state / class diagrams) -->
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <!-- Export helpers -->
@@ -375,6 +400,11 @@
   let isDragging = false, lastX = 0, lastY = 0;
   // Edge bend handle
   let bendHandleEl = null, bendEdge = null;
+  // Save / autosave
+  let isDirty = false;
+  let autosaveEnabled = true;
+  let autosaveTimer = null;
+  const STORAGE_KEY = 'arch-diagram:' + (DIAGRAM_DATA.title || 'untitled');
 
   const $ = id => document.getElementById(id);
 
@@ -426,6 +456,27 @@
           'border-width': '1.5px',
           'border-color': nodeBorder,
           'cursor': 'pointer',
+        }
+      },
+      {
+        selector: 'node[?isParent]',
+        style: {
+          'shape': 'round-rectangle',
+          'background-color': dark ? 'rgba(30,41,59,0.45)' : 'rgba(241,245,249,0.85)',
+          'background-opacity': 0.6,
+          'border-color': dark ? '#475569' : '#94A3B8',
+          'border-width': '1.5px',
+          'border-style': 'dashed',
+          'label': 'data(label)',
+          'text-valign': 'top',
+          'text-halign': 'center',
+          'text-margin-y': -8,
+          'font-size': '11px',
+          'font-weight': '600',
+          'letter-spacing': 1.2,
+          'color': dark ? '#94A3B8' : '#475569',
+          'padding': '24px',
+          'corner-radius': '14px'
         }
       },
       {
@@ -494,8 +545,39 @@
       wheelSensitivity: 0.08,
     });
 
-    // Run dagre layout (auto-registered by cytoscape-dagre CDN script)
-    cy.layout({ name: 'dagre', rankDir: dir, nodeSep: 50, rankSep: 120, padding: 50 }).run();
+    // If positions were baked in by a previous save, use preset and skip auto-layout
+    if (DIAGRAM_DATA._savedPositions) {
+      cy.layout({ name: 'preset', fit: true, padding: 50 }).run();
+    } else {
+    // Layout chain: ELK (primary, deterministic) → fcose (compound fallback) → dagre (last resort)
+    const elkDir = dir === 'TD' ? 'DOWN' : 'RIGHT';
+    try {
+      cy.layout({
+        name: 'elk', nodeDimensionsIncludeLabels: true, fit: true, padding: 50, animate: false,
+        elk: {
+          'algorithm': 'layered',
+          'elk.direction': elkDir,
+          'elk.spacing.nodeNode': '50',
+          'elk.layered.spacing.nodeNodeBetweenLayers': '110',
+          'elk.layered.spacing.edgeNodeBetweenLayers': '40',
+          'elk.padding': '[top=30,left=30,bottom=30,right=30]',
+          'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+          'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+          'elk.layered.nodePlacement.favorStraightEdges': 'true',
+          'elk.layered.cycleBreaking.strategy': 'GREEDY',
+          'elk.layered.thoroughness': '20',
+          'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
+          'elk.edgeRouting': 'ORTHOGONAL'
+        }
+      }).run();
+    } catch (e) {
+      try {
+        cy.layout({ name: 'fcose', quality: 'proof', randomize: false, animate: false,
+          fit: true, padding: 60, nodeSeparation: 90, idealEdgeLength: 130, numIter: 4000, tile: true }).run();
+      } catch (e2) {
+        cy.layout({ name: 'dagre', rankDir: dir, nodeSep: 60, rankSep: 160, padding: 50 }).run();
+      }
+    } // end else (!_savedPositions)
 
     // ── Events ──────────────────────────────────────────────────────
     cy.on('tap', 'node', (e) => {
@@ -528,11 +610,21 @@
     cy.on('dblclick', 'node', (e) => startRename(e.target));
     cy.on('dblclick', 'edge', (e) => startEdgeRename(e.target));
 
+    // Mark dirty on any structural or positional change
+    cy.on('dragfree', 'node', () => markDirty());
+    cy.on('add remove', () => markDirty());
+    cy.on('data', 'node edge', () => markDirty());
+
     // Show edit toolbar
     $('edit-toolbar').classList.remove('hidden');
     $('btn-add-node').addEventListener('click', addNodeImmediate);
     $('btn-add-edge').addEventListener('click', toggleEdgeMode);
     $('btn-delete-sel').addEventListener('click', deleteSelected);
+    $('btn-save').addEventListener('click', saveAsHtml);
+    $('btn-autosave').addEventListener('click', toggleAutosave);
+
+    // Restore autosaved positions (after layout has settled)
+    if (!DIAGRAM_DATA._savedPositions) setTimeout(restoreFromLocal, 300);
   }
 
   // ── Cytoscape highlight ────────────────────────────────────────────
@@ -742,10 +834,160 @@
       handle.style.cursor = 'grab';
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
+      markDirty();
     }
 
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
+  }
+
+  // ── Save / dirty tracking ─────────────────────────────────────────
+
+  function markDirty() {
+    isDirty = true;
+    const btn = $('btn-save');
+    if (btn) btn.classList.add('has-changes');
+    if (autosaveEnabled) scheduleAutosave();
+  }
+
+  function clearDirty() {
+    isDirty = false;
+    const btn = $('btn-save');
+    if (btn) btn.classList.remove('has-changes');
+  }
+
+  function scheduleAutosave() {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(autosaveToLocal, 5000);
+  }
+
+  // Walk through the serialised HTML and find where the JSON object ends
+  function findJsonEnd(str, start) {
+    let depth = 0, inStr = false, esc = false;
+    for (let i = start; i < str.length; i++) {
+      const c = str[i];
+      if (esc) { esc = false; continue; }
+      if (c === '\\' && inStr) { esc = true; continue; }
+      if (c === '"') { inStr = !inStr; continue; }
+      if (!inStr) {
+        if (c === '{' || c === '[') depth++;
+        else if (c === '}' || c === ']') { depth--; if (depth === 0) return i; }
+      }
+    }
+    return -1;
+  }
+
+  // Build a snapshot of the current diagram state (positions + data) for saving
+  function buildSavePayload() {
+    const data = JSON.parse(JSON.stringify(DIAGRAM_DATA));
+    if (!cy) return data;
+
+    const cyNodeMap = {}, cyEdgeMap = {};
+    cy.nodes().forEach(n => cyNodeMap[n.id()] = n);
+    cy.edges().forEach(e => cyEdgeMap[e.id()] = e);
+
+    // Update existing elements, drop deleted ones
+    data.elements = (data.elements || []).map(el => {
+      const id = el.data.id;
+      if (el.data.source !== undefined) {
+        if (!cyEdgeMap[id]) return null;
+        return { data: { ...el.data, ...cyEdgeMap[id].data() } };
+      } else {
+        if (!cyNodeMap[id]) return null;
+        const n = cyNodeMap[id];
+        const pos = n.position();
+        return { data: { ...el.data, ...n.data() }, position: { x: Math.round(pos.x), y: Math.round(pos.y) } };
+      }
+    }).filter(Boolean);
+
+    // Append elements added at runtime
+    const origIds = new Set(data.elements.map(el => el.data.id));
+    cy.nodes().forEach(n => {
+      if (origIds.has(n.id())) return;
+      const pos = n.position();
+      data.elements.unshift({ data: { ...n.data() }, position: { x: Math.round(pos.x), y: Math.round(pos.y) } });
+    });
+    cy.edges().forEach(e => {
+      if (origIds.has(e.id())) return;
+      data.elements.push({ data: { ...e.data() } });
+    });
+
+    data.nodes = DIAGRAM_DATA.nodes || {};
+    data._savedPositions = true; // skip ELK layout on reload
+    return data;
+  }
+
+  // Autosave: persist to localStorage, toast on success
+  function autosaveToLocal() {
+    if (!cy) return;
+    try {
+      const payload = buildSavePayload();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ savedAt: Date.now(), data: payload }));
+      clearDirty();
+      showSaveToast('Auto-saved');
+    } catch (e) { console.warn('Autosave failed:', e); }
+  }
+
+  // Manual save: download an updated standalone HTML file
+  function saveAsHtml() {
+    if (!cy) return;
+    const payload = buildSavePayload();
+    const jsonStr = JSON.stringify(payload, null, 2);
+    let html = document.documentElement.outerHTML;
+    const marker = 'const DIAGRAM_DATA = ';
+    const markerIdx = html.indexOf(marker);
+    if (markerIdx !== -1) {
+      const jsonStart = markerIdx + marker.length;
+      const jsonEnd   = findJsonEnd(html, jsonStart);
+      if (jsonEnd !== -1) html = html.slice(0, jsonStart) + jsonStr + html.slice(jsonEnd + 1);
+    }
+    download(new Blob([html], { type: 'text/html' }), (DIAGRAM_DATA.title || 'diagram') + '.html');
+    clearDirty();
+    showSaveToast('Saved ✓');
+  }
+
+  // Restore positions from the most recent autosave (if any)
+  function restoreFromLocal() {
+    if (!cy) return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const { savedAt, data } = JSON.parse(raw);
+      if (Date.now() - savedAt > 7 * 24 * 60 * 60 * 1000) { localStorage.removeItem(STORAGE_KEY); return; }
+      (data.elements || []).forEach(el => {
+        if (!el.position || !el.data?.id) return;
+        const n = cy.$('#' + CSS.escape(el.data.id));
+        if (n.length) n.position(el.position);
+      });
+      cy.fit(undefined, 40);
+      const t = new Date(savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      showSaveToast('Restored from auto-save (' + t + ')');
+    } catch (e) { console.warn('Restore failed:', e); }
+  }
+
+  function toggleAutosave() {
+    autosaveEnabled = !autosaveEnabled;
+    clearTimeout(autosaveTimer);
+    const btn = $('btn-autosave');
+    btn.classList.toggle('btn-active', autosaveEnabled);
+    btn.title = autosaveEnabled
+      ? 'Auto-save ON — saves after 5s of inactivity (click to toggle)'
+      : 'Auto-save OFF (click to toggle)';
+    if (autosaveEnabled && isDirty) scheduleAutosave();
+    showSaveToast('Auto-save ' + (autosaveEnabled ? 'enabled' : 'disabled'));
+  }
+
+  function showSaveToast(msg) {
+    let toast = document.getElementById('save-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'save-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.className = 'save-toast visible';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => { toast.className = 'save-toast'; }, 2200);
   }
 
   // ── Mermaid rendering ──────────────────────────────────────────────
@@ -1087,6 +1329,22 @@
         pdf.save(title() + '.pdf');
       }
     } finally { btn.textContent = 'PDF'; }
+  });
+
+  // ── Unsaved-changes guard ─────────────────────────────────────────
+  window.addEventListener('beforeunload', (e) => {
+    if (isDirty && USE_CYTOSCAPE) {
+      e.preventDefault();
+      e.returnValue = 'You have unsaved changes. Leave anyway?';
+    }
+  });
+
+  // ── Ctrl/Cmd + S shortcut ─────────────────────────────────────────
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's' && USE_CYTOSCAPE) {
+      e.preventDefault();
+      saveAsHtml();
+    }
   });
 
   // ── Global keyboard ────────────────────────────────────────────────

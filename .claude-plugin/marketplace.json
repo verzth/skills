@@ -6,18 +6,26 @@
     "url": "https://github.com/verzth"
   },
   "metadata": {
-    "description": "Verzth's curated Claude Code skills — humanoid-thinking framework, Go microservices, AI-First Product Management, AI-First Engineering Management, and more. Available via npm and Claude Code plugin marketplace.",
+    "description": "Verzth's curated Claude Code skills \u2014 humanoid-thinking framework, Go microservices, AI-First Product Management, AI-First Engineering Management, and more. Available via npm and Claude Code plugin marketplace.",
     "version": "1.8.0"
   },
   "plugins": [
     {
       "name": "humanoid-thinking",
       "source": "./skills/humanoid-thinking",
-      "description": "Human cognitive framework — default mode for all interactions. Intuition-first thinking validated by logic. Confirms over assumes when ambiguous.",
+      "description": "Human cognitive framework \u2014 default mode for all interactions. Intuition-first thinking validated by logic. Confirms over assumes when ambiguous.",
       "version": "1.1.1",
-      "author": {"name": "Dodi (Verzth)"},
+      "author": {
+        "name": "Dodi (Verzth)"
+      },
       "category": "thinking-framework",
-      "tags": ["thinking", "framework", "common-sense", "cognitive", "default-behavior"],
+      "tags": [
+        "thinking",
+        "framework",
+        "common-sense",
+        "cognitive",
+        "default-behavior"
+      ],
       "homepage": "https://github.com/verzth/skills/tree/main/skills/humanoid-thinking"
     },
     {
@@ -25,49 +33,103 @@
       "source": "./skills/golang-developer",
       "description": "Go microservices development with Clean Architecture, GORM, gRPC + grpc-gateway, Wire DI, NATS JetStream, Redis, MySQL. Covers scaffolding, code review, debugging, testing.",
       "version": "1.1.1",
-      "author": {"name": "Dodi (Verzth)"},
+      "author": {
+        "name": "Dodi (Verzth)"
+      },
       "category": "engineering",
-      "tags": ["go", "golang", "microservices", "grpc", "clean-architecture"],
+      "tags": [
+        "go",
+        "golang",
+        "microservices",
+        "grpc",
+        "clean-architecture"
+      ],
       "homepage": "https://github.com/verzth/skills/tree/main/skills/golang-developer"
     },
     {
       "name": "pm-thinking",
       "source": "./skills/pm-thinking",
-      "description": "AI-First Product Management bundle — pm-discover (synthesize research), pm-works (write PRD with Tech Implications), pm-decide (multi-mode: prio/review/stakeholder/retro). Tech-literate, with explicit handoff to engineer-manager. English-only since v1.5.0.",
+      "description": "AI-First Product Management bundle \u2014 pm-discover (synthesize research), pm-works (write PRD with Tech Implications), pm-decide (multi-mode: prio/review/stakeholder/retro). Tech-literate, with explicit handoff to engineer-manager. English-only since v1.5.0.",
       "version": "0.2.0",
-      "author": {"name": "Dodi (Verzth)"},
+      "author": {
+        "name": "Dodi (Verzth)"
+      },
       "category": "product-management",
-      "tags": ["pm", "ai-first", "prd", "discovery", "prioritization", "retro", "stakeholder-update"],
+      "tags": [
+        "pm",
+        "ai-first",
+        "prd",
+        "discovery",
+        "prioritization",
+        "retro",
+        "stakeholder-update"
+      ],
       "homepage": "https://github.com/verzth/skills/tree/main/skills/pm-thinking"
     },
     {
       "name": "em-thinking",
       "source": "./skills/em-thinking",
-      "description": "AI-First Engineering Management bundle — em-plan (architectural plan with risk tier T0-T3, scope challenge, invariants, failure modes, test strategy, dual output edd.md + edd.html), em-works (execution-ready handoff: atomic tickets with AI compute class + token estimates, worktree lanes, env/secrets spec, deploy plan artifact, dual eng-works.md + eng-works.html), em-review (Mode A code review + Mode B hypothesis-driven debug, dual .md + .html for all modes). Companion to pm-thinking. Role-based handoff (engineer/security-reviewer/qa-reviewer/release-engineer/devops). English-only since v1.5.0.",
+      "description": "AI-First Engineering Management bundle \u2014 em-plan (architectural plan with risk tier T0-T3, scope challenge, invariants, failure modes, test strategy, dual output edd.md + edd.html), em-works (execution-ready handoff: atomic tickets with AI compute class + token estimates, worktree lanes, env/secrets spec, deploy plan artifact, dual eng-works.md + eng-works.html), em-review (Mode A code review + Mode B hypothesis-driven debug, dual .md + .html for all modes). Companion to pm-thinking. Role-based handoff (engineer/security-reviewer/qa-reviewer/release-engineer/devops). English-only since v1.5.0.",
       "version": "0.4.0",
-      "author": {"name": "Dodi (Verzth)"},
+      "author": {
+        "name": "Dodi (Verzth)"
+      },
       "category": "engineering-management",
-      "tags": ["em", "engineering-management", "ai-first", "architecture", "edd", "code-review", "debug", "risk-tiering", "cognitive-patterns", "deployment-prep"],
+      "tags": [
+        "em",
+        "engineering-management",
+        "ai-first",
+        "architecture",
+        "edd",
+        "code-review",
+        "debug",
+        "risk-tiering",
+        "cognitive-patterns",
+        "deployment-prep"
+      ],
       "homepage": "https://github.com/verzth/skills/tree/main/skills/em-thinking"
     },
     {
       "name": "arch-diagram",
       "source": "./skills/arch-diagram",
-      "description": "Interactive system diagram generator — self-contained HTML files with no build step. Flowchart/architecture diagrams use Cytoscape.js (fully editable: drag nodes, add/remove nodes and edges, rename labels, bend connection lines). Sequence diagrams are custom SVG with gradient actors, phase bands, numbered steps, and a legend. ER/state/class diagrams use Mermaid. All diagrams include zoom/pan, dark/light theme, click-to-explore node details, and SVG/PNG/PDF export.",
-      "version": "1.2.0",
-      "author": {"name": "Dodi (Verzth)"},
+      "description": "Interactive system diagram generator \u2014 self-contained HTML files with no build step. Flowchart/architecture diagrams use Cytoscape.js (fully editable: drag nodes, add/remove nodes and edges, rename labels, bend connection lines). Sequence diagrams are custom SVG with gradient actors, phase bands, numbered steps, and a legend. ER/state/class diagrams use Mermaid. All diagrams include zoom/pan, dark/light theme, click-to-explore node details, and SVG/PNG/PDF export.",
+      "version": "1.3.0",
+      "author": {
+        "name": "Dodi (Verzth)"
+      },
       "category": "engineering",
-      "tags": ["diagram", "architecture", "visualization", "cytoscape", "mermaid", "interactive", "flowchart", "sequence-diagram", "er-diagram", "system-design", "editable"],
+      "tags": [
+        "diagram",
+        "architecture",
+        "visualization",
+        "cytoscape",
+        "mermaid",
+        "interactive",
+        "flowchart",
+        "sequence-diagram",
+        "er-diagram",
+        "system-design",
+        "editable"
+      ],
       "homepage": "https://github.com/verzth/skills/tree/main/skills/arch-diagram"
     },
     {
       "name": "public-awareness",
       "source": "./skills/public-awareness",
-      "description": "Artifact integrity guardrail — keeps internal working context (progress notes, TODOs, uncertainty, session reasoning) out of public-facing artifacts: websites, API specs, technical documentation, databases, and shared documents. Routes internal context to TodoWrite (in-session) or memory (cross-session). Applies to all contexts where AI writes to any external or shared system.",
+      "description": "Artifact integrity guardrail \u2014 keeps internal working context (progress notes, TODOs, uncertainty, session reasoning) out of public-facing artifacts: websites, API specs, technical documentation, databases, and shared documents. Routes internal context to TodoWrite (in-session) or memory (cross-session). Applies to all contexts where AI writes to any external or shared system.",
       "version": "1.0.0",
-      "author": {"name": "Dodi (Verzth)"},
+      "author": {
+        "name": "Dodi (Verzth)"
+      },
       "category": "guardrail",
-      "tags": ["guardrail", "artifact-integrity", "public-private", "context-boundary", "internal-notes", "workspace-hygiene"],
+      "tags": [
+        "guardrail",
+        "artifact-integrity",
+        "public-private",
+        "context-boundary",
+        "internal-notes",
+        "workspace-hygiene"
+      ],
       "homepage": "https://github.com/verzth/skills/tree/main/skills/public-awareness"
     }
   ]
