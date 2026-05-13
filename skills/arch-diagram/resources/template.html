@@ -136,7 +136,7 @@
 
     /* ── Node highlight states (Mermaid SVG) ──────────────────────── */
     #mermaid-container svg g.hl-dimmed {
-      opacity: 0.1;
+      opacity: 0.15;
       transition: opacity 0.22s ease;
     }
     #mermaid-container svg g.hl-active {
@@ -526,7 +526,7 @@
           'target-arrow-color': '#3B82F6',
         }
       },
-      { selector: '.dimmed',      style: { 'opacity': 0.1, 'text-opacity': 0.1 } },
+      { selector: '.dimmed',      style: { 'opacity': 0.35, 'text-opacity': 0.4 } },
       {
         selector: 'node.highlighted',
         style: {
@@ -664,8 +664,9 @@
   // ── Cytoscape highlight ────────────────────────────────────────────
   function highlightCyNode(node) {
     clearCyHighlight();
-    cy.elements().not(node).addClass('dimmed');
-    node.addClass('highlighted');
+    const neighborhood = node.closedNeighborhood();
+    cy.elements().not(neighborhood).addClass('dimmed');
+    neighborhood.addClass('highlighted');
   }
 
   function clearCyHighlight() {
@@ -1258,11 +1259,14 @@
     const svg = $('mermaid-container').querySelector('svg');
     if (!svg) return;
     clearHighlight();
+    const connected = new Set([nodeId, ...getConnected(nodeId)]);
     svg.querySelectorAll('g.node').forEach(el => {
       const m = el.id.match(/flowchart-(.+)-\d+$/);
       if (!m) return;
-      if (m[1] === nodeId) {
-        el.classList.add('hl-active', 'hl-selected');
+      const id = m[1];
+      if (connected.has(id)) {
+        el.classList.add('hl-active');
+        if (id === nodeId) el.classList.add('hl-selected');
       } else { el.classList.add('hl-dimmed'); }
     });
     svg.querySelectorAll('path.flowchart-link, g.edgeLabel').forEach(el => {
