@@ -34,6 +34,7 @@ A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/d
 | `em-thinking` | bundle | AI-First Engineering Management — em-plan, em-works, em-review |
 | `public-awareness` | single | Artifact integrity guardrail — keeps internal working context out of public-facing artifacts |
 | `arch-diagram` | single | Interactive diagram generator — editable flowcharts (Cytoscape.js), rich SVG sequence diagrams, ER/state/class via Mermaid |
+| `board-thinking` | single | Board Thinking idea diagnostic — convene a virtual board of 5-7 advisors (`/onboard`) to stress-test an idea before PRD or architecture |
 
 > Want something else? [Request a skill →](https://github.com/verzth/skills/issues/new)
 
@@ -101,6 +102,7 @@ If you prefer the native plugin marketplace mechanism in Claude Code:
 /plugin install golang-developer@verzth-skills
 /plugin install pm-thinking@verzth-skills
 /plugin install em-thinking@verzth-skills
+/plugin install board-thinking@verzth-skills
 ```
 
 Update later:
@@ -267,6 +269,24 @@ Generates interactive system diagrams as self-contained `.html` files — open i
 **When to use:** any time the user wants to diagram, visualize, or document a system — even casual phrasing like "draw this", "show me how these connect", "map out my stack", or "make a diagram of my app".
 
 [Read full documentation →](./skills/arch-diagram/SKILL.md)
+
+## Skill: board-thinking
+
+A multi-perspective idea diagnostic that sits between raw ideation and structured product work. **One install → one skill**: `/onboard` (Board Thinking).
+
+**What it does:**
+- **Convenes a virtual board of 5-7 stakeholder advisors** — 5 always-on lenses (The Skeptical Customer, The Cynical Investor, The Operator, The Contrarian, The Time Traveler) plus auto-added domain seats (Compliance Officer for regulated industries; Technical Architect for enterprise-scale or real-time claims)
+- **Two rounds of questions** — Round 1 is discovery (each member asks one probing question citing specifics from the idea); Round 2 is cross-examination (each member reacts to other members' findings to surface tension). Cross-examination is the unique value vs single-voice "office hours" diagnosis
+- **Mechanical verdict tally** — `≥4 REJECT → REJECT`, `≥4 APPROVE no rejects → PROCEED`, anything else → `PROCEED_WITH_CONDITIONS`. Founder enthusiasm does not override votes — verdicts reflect answer quality
+- **Self-contained memo output** — writes `board-memo-{YYYYMMDD-HHMMSS}.md` to the working directory with executive summary, idea brief, roster, both rounds verbatim, verdicts table, conditions to satisfy, "the most important finding," "recommended next action," and "what the board noticed about how you think"
+- **Bilingual runtime output** — memo prose matches user's language (Indonesian/English mix supported); persona names, verdict tokens, and section anchors stay English to preserve brand and parseability across sessions
+- **Anti-routing discipline on REJECT** — a REJECT verdict never routes to `/em-plan` or `/pm-works`; it loops back to ideation or parks the project
+
+**Sprint flow position:** raw idea → `/onboard` → verdict → `/pm-works` (PRD) or `/em-plan` (architecture) on PROCEED; off-tool user interviews then `/pm-discover` on PROCEED_WITH_CONDITIONS; back to ideation on REJECT.
+
+**When to use:** "stress test this idea", "what would a board say", "should I build this", "review this idea from multiple perspectives", "convene a board" — when you have an idea past raw brainstorm but before any PRD or architecture commitment, and want disconfirming evidence rather than affirmation.
+
+[Read full documentation →](./skills/board-thinking/README.md)
 
 ## Requirements
 
