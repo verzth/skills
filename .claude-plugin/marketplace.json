@@ -131,6 +131,29 @@
         "workspace-hygiene"
       ],
       "homepage": "https://github.com/verzth/skills/tree/main/skills/public-awareness"
+    },
+    {
+      "name": "board-thinking",
+      "source": "./skills/board-thinking",
+      "description": "Board Thinking \u2014 convene a virtual board of 5-7 stakeholder advisors (Customer, Investor, Operator, Contrarian, Time Traveler + Compliance/Architect domain seats) to stress-test an idea from distinct lenses. Includes /onboard (multi-perspective idea diagnostic with two rounds of questions plus cross-examination plus board verdict). Bilingual runtime output (Indonesian/English mix; brand and section anchors stay English). Sits between raw ideation and PRD/architecture work \u2014 the bridge between an unstructured idea and a structured plan.",
+      "version": "0.1.1",
+      "author": {
+        "name": "Dodi (Verzth)"
+      },
+      "category": "thinking-framework",
+      "tags": [
+        "board-thinking",
+        "ideation",
+        "diagnostic",
+        "multi-perspective",
+        "stress-test",
+        "advisor",
+        "pre-prd",
+        "founder",
+        "ai-first",
+        "cross-examination"
+      ],
+      "homepage": "https://github.com/verzth/skills/tree/main/skills/board-thinking"
     }
   ]
 }
