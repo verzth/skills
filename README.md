@@ -33,7 +33,6 @@ A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/d
 | `pm-thinking` | bundle | AI-First Product Management — pm-discover, pm-works, pm-decide |
 | `em-thinking` | bundle | AI-First Engineering Management — em-plan, em-works, em-review |
 | `public-awareness` | single | Artifact integrity guardrail — keeps internal working context out of public-facing artifacts |
-| `arch-diagram` | single | Interactive diagram generator — editable flowcharts (Cytoscape.js), rich SVG sequence diagrams, ER/state/class via Mermaid |
 | `board-thinking` | single | Board Thinking idea diagnostic — convene a virtual board of 5-7 advisors (`/onboard`) to stress-test an idea before PRD or architecture |
 | `cso-thinking` | single | CSO mindset security audit — single command (`/cso-audit`) covers frontend / backend / infra / db / Android / iOS / generic; emits SECURITY_AUDIT.md + .html with score, audit list, and fix-ready remediation prompts |
 
@@ -256,21 +255,6 @@ A guardrail that keeps working context out of artifacts. Install it globally so 
 > *With skill:* Keeps those notes in conversation; writes only intentional, finished content into the artifact
 
 [Read full documentation →](./skills/public-awareness/SKILL.md)
-
-## Skill: arch-diagram
-
-Generates interactive system diagrams as self-contained `.html` files — open in any browser, no server, no build step.
-
-**What it does:**
-- **Flowchart / architecture** — fully editable Cytoscape.js canvas: drag nodes to rearrange, add/remove nodes and edges, rename labels inline, and drag any connection line to bend it into a curve. Auto-layout via dagre (LR/TD direction). Click any node to open a details sidebar with editable title, description, tech stack tags, and links
-- **Sequence diagrams** — standalone custom SVG: gradient actor boxes with colored lifelines, phase bands with letter labels, numbered step circles, solid vs dashed arrow styles, and a legend — no Mermaid involved
-- **ER / State / Class diagrams** — Mermaid-rendered with themed dark/light mode
-- **Export** — SVG, PNG, and PDF from the toolbar
-- **Category color system** — frontend (blue), backend (green), database (purple), cache (amber), queue (red), auth (pink), infra (cyan), external (gray)
-
-**When to use:** any time the user wants to diagram, visualize, or document a system — even casual phrasing like "draw this", "show me how these connect", "map out my stack", or "make a diagram of my app".
-
-[Read full documentation →](./skills/arch-diagram/SKILL.md)
 
 ## Skill: board-thinking
 

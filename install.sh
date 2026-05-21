@@ -21,7 +21,6 @@ ALL_SKILLS=(
     "pm-thinking"
     "em-thinking"
     "public-awareness"
-    "arch-diagram"
     "board-thinking"
     "cso-thinking"
 )
