@@ -154,6 +154,31 @@
         "cross-examination"
       ],
       "homepage": "https://github.com/verzth/skills/tree/main/skills/board-thinking"
+    },
+    {
+      "name": "cso-thinking",
+      "source": "./skills/cso-thinking",
+      "description": "Chief Security Officer mindset \u2014 single-command security audit (/cso-audit) that adapts to any target: frontend, backend (any language), infrastructure, databases, Android, iOS, or generic software. Auto-detects relevant profiles from the working directory, offers to install missing security scanners interactively (Phase 3.5) so the run starts well-equipped, runs a hybrid scan (external tools where installed + checklist review where not), enriches Critical/High findings with live exploitability signals from free public APIs (OSV.dev, EPSS, CISA KEV, NVD, GitHub Advisory, Hacker News \u2014 no paid keys, ever) via Phase 4.5 with severity auto-promotion when CISA confirms in-the-wild exploitation, computes a composite security score (0\u2013100 + letter grade with hard cap when Critical findings exist), and emits dual output: SECURITY_AUDIT.md (agent handoff, stable structure) plus SECURITY_AUDIT.html (human review with score banner, severity filters, copy-pasteable remediation prompts per finding, Recent-activity blocks with EPSS percentiles and KEV status). Grounded in OWASP Top 10 / API Top 10 / ASVS / MASVS, CIS benchmarks, NIST SSDF, SLSA.",
+      "version": "0.2.0",
+      "author": {
+        "name": "Dodi (Verzth)"
+      },
+      "category": "security",
+      "tags": [
+        "security",
+        "audit",
+        "owasp",
+        "masvs",
+        "cis",
+        "vulnerability",
+        "score",
+        "checklist",
+        "supply-chain",
+        "secrets",
+        "cso",
+        "single-command"
+      ],
+      "homepage": "https://github.com/verzth/skills/tree/main/skills/cso-thinking"
     }
   ]
 }

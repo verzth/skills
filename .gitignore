@@ -8,3 +8,4 @@
 
 # Benchmark / eval workspace artifacts (regenerated per session)
 skills/*/skills/*-workspace/
+*-workspace/

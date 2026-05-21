@@ -35,6 +35,7 @@ A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/d
 | `public-awareness` | single | Artifact integrity guardrail — keeps internal working context out of public-facing artifacts |
 | `arch-diagram` | single | Interactive diagram generator — editable flowcharts (Cytoscape.js), rich SVG sequence diagrams, ER/state/class via Mermaid |
 | `board-thinking` | single | Board Thinking idea diagnostic — convene a virtual board of 5-7 advisors (`/onboard`) to stress-test an idea before PRD or architecture |
+| `cso-thinking` | single | CSO mindset security audit — single command (`/cso-audit`) covers frontend / backend / infra / db / Android / iOS / generic; emits SECURITY_AUDIT.md + .html with score, audit list, and fix-ready remediation prompts |
 
 > Want something else? [Request a skill →](https://github.com/verzth/skills/issues/new)
 
@@ -103,6 +104,7 @@ If you prefer the native plugin marketplace mechanism in Claude Code:
 /plugin install pm-thinking@verzth-skills
 /plugin install em-thinking@verzth-skills
 /plugin install board-thinking@verzth-skills
+/plugin install cso-thinking@verzth-skills
 ```
 
 Update later:
@@ -287,6 +289,24 @@ A multi-perspective idea diagnostic that sits between raw ideation and structure
 **When to use:** "stress test this idea", "what would a board say", "should I build this", "review this idea from multiple perspectives", "convene a board" — when you have an idea past raw brainstorm but before any PRD or architecture commitment, and want disconfirming evidence rather than affirmation.
 
 [Read full documentation →](./skills/board-thinking/README.md)
+
+## Skill: cso-thinking
+
+A Chief Security Officer in a single command. **One install → one skill**: `/cso-audit`.
+
+**What it does:**
+- **Auto-detects target profile(s)** from the working directory — frontend, backend (any language: Go / Node / Python / Java / Ruby / PHP / Rust / .NET / Elixir), infrastructure (Docker / Terraform / Kubernetes / Helm / Ansible / CI), databases, Android, iOS. `generic` baseline (secrets, supply chain, repo hygiene) is always active.
+- **Confirms scope before running** — proposes profiles with detection evidence, accepts edits (no surprise 20-minute audit on the wrong target).
+- **Hybrid execution** — runs external tools where installed (`gitleaks`, `semgrep`, `trivy`, `osv-scanner`, `govulncheck`, `bandit`, `mobsfscan`, `npm audit`, `hadolint`, `checkov`, `actionlint`, …) and falls back to checklist review against curated reference files (OWASP Top 10 / API Top 10 / ASVS / MASVS / Cheat Sheets, CIS benchmarks, NIST SP 800-190, SLSA) where they are not.
+- **Composite score 0–100 + letter grade** with a hard cap at C+ when any Critical finding exists — score is a trend signal, not a pass/fail. Severity-weighted formula (Critical −15, High −7, Medium −3, Low −1, Info 0) with scope-size adjustment so a 50-line script and a 500k-LOC platform don't share the same scale.
+- **Fix-ready audit list** — every finding has severity, location (`file:line` or config key), source (tool+version or checklist item ID), why-it-matters, copy-pasteable remediation prompt (paste into a fresh Claude session and the fix executes itself), and verification steps.
+- **Dual output** — `SECURITY_AUDIT.md` (agent handoff, stable structure, parseable) AND `SECURITY_AUDIT.html` (human review with score banner, severity filters, expandable findings, copy buttons, dark/light auto, printable).
+- **Re-audit deltas** — second run computes resolved/regressed/new findings and shows score trend over time, preserving the prior report.
+- **Honest about blind spots** — every report ends with a Scope & limitations section listing what the audit could not assess (runtime behavior, business-logic flaws, social engineering, physical security).
+
+**When to use:** "audit security", "security score", "vulnerability scan", "OWASP check", "MASVS check", "find security holes", "audit our api/infra/app/db", "is this safe to ship", "security posture", "security review" — pre-release, periodic posture review, post-incident, before audit committee.
+
+[Read full documentation →](./skills/cso-thinking/README.md)
 
 ## Requirements
 
