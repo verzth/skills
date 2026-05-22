@@ -1,7 +1,7 @@
 {
   "name": "golang-developer",
-  "version": "1.1.1",
-  "description": "Go microservices development with Clean Architecture, GORM, gRPC + grpc-gateway, Google Wire DI, NATS JetStream, Redis, MySQL. Covers scaffolding, code review, debugging, testing, and architecture guidance.",
+  "version": "1.3.0",
+  "description": "Go microservices development with Clean Architecture, GORM, gRPC + grpc-gateway, Google Wire DI, NATS JetStream, Redis, MySQL. Covers scaffolding, code review, debugging, testing, architecture guidance, restructuring existing projects to the target layout, and a strict proto workflow (buf lint mandatory pre-commit, protoc-go-inject-tag for validate/json struct tags, never edit *.pb.go by hand).",
   "author": {
     "name": "Dodi (Verzth)",
     "url": "https://github.com/verzth"

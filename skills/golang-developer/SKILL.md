@@ -100,6 +100,36 @@ Key rules:
 - Each API tier (admin/insider/public) has its own gRPC server, REST gateway, controllers, and proto package
 - `injector/inject/` is the single source of truth for dependency wiring
 
+### Restructuring an existing project
+
+When the user asks to migrate, restructure, reorganize, or "follow this layout" on an **existing** Go service, this is a *convergence* task, not a *generation* task. Do not create the new tree alongside the old one — that leaves a dirty hybrid with imports half-pointing each way and nothing compiling.
+
+Read `references/restructuring.md` and follow it. Non-negotiables:
+
+1. **Inventory first, move second** — discover what's actually there (`find`, `head go.mod`), don't assume.
+2. **Propose a mapping table and confirm with the user** before any move, especially for ambiguous dirs (`handlers/`, `pkg/`, API tier).
+3. **`git mv`, never `cp`** — preserves history, and ensures the old path is gone in the same operation.
+4. **Build after every batch** (`go build ./...`, `go vet ./...`) — never stack moves on a broken build.
+5. **Regenerate generated code** (`*.pb.go`, `*.pb.gw.go`, `wire_gen.go`) — never move it. Delete at old path, regenerate at new.
+6. **Delete emptied old dirs** (`find <old-roots> -type d -empty -delete`) only after the build is green, and scope to the old roots — never run unscoped from repo root.
+
+If the codebase is large (>50 files or >5 domains), suggest splitting into 5–7 PRs by layer rather than one mega-PR.
+
+---
+
+## Quality Gates (always before declaring done)
+
+Every code-change task — scaffold, refactor, restructure, bug fix, code-review fix — ends with **both** of these passing:
+
+```bash
+go build ./...
+go vet ./...
+```
+
+Treat `go vet` failures with the same severity as a build failure. `vet` catches shadowed variables, malformed `Printf` format strings, suspicious assignments, and other classes of bug the compiler accepts but production won't. A "build passes" report is incomplete if `vet` wasn't run.
+
+For proto-touching tasks, also run `buf lint` (see Proto checklist below) — it's blocking on the same level. The pattern is the same: cheap automated checks run before claiming a change is complete, so the human reviewer never has to catch what tooling already could.
+
 ---
 
 ## Core Capabilities
@@ -151,6 +181,20 @@ When generating code, ALWAYS include these patterns:
 - DTO layer: Entity → DTO (formatting/computed) → Proto (wire mapping), files in `engine/grpc/dto/`
 - Wire naming: `InitializeXxxControllerGRPC` / `...GRPCInsider` / `...GRPCPublic`
 
+**Proto checklist (buf + protoc-go-inject-tag):**
+- ALL proto generation goes through `make protogen` — never call `protoc` directly, never call `buf generate` alone (it skips inject-tag, killing all validation)
+- Run `buf lint` before every commit that touches `.proto`; treat failures as blocking (same severity as `go build` errors). `make protogen` runs lint as step 1 and aborts on failure
+- Run `buf breaking --against '.git#branch=main'` before pushing PRs that modify `proto/nav/{admin,insider,public}/` — those tiers have live consumers (other services' gRPC client SDKs)
+- Add validation via `// @gotags: validate:"..."` magic comments above proto fields, NOT by hand-editing `*.pb.go` (generated files get wiped). Every `XxxReqRPC` field with a constraint MUST have a `validate:` tag — missing tag = silent acceptance of invalid input, since `c.Validator.Struct(req)` only fires on tagged fields
+- Use `// @gotags: json:"...,omitempty"` only when JSON name must differ from proto name or `omitempty` is needed — default protojson doesn't honor `omitempty`
+- Magic comment prefix is exactly `// @gotags:` (no space after `@`). `// gotags:` and `// @gotag:` are silently ignored
+- Proto request types: `XxxReqRPC`. Response types: `XxxResRPC`. Data types: `XxxData`
+- Decimal fields: always `string` in proto (converted via `decimal.NewFromString`)
+- Timestamp fields: always `string` in proto (RFC3339 format)
+- Boolean fields: `int32` or `optional bool` in proto, always `int` in Go entity
+- Never reuse field numbers, even after deprecation — use `reserved 8, 15;` to lock them
+- See [grpc-patterns.md §8](references/grpc-patterns.md) for full buf config, inject-tag examples, and quality-gate workflow
+
 Read the reference files for detailed patterns:
 - `references/entity-patterns.md` — composable traits, BaseEntity, Sign interface, multi-tenant pattern, encrypted field types (AES/RSA)
 - `references/repository-patterns.md` — fluent builder, generics, transactions
@@ -161,6 +205,7 @@ Read the reference files for detailed patterns:
 - `references/scheduler-patterns.md` — multi-mode scheduler (database/http/message/disable), CronLocker, NATS consumer, hot reload
 - `references/provider-integration-patterns.md` — outbound providers, inbound SDK, TOTP auth
 - `references/testing.md` — testify/mock, table-driven, build tags
+- `references/restructuring.md` — migrating an existing Go project to this layout (inventory → mapping → `git mv` → regenerate → verify)
 
 ### 2. Code Review
 
@@ -173,6 +218,8 @@ When reviewing code, check in this order:
 - Missing Sign interface on financial entities — HMAC validation will fail
 - Decimal precision: transformers must use `DEFAULT_PRECISION=8` with `decimal.StringFixed()`
 - Transaction field consistency: Order/Current/Realized amounts must be properly set
+- Missing `// @gotags: validate:"..."` on request-message fields — silent acceptance of invalid input. `c.Validator.Struct(req)` only validates fields that have a `validate` tag, and `buf generate` alone won't emit one. Check the `.proto` source, not the `*.pb.go`
+- `buf generate` called directly instead of `make protogen` — skips `protoc-go-inject-tag`, wiping every validation tag. Re-run `make protogen` to restore
 
 **Important (causes pain)**
 - Missing trait composition: entity that transitions states but lacks Processable/Completable

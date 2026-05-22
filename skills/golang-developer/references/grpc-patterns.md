@@ -1112,20 +1112,93 @@ service OrderService {
 
 ### Generation Workflow
 
+`make protogen` runs the full pipeline. Never call `protoc` directly — buf wraps it and adds dependency resolution, plugin pinning, and lint integration.
+
 ```bash
-# Generate all proto files (runs 4 buf generate passes + tag injection)
+# Generate all proto files (runs lint → 4 buf generate passes → tag injection)
 make protogen
 
 # Breakdown:
-# 1. buf generate                              (default)
-# 2. buf generate --template buf.gen.admin.yaml --path proto/nav/admin
-# 3. buf generate --template buf.gen.insider.yaml --path proto/nav/insider
-# 4. buf generate --template buf.gen.public.yaml --path proto/nav/public
-# 5. protoc-go-inject-tag --input="proto/**/**/**/*.pb.go"
+# 1. buf lint                                  (MANDATORY pre-gate — blocks on failure)
+# 2. buf generate                              (default — base messages, googleapis)
+# 3. buf generate --template buf.gen.admin.yaml --path proto/nav/admin
+# 4. buf generate --template buf.gen.insider.yaml --path proto/nav/insider
+# 5. buf generate --template buf.gen.public.yaml --path proto/nav/public
+# 6. protoc-go-inject-tag --input="proto/**/**/**/*.pb.go"
 
 # Clean generated files
 make protoclean
 ```
+
+If `buf lint` fails at step 1, the rest of `make protogen` MUST NOT run. Lint failures usually mean a `.proto` file violates a naming/style rule that breaks consumer codegen downstream.
+
+### Custom Struct Tags via protoc-go-inject-tag
+
+`buf generate` only emits the default `protobuf:"..."` struct tag on each generated Go field. To add validation, JSON overrides, or other tags, use **`protoc-go-inject-tag`** — a post-processor that reads a magic comment above each proto field and appends tags to the matching Go struct field after generation.
+
+**Magic comment syntax** (placed directly above the field in the `.proto` file):
+
+```protobuf
+message CreateOrderReqRPC {
+    // @gotags: validate:"required,uuid"
+    string id = 1;
+
+    // @gotags: validate:"required,min=1" json:"order_total,omitempty"
+    string amount = 2;
+
+    // @gotags: validate:"required,oneof=pending paid cancelled"
+    string status = 3;
+
+    // No magic comment → no extra tags injected (just the default protobuf tag)
+    string note = 4;
+}
+```
+
+**After `buf generate` (before inject):**
+```go
+type CreateOrderReqRPC struct {
+    Id     string `protobuf:"bytes,1,opt,name=id,proto3"`
+    Amount string `protobuf:"bytes,2,opt,name=amount,proto3"`
+    Status string `protobuf:"bytes,3,opt,name=status,proto3"`
+    Note   string `protobuf:"bytes,4,opt,name=note,proto3"`
+}
+```
+
+**After `protoc-go-inject-tag` runs:**
+```go
+type CreateOrderReqRPC struct {
+    Id     string `protobuf:"bytes,1,opt,name=id,proto3" validate:"required,uuid"`
+    Amount string `protobuf:"bytes,2,opt,name=amount,proto3" validate:"required,min=1" json:"order_total,omitempty"`
+    Status string `protobuf:"bytes,3,opt,name=status,proto3" validate:"required,oneof=pending paid cancelled"`
+    Note   string `protobuf:"bytes,4,opt,name=note,proto3"`
+}
+```
+
+**Tags the team injects:**
+- **`validate:"..."`** — go-playground/validator rules for request/response messages. The controller's `c.Validator.Struct(req)` call (Step 1 of the controller flow, see Section 2) relies on these. **Without inject, no request validation happens.**
+- **`json:"..."`** — only when you need a JSON field name that differs from the proto field name, or when you need `omitempty`. The default `protojson` marshaler doesn't honor `omitempty`, but the gateway path that goes through `encoding/json` does.
+
+**Rules of thumb:**
+- Every request message field (`XxxReqRPC`) that has constraints **must** have a `validate:` tag. Missing tags = silent acceptance of invalid input.
+- Response message fields (`XxxResRPC`) and data types (`XxxData`) rarely need inject tags — they're transformer output, already shaped correctly.
+- The magic comment is part of the `.proto` source — it travels with the field. Renaming or moving a field carries the tag with it.
+- `// @gotags:` (no space after `@`) is the exact prefix the tool recognizes. `// gotags:` or `// @gotag:` is silently ignored.
+- Inject runs AFTER `buf generate`, never before. If you regenerate without inject, all validation tags vanish — re-run `make protogen` (don't call `buf generate` directly).
+- Never hand-edit `*.pb.go` to add tags — they will be wiped on the next generation. Always put the tag in the `.proto` magic comment.
+
+### Quality Gates: buf lint, format, breaking
+
+Three buf commands are part of the workflow beyond `buf generate`. Each has a specific moment it runs.
+
+| Command | When to run | What it does | Failure policy |
+|---|---|---|---|
+| `buf lint` | **Before every commit** that touches `.proto`, and as step 1 of `make protogen` | Enforces naming conventions, package layout, service/RPC shape (e.g., RPCs must take a request message, not a primitive) | **Blocking.** Do not commit. Do not generate. Fix the proto. |
+| `buf format -w` | Before commit, optional | Reformats `.proto` files to canonical style (whitespace, alignment). Idempotent. | Non-blocking, but a follow-up `buf lint` may then pass cleanly. |
+| `buf breaking --against '.git#branch=main'` | Before pushing a PR | Detects backward-incompatible changes vs `main` (field number reuse, removed RPCs, changed types). Catches wire-protocol breakage that compiles but breaks running consumers. | **Blocking on Admin/Insider/Public protos** (they have live consumers — other services' gRPC client SDKs). Soft-warning on internal-only protos. |
+
+**`buf lint` is mandatory.** If a model is editing a `.proto` file, it should run `buf lint` before considering the change done — and treat any failure as blocking, same as a `go build` error. The reason: lint rules are tuned to the generators (`protoc-gen-go`, `protoc-gen-go-grpc`, `protoc-gen-grpc-gateway`) so that a lint-clean proto produces sane Go bindings. A lint violation usually means generation will succeed but produce something downstream code can't use (e.g., a service whose name is parsed as a different identifier in the gateway).
+
+**`buf breaking` is the silent-incident catcher.** Field-number reuse and type changes don't break the build — they break clients in production. Run it as part of CI on every PR that modifies `proto/nav/admin/`, `proto/nav/insider/`, or `proto/nav/public/`.
 
 ### Field Numbering Rules
 
