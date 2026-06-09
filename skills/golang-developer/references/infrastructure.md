@@ -16,6 +16,7 @@ A comprehensive guide to database, caching, event streaming, dependency injectio
 10. [PDF Infrastructure](#10-pdf-infrastructure)
 11. [Supervisord (Multi-Process)](#11-supervisord-multi-process)
 12. [Helpers & Calculators](#12-helpers--calculators)
+13. [Anti-Patterns](#13-anti-patterns)
 
 ---
 
@@ -1260,8 +1261,29 @@ func CommitOrRollback(repo repository.BaseRepository, err *error)
 
 ---
 
+## 13. Anti-Patterns
+
+| Anti-pattern | Why it breaks | Fix |
+|---|---|---|
+| `SkipDefaultTransaction: false` (GORM default) | GORM wraps every single write in a transaction — ~3× slower on simple inserts | Set `SkipDefaultTransaction: true`; wrap explicitly only where needed |
+| `PrepareStmt: false` (GORM default) | Re-parses SQL on every call — wasted CPU on hot paths | Set `PrepareStmt: true` for the production connection pool |
+| Opening DB connection directly in service/controller | Connection is not pooled; can't be mocked in tests; Wire can't inject it | Always inject `*gorm.DB` via Wire from `database.GetDB()` |
+| Using Redis `Set` without TTL for application-level caches | Key lives forever; Redis OOMs on large keyspaces | Always set a TTL: `CacheManager.Set(key, value, ttl)` |
+| Using Redis `KEYS *` for cache invalidation by pattern | Blocks Redis single-threaded event loop while scanning all keys | Use `SCAN` with a cursor, or design keys so invalidation targets exact IDs |
+| NATS publish without setting tenant/trace headers | Consumer loses tenant context; audit trail breaks | Set `X-Tenant-ID` and `X-Trace-ID` in `msg.Header` before `js.PublishMsg` |
+| Calling `wire.Build(...)` in business code | Wire generators parse `wire.Build` at codegen time; runtime calls panic | `wire.Build` is only valid inside `//go:build wireinject` files in `injector/inject/` |
+| Returning concrete `*ServiceImpl` from `New*` constructor | Wire can't resolve interface → implementation mapping | Constructor must return the interface: `func NewOrderService(...) OrderService` |
+| Reading `viper.Get*` directly in service or repository | Couples business code to config; impossible to test with different values | Inject config values through constructors or use a typed `Config` struct |
+| Using `app.GetXxx()` singletons inside unit-tested code | Singletons require full app init; unit tests can't run in isolation | Inject dependencies via Wire; `app.GetXxx()` only in `engine/` entry points |
+| Plaintext sensitive field in entity struct (`type Email string`) | DB stores plaintext; logs may leak PII | Use `types.EncryptedAES128` or appropriate encrypted type |
+| Supervisord `autorestart=false` for critical processes | Process crash stops silently; no recovery until manual intervention | Set `autorestart=true`, `startretries=3` for all 7 processes |
+
+---
+
 ## Related References
 
 - **Service Patterns** (`service-patterns.md`) — Transaction management with `StartTx`/`CommitTx`/`RollbackTx`
 - **Scheduler Patterns** (`scheduler-patterns.md`) — CronLocker distributed locking, DB-driven scheduling
 - **Provider Integration** (`provider-integration-patterns.md`) — External service clients (Payment, Product, Backoffice)
+- **Security** (`security.md`) — Encryption key management, govulncheck, Vault secrets
+- **Context Patterns** (`context-patterns.md`) — How to propagate tenant/trace through NATS, gRPC, HTTP

@@ -15,6 +15,7 @@
 11. [Swagger & Metrics Endpoints](#11-swagger--metrics-endpoints)
 12. [Health & Connection Check](#12-health--connection-check)
 13. [Key Rules](#13-key-rules)
+14. [Anti-Patterns](#14-anti-patterns)
 
 ---
 
@@ -818,8 +819,25 @@ handler = handlers.LoggingHandler(os.Stdout, handler)
 
 ---
 
+## 14. Anti-Patterns
+
+| Anti-pattern | Why it breaks | Fix |
+|---|---|---|
+| Writing REST route handlers manually in Go | Bypasses grpc-gateway; routes diverge from proto definitions; no auto-generated OpenAPI | Define HTTP bindings in `.proto` via `google.api.http`; use `make protogen` |
+| One shared gateway for all tiers | Admin and public clients get each other's routes; impossible to apply per-tier middleware | One `GRPCGatewayServer` per tier — admin, insider, public each separate |
+| Mounting routes without the `/v1` prefix | Client URLs break when adding versioning; existing integrations need migration | `AttachToRouter` always registers under `/v1/*` |
+| `UseProtoNames: false` | JSON keys become camelCase (Go default), not snake_case (proto default); clients break on field name mismatch | Always set `UseProtoNames: true` in the marshaler |
+| `EmitUnpopulated: false` | Clients receive no key for zero-value fields; must null-check every field | Always set `EmitUnpopulated: true` |
+| Connecting gateway to gRPC server with TLS locally | Same-machine connection adds TLS overhead with no security benefit (no network hop) | Use `grpc.WithTransportCredentials(insecure.NewCredentials())` for local connections |
+| Applying CORS in the gRPC interceptor chain | gRPC interceptors run after the HTTP layer; OPTIONS preflight never reaches gRPC | Add CORS via `handlers.CORS(...)` on the `gorilla/mux` router before gateway registration |
+| Adding business logic in REST middleware | Business rules bypass service validation and panic recovery | Keep REST middleware to header extraction and metadata forwarding only |
+| Skipping `make protogen` after proto annotation change | Stale `*.pb.gw.go` — new HTTP bindings not registered | Always run `make protogen` after any `.proto` edit |
+
+---
+
 ## Related References
 
 - **gRPC Patterns** (`grpc-patterns.md`) — Controller, transformer, interceptor patterns
-- **Proto Management** (`grpc-patterns.md#8`) — buf v2 config, proto naming conventions
+- **Proto Workflow** (`proto-workflow.md`) — Authoritative `make protogen` flow, buf lint/breaking
+- **Context Patterns** (`context-patterns.md §7`) — REST → gRPC header forwarding and metadata strategy
 - **Alert System** (`grpc-patterns.md#6`) — Alert resolution and `Accept-Language` usage

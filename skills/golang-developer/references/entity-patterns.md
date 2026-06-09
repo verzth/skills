@@ -14,8 +14,9 @@ A comprehensive guide to Entity layer patterns for Go microservices. This docume
 8. [Frame/DTO Layer (Three-Tier DTO Architecture)](#framedto-layer)
 9. [Value Types](#value-types)
 10. [When to Use Each Pattern](#when-to-use-each-pattern)
-10. [Encrypted Field Types](#encrypted-field-types)
-11. [Best Practices](#best-practices)
+11. [Encrypted Field Types](#encrypted-field-types)
+12. [Best Practices](#best-practices)
+13. [Anti-Patterns](#anti-patterns)
 
 ---
 
@@ -1415,6 +1416,25 @@ type User struct {
 
 ---
 
+## Anti-Patterns
+
+| Anti-pattern | Why it breaks | Fix |
+|---|---|---|
+| Defining `TableName()` on an entity | Breaks the DB/Table prefix strategy; entities auto-name from struct + prefix | Remove `TableName()`; configure the global table prefix in GORM config |
+| Using `bool` for boolean columns | MySQL TINYINT(1) → stored as 0/1; `bool` type creates type mismatch on some drivers | Use `int` with `type:tinyint(1)` GORM tag |
+| Using `time.Time` (non-pointer) for nullable timestamps | Non-pointer `time.Time` can't represent NULL; GORM stores zero-value as epoch | Use `*time.Time` with `type:timestamp;null` tag |
+| Using `foreignKey` GORM tag on associations | Creates implicit foreign key constraints; migrations become fragile; removes cross-DB portability | Use manual `uint` / `uint64` ID fields; load related entities explicitly |
+| Skipping trait composition on a state-transitioning entity | State fields (`processed_at`, `failed_at`, etc.) must be set consistently via trait methods; raw assignment misses side effects (hooks, sign invalidation) | Compose `Processable`, `Completable`, `Failable` etc. and call trait methods (`SyncProcessedDate()`, `SyncFailedDate()`) |
+| Storing monetary amounts as `float64` | Floating-point arithmetic produces rounding errors for financial values | Use `decimal.Decimal` (shopspring/decimal) for all monetary fields |
+| Setting `created_at` / `updated_at` manually | GORM manages these automatically; manual setting causes drift | Never assign `CreatedAt`/`UpdatedAt` in code; let GORM handle them |
+| Using `int` / `int64` for tenant/partner IDs | Schema and protobuf use `uint64`; sign mismatch causes silent truncation on large IDs | Use `uint64` for all tenant/partner ID fields |
+| Adding HMAC sign field as plain `string` | Plain string allows silent mutation without re-sign detection | Implement the `Sign` interface; use HMAC-SHA256 with `StringFixed(4)` + `Unix()` per `security.md` |
+| Embedding `BaseEntity` for entities that need global uniqueness | Autoincrement ID collides across shards; no distributed ordering guarantee | Use `BaseEntitySF` (snowflake) for cross-service / event-sourced entities |
+| Putting business logic in entity methods | Entities are data structures; logic in methods bypasses service validation and panic recovery | Keep business logic in service methods; entities provide only trait mutations and sign computation |
+| Using `string` for encrypted PII fields | Stores plaintext in DB; no automatic encryption/decryption | Use `types.EncryptedAES128` or `types.EncryptedAES` from `src/model/types/` |
+
+---
+
 ## Summary
 
 Entity layer patterns enable:
@@ -1427,3 +1447,13 @@ Entity layer patterns enable:
 ✓ **Maintainability**: Clear separation of concerns with trait mixins  
 
 Use this guide to design entities that scale, are auditable, and maintain data integrity in production microservices.
+
+---
+
+## Related References
+
+- → `references/repository-patterns.md` — fluent builder that consumes these entities; `ForStatus`, `ForTenant` rely on entity field names
+- → `references/service-patterns.md` — service methods that compose trait mutations (`SyncProcessedDate`, `SyncFailedDate`, etc.)
+- → `references/security.md` — HMAC sign convention, `StringFixed(4)` + `Unix()` rules, AES/RSA key management
+- → `references/infrastructure.md §6` — encrypted field type definitions (`EncryptedAES128`, `EncryptedAES`)
+- → `references/grpc-patterns.md §5` — Frame/DTO layer and transformer mapping from entity to proto

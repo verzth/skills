@@ -15,6 +15,7 @@ A comprehensive reference for implementing gRPC APIs across Admin, Insider, and 
 9. [Wire DI for Controllers](#9-wire-di-for-controllers)
 10. [Interceptor Chain](#10-interceptor-chain)
 11. [Health Check Endpoint](#11-health-check-endpoint)
+12. [Anti-Patterns](#12-anti-patterns)
 
 ---
 
@@ -1663,9 +1664,28 @@ REST gateway forwards these HTTP headers as gRPC metadata:
 
 ---
 
+## 12. Anti-Patterns
+
+| Anti-pattern | Why it breaks | Fix |
+|---|---|---|
+| Controller method returns `(ControllerInterface, error)` from constructor | Wire requires the proto server interface return type to auto-wire; returning a custom interface breaks registration | Constructor must return `(proto.XxxServer, error)` |
+| Value receiver on constructor, pointer receiver on methods | Constructor builds a value; methods mutate the pointer — receiver mismatch means method changes don't persist | Use pointer receivers consistently on implementation methods |
+| Skipping the `validate struct` step (step 1 of 7-step flow) | Invalid input reaches the service layer; service must defensively re-validate | Always validate the request struct before building Params |
+| Returning a gRPC `status.Error` for business / param errors | gRPC status errors bypass the response envelope; callers receive raw gRPC status, not the structured `{Status, Code, Message}` | Wrap param errors in the response envelope; use gRPC status only for infrastructure failures (authentication, unavailable) |
+| Controller embedding a controller interface instead of `UnimplementedXxxServer` | Missing proto methods panic at runtime when a new method is added to the proto | Embed the `Unimplemented*` struct from the generated proto package |
+| Hand-editing `*.pb.go` files | Next `make protogen` overwrites changes silently | Use `// @gotags:` comments in `.proto` files; see `proto-workflow.md` |
+| Calling `buf generate` directly (not `make protogen`) | `buf generate` runs without `protoc-go-inject-tag` — struct validation tags are stripped | Always use `make protogen`; see `proto-workflow.md §1` |
+| Putting business logic in transformers | Transformers translate shape only; business logic there is untested and unrecovered from panics | Keep transformers pure field-mapping; all decisions happen in services |
+| Using concrete type return (`*OrderTransformerImpl`) for transformer in controller | Can't swap transformers in tests | Return interface from constructor |
+| Response code that doesn't follow `{TIER}-{DOMAIN}-{SEV}-{ACTION}-{SEQ}` format | Ops can't parse tier/domain/severity from logs automatically | Use the format strictly: e.g., `A-ORD-S-CRT-001` (Admin, Order, Success, Create, #1) |
+
+---
+
 ## Related References
 
 - **Service Patterns** (`service-patterns.md`) — Triple return, Params validation, service implementation
 - **Entity Patterns** (`entity-patterns.md`) — Composable traits, BaseEntity
 - **Repository Patterns** (`repository-patterns.md`) — Fluent builder, transactions
 - **Infrastructure** (`infrastructure.md`) — Database, event pools, encryption
+- **Proto Workflow** (`proto-workflow.md`) — Authoritative `make protogen` flow, buf lint/breaking
+- **Error Handling** (`error-handling.md`) — ParamError structure, response code matrix

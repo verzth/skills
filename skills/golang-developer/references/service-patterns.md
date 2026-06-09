@@ -9,6 +9,7 @@
 5. [Transaction Management](#5-transaction-management)
 6. [Panic Recovery](#6-panic-recovery)
 7. [Key Rules](#7-key-rules)
+8. [Anti-Patterns](#8-anti-patterns)
 
 ---
 
@@ -966,9 +967,27 @@ func (s *OrderServiceImpl) Gets(
 
 ---
 
+## 8. Anti-Patterns
+
+| Anti-pattern | Why it breaks | Fix |
+|---|---|---|
+| Returning `(result, error)` instead of `(result, error, []ParamError)` | Controllers must handle validation separately from system errors; mismatching caller expectations | Always use the triple return; consolidate in `error-handling.md §1` |
+| Wrapping validation errors in `error` (not `[]ParamError`) | Controller can't extract field-level detail; response code won't include field info | Return param errors as `[]ParamError`; system errors as `error` |
+| Missing `defer helpers.LogAndCatchPanic()` at top of exported methods | Unrecovered panics crash the process; Supervisord restarts but you lose the stack trace | Add as the **first line** of every exported service method |
+| Method name includes the entity: `GetOrder()`, `CreateOrder()` | Interface grows verbosely; callers can't swap implementations easily | Use `Get()`, `Create()`, `Gets()` — entity is implied by the service type |
+| Setting `CreatedAt` / `UpdatedAt` manually | GORM manages these; manual set causes drift in audits | Never assign timestamp fields in service code |
+| Missing transaction rollback `defer` | On early return (error, panic), tx never rolls back — partial write persists | `defer func() { _ = repo.RollbackTx() }()` immediately after `StartTx` |
+| Committing before all repo writes are done | Race between commit and a pending repo call | Call `CommitTx()` only after ALL repo calls in the tx path succeed |
+| Multi-repo transaction without `WithTx` | Second repo runs outside the transaction; partial commit on error | `s.OtherRepo.WithTx(repo.GetTx())` before any write on the second repo |
+| Calling service methods from entity hooks (`BeforeCreate`, etc.) | Hooks can't receive service dependencies; creates hidden coupling | Put all business logic in services; entities only handle sign computation and field defaults |
+| Not passing `ctx` to repository calls | Repository ignores cancellation; hung query blocks after client disconnects | Pass ctx through to every terminal repo call |
+
+---
+
 ## Related References
 
 - **Entity Patterns** (`entity-patterns.md`) — Composable traits, BaseEntity, Sign interface
 - **Repository Patterns** (`repository-patterns.md`) — Fluent builder, generics, transactions
 - **gRPC Patterns** (`grpc-patterns.md`) — Controller layer, transformers, response wrappers
 - **Infrastructure** (`infrastructure.md`) — Event pools, database setup
+- **Error Handling** (`error-handling.md`) — ParamError structure, `samber/oops` wrapping, response code matrix

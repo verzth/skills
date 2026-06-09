@@ -10,6 +10,8 @@ Two complementary patterns for inter-service communication via gRPC: **Providers
 4. [Authentication (TOTP)](#authentication-totp)
 5. [Wire Injection](#wire-injection)
 6. [Best Practices](#best-practices)
+7. [Anti-Patterns](#anti-patterns)
+8. [Related References](#related-references)
 
 ---
 
@@ -405,3 +407,28 @@ func main() {
 3. Add singleton var + Connect/Get in `integration.go`
 4. Implement `getContext()` for TOTP auth
 5. Wrap each RPC method with `handleResponse()`
+
+---
+
+## Anti-Patterns
+
+| Anti-pattern | Why it breaks | Fix |
+|---|---|---|
+| Returning `*ServiceImpl` (concrete type) from `Provide*` | Wire can't substitute mocks in tests; breaks Wire's interface-based injection | Return the interface type: `Provide*() (SomeClient, error)` |
+| Calling `initClient()` multiple times or skipping `sync.Once` | Concurrent calls create multiple connections; connection state conflicts | All initialization goes inside `clientOnce.Do(...)` |
+| One provider file per sub-client | Creates N `sync.Once` vars for the same upstream service; risk of partial init | One file per **external service** — all its sub-clients init together |
+| Calling `context.Background()` in `getContext()` for providers | Disconnects deadline cascading; downstream can block after caller has given up | Use the inbound `ctx` passed to the method; create a per-call `WithTimeout` from it (→ `context-patterns.md §6`) |
+| Calling `GetXxxClient()` without `ConnectXxxClient()` first | `GetXxxClient` returns error: client is nil | Always call `Connect*` in the Wire injector or integration init; never on-demand in business code |
+| Storing client credentials as struct fields on service impls | Credentials leak into business code; breaks if credentials rotate | Credentials stay in `integration.go` / provider init only |
+| Skipping `CloseConnections()` on shutdown | gRPC connections linger; port reuse issues on restart | Register `defer svcint.CloseConnections()` in `main()` or the engine shutdown hook |
+| Cross-tier imports (`integration/admin/v1` used by insider handler) | Exposes admin-level data to lower-trust tier | Always import the tier-matched package |
+
+---
+
+## Related References
+
+- → `references/context-patterns.md §6` — outbound provider ctx propagation (timeout, metadata injection)
+- → `references/security.md` — TOTP generation, client credential rotation, TLS config
+- → `references/infrastructure.md §4` — Wire DI wiring patterns for providers
+- → `references/concurrency-patterns.md §4` — `sync.Once` correct usage and error-persistence semantics
+- → `references/grpc-patterns.md` — server-side counterpart (how the inbound SDK calls are received)

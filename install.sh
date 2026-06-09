@@ -6,6 +6,7 @@
 # Install one:        curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- humanoid-thinking
 # Install many:       curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- humanoid-thinking public-awareness
 # Install (OpenClaw): curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- --openclaw public-awareness
+# Install (Hermes):   curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- --hermes public-awareness
 # ============================================================
 
 set -e
@@ -27,14 +28,22 @@ ALL_SKILLS=(
 
 # Parse flags
 OPENCLAW=false
+HERMES=false
 REMAINING_ARGS=()
 for arg in "$@"; do
     if [ "$arg" = "--openclaw" ] || [ "$arg" = "-o" ]; then
         OPENCLAW=true
+    elif [ "$arg" = "--hermes" ] || [ "$arg" = "-H" ]; then
+        HERMES=true
     else
         REMAINING_ARGS+=("$arg")
     fi
 done
+
+if [ "$OPENCLAW" = true ] && [ "$HERMES" = true ]; then
+    echo "❌ --openclaw and --hermes are mutually exclusive. Run twice if you want both." >&2
+    exit 1
+fi
 
 # Detect target directory
 if [ "$OPENCLAW" = true ]; then
@@ -47,6 +56,16 @@ if [ "$OPENCLAW" = true ]; then
         mkdir -p "$BASE_TARGET"
     fi
     echo "🦅 OpenClaw mode — installing to $BASE_TARGET/"
+elif [ "$HERMES" = true ]; then
+    if [ -d ".hermes/skills" ]; then
+        BASE_TARGET=".hermes/skills"
+    elif [ -d "$HOME/.hermes/skills" ]; then
+        BASE_TARGET="$HOME/.hermes/skills"
+    else
+        BASE_TARGET="$HOME/.hermes/skills"
+        mkdir -p "$BASE_TARGET"
+    fi
+    echo "🪽 Hermes mode — installing to $BASE_TARGET/"
 else
     if [ -d ".claude/skills" ]; then
         BASE_TARGET=".claude/skills"
@@ -186,5 +205,9 @@ echo "  📁 Location: $BASE_TARGET/"
 if [ "$OPENCLAW" = true ]; then
     echo "  Note: For full content adaptation (tool rewrites), use:"
     echo "        npx @verzth/skills install <skill> --openclaw"
+elif [ "$HERMES" = true ]; then
+    echo "  Hermes loads SKILL.md natively — no content adaptation needed."
+    echo "  Alternative install via Hermes CLI:"
+    echo "        hermes skills install github:verzth/skills/skills/<name>"
 fi
 echo "════════════════════════════════════"

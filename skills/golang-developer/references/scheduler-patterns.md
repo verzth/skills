@@ -1605,9 +1605,26 @@ func startPrometheusServer() {
 
 ---
 
+## Anti-Patterns
+
+| Anti-pattern | Why it breaks | Fix |
+|---|---|---|
+| `context.Background()` in `executeJob()` | Disconnects from engine shutdown signal; hung job keeps running after Supervisord stops the process | Use `engineCtx` as parent; wrap with per-job `WithTimeout` |
+| `jobRegistry[sch.Code]` called without checking nil | Panics at runtime for unregistered codes — panic propagates if no recovery is in place | Always check `handler == nil` before calling; log + skip missing handlers |
+| Using `db.Where("status = ?", ...)` directly in job handler | Bypasses fluent builder; no `defer r.clean()`, no tx support, no ForTenant scoping | Use repository fluent methods: `repo.ForStatus(...).Gets(ctx)` |
+| Calling entity state transition with raw field assignment (`sch.FailedAt = &now`) | Skips trait method side effects (sign invalidation, hook triggers, consistent time format) | Call the trait method: `sch.SyncFailedDate()` or `sch.SyncProcessedDate()` |
+| Writing execution-tracking updates outside `executeJob()` | Tracking may be skipped if handler panics; inconsistent audit trail | All `updateSchedulerExecutionTime` / `Success` / `Failed` calls live inside `executeJob()`, not in individual handlers |
+| Missing `defer locker.Release(ctx)` | Redis lock held until TTL expiry; next run blocked for the full lock TTL | `defer locker.Release(ctx)` immediately after successful `Acquire` |
+| CronLocker TTL shorter than the job's expected runtime | Lock expires mid-run; second instance acquires lock and runs concurrently | Set lock TTL ≥ job timeout + 20% buffer |
+| 5-field cron expression (minutes not seconds) | gocron uses 6-field expressions with seconds; 5-field expressions parsed incorrectly | Always include the seconds field: `*/30 * * * * *` |
+| Sharing one `*RoutineEngine` instance across multiple goroutines without mutex | `jobRegistry` and internal state are written at startup; concurrent hot-reload may cause races | Run hot-reload in a single goroutine; read `jobRegistry` only after init is complete |
+
+---
+
 ## Related References
 
 - **Service Patterns** (`service-patterns.md`) — Service-only Wire injection used by job handlers
 - **Infrastructure** (`infrastructure.md`) — Redis (CronLocker), NATS JetStream (event listeners), Wire DI, message broker connections
-- **Entity Patterns** (`entity-patterns.md`) — BaseEntity, timestamps
+- **Entity Patterns** (`entity-patterns.md`) — BaseEntity, trait methods (SyncFailedDate, SyncProcessedDate, etc.)
 - **Repository Patterns** (`repository-patterns.md`) — Fluent builder used by SchedulerRepository
+- **Context Patterns** (`context-patterns.md §4`) — gocron job ctx, per-run WithTimeout, engineCtx as parent

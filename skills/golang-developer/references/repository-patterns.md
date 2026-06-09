@@ -16,6 +16,7 @@
 5. [Transaction Management](#4-transaction-management)
 6. [Method Chaining Usage](#5-method-chaining-usage)
 7. [Key Rules & Best Practices](#6-key-rules--best-practices)
+8. [Anti-Patterns](#anti-patterns)
 
 ---
 
@@ -816,7 +817,7 @@ orders, total, err := orderRepo.
 | Transitions | `[Verb]` | `Process`, `Complete`, `Fail`, `Cancel` |
 | Generics | `[T]` | `BaseRepository[T]` |
 
-### Common Pitfalls to Avoid
+## Anti-Patterns
 
 ❌ **DON'T:** Access `db` or `tx` directly
 ```go
@@ -904,6 +905,41 @@ order, err := repo.Create(ctx, order)
 
 ---
 
+---
+
+❌ **DON'T:** Use raw `db.Where(...)` instead of `For*` fluent methods
+```go
+// Wrong — bypasses the fluent chain, no clean(), no buildQuery()
+orders, _ := r.db.Where("status = ? AND tenant_id = ?", "pending", tenantID).Find(&orders).Error
+```
+
+✅ **DO:** Use fluent `For*` builders and let `buildQuery()` resolve db/tx
+```go
+orders, err := r.ForTenant(tenantID).ForStatus("pending").Gets(ctx)
+```
+
+---
+
+❌ **DON'T:** Ignore the `nil` return from `Get` (not-found case)
+```go
+// Wrong — order may be nil if not found; dereferencing panics
+order, _ := r.ForID(id).Get(ctx)
+doSomething(order.ID)   // panic if not found
+```
+
+✅ **DO:** Check for nil before using the result
+```go
+order, err := r.ForID(id).Get(ctx)
+if err != nil {
+    return nil, err
+}
+if order == nil {
+    return nil, nil  // caller turns this into a ParamError
+}
+```
+
+---
+
 ## Summary
 
 The repository pattern in this architecture provides:
@@ -916,3 +952,13 @@ The repository pattern in this architecture provides:
 - **Maintainability**: Consistent patterns across the codebase
 
 Follow the patterns in this guide, especially the critical rules about `defer r.clean()` and using `buildQuery()`, and your repositories will be robust, testable, and maintainable.
+
+---
+
+## Related References
+
+- → `references/entity-patterns.md` — entity struct definitions, trait composition, field types
+- → `references/service-patterns.md §5` — transaction management patterns (`StartTx`/`CommitTx`/`RollbackTx`)
+- → `references/infrastructure.md §1` — GORM/MySQL connection setup, pool config, `SkipDefaultTransaction`
+- → `references/context-patterns.md §2` — how ctx flows through the fluent builder to terminal methods
+- → `references/testing.md §7` — repository integration test patterns with testcontainers

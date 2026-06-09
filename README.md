@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">@verzth/skills</h1>
   <p align="center">
-    Curated collection of custom skills for Claude Code, Cowork &amp; OpenClaw
+    Curated collection of custom skills for Claude Code, Cowork, OpenClaw &amp; Hermes Agent
     <br />
     <a href="https://www.npmjs.com/package/@verzth/skills"><strong>npm</strong></a> · <a href="https://github.com/verzth/skills/issues"><strong>Issues</strong></a>
   </p>
@@ -17,12 +17,13 @@
 
 ## What is this?
 
-A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cowork](https://claude.ai), and [OpenClaw](https://openclaw.ai). Each skill extends the AI's behavior with domain-specific frameworks, workflows, and personality — installed with a single command.
+A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cowork](https://claude.ai), [OpenClaw](https://openclaw.ai), and [Hermes Agent](https://hermes-agent.org/). Each skill extends the AI's behavior with domain-specific frameworks, workflows, and personality — installed with a single command.
 
-**Three install paths supported:**
+**Four install paths supported:**
 - **npm CLI** — `npx @verzth/skills install <name>`
 - **Claude Code plugin marketplace** — `/plugin install <name>@verzth-skills`
 - **OpenClaw** — `npx @verzth/skills install <name> --openclaw`
+- **Hermes Agent** — `hermes skills install github:verzth/skills/skills/<name>` *(native)* or `bash install.sh --hermes <name>`
 
 ## Available skills
 
@@ -84,10 +85,11 @@ npx @verzth/skills list
 | `--global` | `-g` | Install to `~/.claude/skills/` — available across all projects |
 | `--project` | `-p` | Install to `./.claude/skills/` — scoped to current project only |
 | `--openclaw` | `-o` | Install for OpenClaw with adapted content |
+| `--hermes` | `-H` | Install for Hermes Agent (path switch to `.hermes/skills/`; no content adaptation needed) |
 
-Flags can be combined: `--openclaw --global` installs adapted skill to `~/.openclaw/skills/`.
+Flags can be combined: `--openclaw --global` installs adapted skill to `~/.openclaw/skills/`. `--openclaw` and `--hermes` are mutually exclusive (run twice if you want both).
 
-When no scope flag is provided and the session is interactive, the CLI prompts you to choose. In non-interactive environments (CI/CD, piped input), it auto-detects based on whether `.claude/` (or `.openclaw/`) exists in the current directory.
+When no scope flag is provided and the session is interactive, the CLI prompts you to choose. In non-interactive environments (CI/CD, piped input), it auto-detects based on whether `.claude/`, `.openclaw/`, or `.hermes/` exists in the current directory.
 
 ## Install via Claude Code plugin marketplace
 
@@ -130,6 +132,71 @@ The `--openclaw` flag adapts skill content at install time:
 - Rewrites paths: `.claude/` → `.openclaw/`, `CLAUDE.md` → `AGENTS.md`
 - Normalizes frontmatter: only `name`, `description`, and `version` are kept
 
+### Install for Hermes Agent
+
+Hermes Agent reads the same `SKILL.md` + YAML frontmatter + `references/` format Claude Code uses — no content adaptation needed. Three install paths:
+
+**1. Native Hermes CLI** (recommended — uses Hermes' own dependency/update tracking):
+
+```bash
+hermes skills install github:verzth/skills/skills/golang-developer
+hermes skills install github:verzth/skills/skills/cso-thinking
+hermes skills list
+```
+
+**2. Our curl one-liner** (drops files into `~/.hermes/skills/` directly):
+
+```bash
+# Install one
+curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- --hermes humanoid-thinking
+
+# Install all
+curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- --hermes
+```
+
+**3. npm CLI**:
+
+```bash
+npx @verzth/skills install humanoid-thinking --hermes --global
+```
+
+Hermes looks for skills in `~/.hermes/skills/` by default (configurable via `skills.external_dirs` in Hermes' `config.yaml`).
+
+### Already using Claude Code? Add Hermes too
+
+If you've already installed these skills into `~/.claude/skills/` and want to use them in Hermes without re-downloading, you have three options:
+
+**Option A — Symlink** (recommended; one source of truth, updates flow automatically):
+
+```bash
+# Per-skill
+mkdir -p ~/.hermes/skills
+for skill in humanoid-thinking golang-developer pm-thinking em-thinking public-awareness board-thinking cso-thinking; do
+  [ -d ~/.claude/skills/$skill ] && ln -sfn ~/.claude/skills/$skill ~/.hermes/skills/$skill
+done
+```
+
+When you later run `npx @verzth/skills update` or re-curl, the change to `~/.claude/skills/<skill>` is instantly visible to Hermes — no second install step.
+
+**Option B — Add `external_dirs` to Hermes config** (cleanest; zero file duplication):
+
+```yaml
+# ~/.hermes/config.yaml
+skills:
+  external_dirs:
+    - ~/.claude/skills
+```
+
+Hermes will load skills from both `~/.hermes/skills/` AND `~/.claude/skills/`. Same single-source-of-truth benefit as symlinks, with no FS clutter.
+
+**Option C — Re-install via Hermes flag** (independent copies; useful if you want per-runtime overrides):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- --hermes
+```
+
+This drops fresh copies into `~/.hermes/skills/`. You then maintain them separately from your `.claude/skills/` set. Pick this only if you intend to diverge the two installs (e.g., test a new version in Hermes before promoting it to Claude).
+
 ### Alternative Install Methods
 
 <details>
@@ -156,6 +223,20 @@ curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bas
 </details>
 
 <details>
+<summary><strong>curl (Hermes Agent)</strong></summary>
+
+```bash
+# Install specific skill for Hermes
+curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- --hermes humanoid-thinking
+
+# Install all skills for Hermes
+curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- --hermes
+```
+
+> Hermes reads `SKILL.md` natively, so curl and the npm CLI produce identical results — no content adaptation step. Or use the Hermes-native CLI: `hermes skills install github:verzth/skills/skills/<name>`.
+</details>
+
+<details>
 <summary><strong>git clone</strong></summary>
 
 ```bash
@@ -166,9 +247,15 @@ cp -r /tmp/verzth-skills/skills/humanoid-thinking .claude/skills/humanoid-thinki
 
 ## How Skills Work
 
-Claude Code and Cowork load skills from `.claude/skills/` directories. Each skill is a folder containing a `SKILL.md` with instructions that shape how Claude thinks and responds.
+Each skill is a folder containing a `SKILL.md` with YAML frontmatter (name, description, version) plus optional `references/`, `scripts/`, `assets/` and `templates/` directories. The runtime loads SKILL.md into context whenever the description matches the user's request.
 
-**Global** (`~/.claude/skills/`) skills are active in every project on your machine. **Project** (`./.claude/skills/`) skills only activate when Claude is working in that specific project directory.
+| Runtime | Skill directory | Loader |
+|---|---|---|
+| Claude Code & Cowork | `~/.claude/skills/` (global) or `./.claude/skills/` (project) | Built-in skill loader |
+| OpenClaw | `~/.openclaw/skills/` or `./.openclaw/skills/` | Built-in (with `--openclaw` content adaptation) |
+| Hermes Agent | `~/.hermes/skills/` (and any `skills.external_dirs` configured in `~/.hermes/config.yaml`) | Native; reads SKILL.md unchanged |
+
+**Global** skills are active in every project on your machine. **Project** skills only activate when the agent is working in that specific project directory.
 
 ### Upgrade-safe
 
@@ -309,7 +396,10 @@ Your personalized settings (like `personality.md`) are automatically backed up a
 Use **global** if you want the skill everywhere. Use **project** if you only want it in a specific repo, or if different projects need different configurations.
 
 **Can I uninstall a skill?**
-Just delete the skill folder from `.claude/skills/` (project) or `~/.claude/skills/` (global). For OpenClaw, same pattern under `.openclaw/skills/`.
+Just delete the skill folder from `.claude/skills/` (project) or `~/.claude/skills/` (global). For OpenClaw, same pattern under `.openclaw/skills/`; for Hermes, under `.hermes/skills/` (or run `hermes skills remove <name>` for installs done via the Hermes CLI).
+
+**I already have skills in `.claude/skills/` — can Hermes use them without re-downloading?**
+Yes. Either symlink each skill from `~/.claude/skills/` into `~/.hermes/skills/`, or add `~/.claude/skills` to Hermes' `skills.external_dirs` in `~/.hermes/config.yaml`. Both options keep one source of truth so updates flow to both runtimes automatically. See the *"Already using Claude Code? Add Hermes too"* section above for commands.
 
 ## License
 

@@ -10,4 +10,15 @@ references/scheduler-patterns.md
 references/provider-integration-patterns.md
 references/testing.md
 references/restructuring.md
+references/context-patterns.md
+references/observability.md
+references/security.md
+references/performance.md
+references/proto-workflow.md
+references/error-handling.md
+references/concurrency-patterns.md
 evals/evals.json
+.claude-plugin/plugin.json
+.cursor-plugin/plugin.json
+gemini-extension.json
+CHANGELOG.md

@@ -1,7 +1,7 @@
 {
   "name": "golang-developer",
-  "version": "1.3.0",
-  "description": "Go microservices development with Clean Architecture, GORM, gRPC + grpc-gateway, Google Wire DI, NATS JetStream, Redis, MySQL. Covers scaffolding, code review, debugging, testing, architecture guidance, restructuring existing projects to the target layout, and a strict proto workflow (buf lint mandatory pre-commit, protoc-go-inject-tag for validate/json struct tags, never edit *.pb.go by hand).",
+  "version": "1.4.2",
+  "description": "Go microservices development with Clean Architecture, GORM, gRPC + grpc-gateway, Google Wire DI, NATS JetStream, Redis, MySQL. Covers scaffolding, code review, debugging, testing, restructuring, proto workflow (buf + protoc-go-inject-tag), context propagation (tenant key, NATS consumer ctx, WithoutCancel), concurrency (sync primitives, errgroup, singleflight, goroutine leaks, GORM/repo thread-safety, -race policy), observability (Zap + OTel + metrics), security (TOTP/HMAC/Vault/govulncheck), performance (pprof + allocation hotspots), and error handling (ParamError + samber/oops). Project Bootstrap Flow confirms stack choice with the user before scaffolding a new service.",
   "author": {
     "name": "Dodi (Verzth)",
     "url": "https://github.com/verzth"
@@ -18,6 +18,9 @@
     "clean-architecture",
     "gorm",
     "wire-di",
-    "nats-jetstream"
+    "nats-jetstream",
+    "buf",
+    "observability",
+    "security"
   ]
 }
