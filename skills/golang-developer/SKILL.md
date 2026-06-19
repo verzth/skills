@@ -1,23 +1,19 @@
 ---
 name: golang-developer
 description: >
-  Go microservices development for the team's opinionated production stack —
-  Clean Architecture with GORM, gRPC + grpc-gateway, Google Wire DI, NATS JetStream,
-  Redis, MySQL, Goose migrations, buf + protoc-go-inject-tag proto workflow, and
-  Supervisord multi-process layout. Covers scaffolding new services, project
-  restructuring (`git mv` driven), code review against team standards, debugging
-  in this stack, testing with testify, observability (Zap + tracing), security
-  (HMAC/TOTP/Vault), performance tuning, context propagation, concurrency (sync
-  primitives, errgroup, singleflight, goroutine leaks), and error handling.
-  Use when the user mentions Go/Golang/microservices/gRPC, asks to scaffold or
-  restructure a service, requests review of Go code that touches entities/services/
-  repositories/controllers/proto/scheduler, or debugs stack-specific issues (NATS
-  consumer, Wire injection, GORM tx, CronLocker, proto generation). Not for
-  generic Go language idioms unrelated to this stack (→ See
-  `samber/cc-skills-golang@golang-code-style`), not for Go performance theory
-  without a stack-specific context (→ See `samber/cc-skills-golang@golang-performance`),
-  not for greenfield Go projects that explicitly opt out of this stack — confirm
-  with the user during Project Bootstrap Flow before generating code.
+  Go microservices for the team's production stack — Clean Architecture with GORM, gRPC
+  + grpc-gateway, Wire DI, NATS JetStream, Redis, MySQL, Goose migrations, buf +
+  protoc-go-inject-tag proto workflow, Supervisord layout. Covers scaffolding,
+  restructuring (`git mv` driven), code review, debugging, testing with testify,
+  observability (Zap + tracing), security (HMAC/TOTP/Vault), performance, concurrency
+  (errgroup, singleflight, goroutine leaks), and error handling. Use when the user
+  mentions Go/Golang/microservices/gRPC, asks to scaffold or restructure a service,
+  reviews Go code touching entities/services/repositories/controllers/proto/scheduler,
+  or debugs stack issues (NATS consumer, Wire injection, GORM tx, CronLocker, proto
+  generation). Not for generic Go idioms unrelated to this stack (→
+  `samber/cc-skills-golang@golang-code-style`), Go performance theory (→
+  `samber/cc-skills-golang@golang-performance`), or greenfield projects opting out —
+  confirm during Project Bootstrap Flow first.
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Cursor, Gemini CLI, OpenClaw, OpenCode, and similar AI coding agents. Targets Go 1.25+ microservices using the documented stack.

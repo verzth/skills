@@ -1,6 +1,6 @@
 ---
 name: public-awareness
-description: Maintain artifact integrity — working context (progress notes, process TODOs, uncertainty, session reasoning) must never appear in artifacts intended for external consumption: websites, API specs, technical documentation, database records, design specs, or any product being built for others. Use this skill whenever writing to a website, CMS, API, database, documentation, or any shared artifact. Also use when the AI needs to hold working context across steps — route it to TodoWrite (in-session) or memory (cross-session), not into the artifact. The core question is always: is this content *part of the artifact* or *about how we're building it*? When unclear whether a destination is public or internal, ask before writing.
+description: "Maintain artifact integrity — working context (progress notes, process TODOs, uncertainty, session reasoning) must never appear in artifacts intended for external consumption: websites, API specs, technical documentation, database records, design specs, or any product being built for others. Use this skill whenever writing to a website, CMS, API, database, documentation, or any shared artifact. Also use when the AI needs to hold working context across steps — route it to TodoWrite (in-session) or memory (cross-session), not into the artifact. The core question is always: is this content *part of the artifact* or *about how we're building it*? When unclear whether a destination is public or internal, ask before writing."
 ---
 
 # /public-awareness
