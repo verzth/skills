@@ -24,6 +24,7 @@ ALL_SKILLS=(
     "public-awareness"
     "board-thinking"
     "cso-thinking"
+    "mockerize"
 )
 
 # Parse flags
@@ -77,6 +78,11 @@ else
     fi
 fi
 
+# Resolve the destination before entering temporary checkout directories.
+if [[ "$BASE_TARGET" != /* ]]; then
+    BASE_TARGET="$(pwd)/${BASE_TARGET#./}"
+fi
+
 # Determine which skills to install
 REQUESTED_SKILLS=("${REMAINING_ARGS[@]}")
 if [ ${#REQUESTED_SKILLS[@]} -eq 0 ]; then
@@ -95,16 +101,19 @@ install_via_git() {
     local target="$BASE_TARGET/$skill"
     local tmp_dir=$(mktemp -d)
 
-    cd "$tmp_dir"
-    git init -q
-    git remote add origin "$REPO_URL.git"
-    git config core.sparseCheckout true
-    echo "skills/$skill/" > .git/info/sparse-checkout
-    git pull -q --depth 1 origin main 2>/dev/null
+    if (
+        cd "$tmp_dir"
+        git init -q
+        git remote add origin "$REPO_URL.git"
+        git config core.sparseCheckout true
+        echo "skills/$skill/" > .git/info/sparse-checkout
+        git pull -q --depth 1 origin main 2>/dev/null
 
-    if [ -d "skills/$skill" ]; then
+        [ -d "skills/$skill" ]
         rm -rf "$target"
-        cp -r "skills/$skill" "$target"
+        mkdir -p "$(dirname "$target")"
+        cp -R "skills/$skill" "$target"
+    ); then
         rm -rf "$tmp_dir"
         return 0
     fi
@@ -118,6 +127,8 @@ install_via_curl() {
     local skill=$1
     local target="$BASE_TARGET/$skill"
     local manifest_url="$RAW_BASE/skills/$skill/MANIFEST"
+
+    rm -rf "$target"
 
     local manifest
     manifest=$(curl -fsSL "$manifest_url" 2>/dev/null) || {
@@ -135,7 +146,7 @@ install_via_curl() {
         [[ "$file" == \#* ]] && continue
         local dir=$(dirname "$file")
         [ "$dir" != "." ] && mkdir -p "$target/$dir"
-        curl -fsSL "$RAW_BASE/skills/$skill/$file" -o "$target/$file"
+        curl -fsSL "$RAW_BASE/skills/$skill/$file" -o "$target/$file" || return 1
     done <<< "$manifest"
 
     return 0
@@ -173,8 +184,23 @@ FAIL=0
 for skill in "${REQUESTED_SKILLS[@]}"; do
     echo "── $skill"
 
-    if ! curl -fsSL "$RAW_BASE/skills/$skill/SKILL.md" -o /dev/null 2>/dev/null; then
-        echo "   ❌ Skill not found in repo"
+    KNOWN_SKILL=false
+    for available_skill in "${ALL_SKILLS[@]}"; do
+        if [ "$skill" = "$available_skill" ]; then
+            KNOWN_SKILL=true
+            break
+        fi
+    done
+
+    if [ "$KNOWN_SKILL" = false ]; then
+        echo "   ❌ Unknown skill"
+        FAIL=$((FAIL + 1))
+        continue
+    fi
+
+    if ! curl -fsSL "$RAW_BASE/skills/$skill/SKILL.md" -o /dev/null 2>/dev/null &&
+       ! curl -fsSL "$RAW_BASE/skills/$skill/.claude-plugin/plugin.json" -o /dev/null 2>/dev/null; then
+        echo "   ❌ Skill not found in published repository"
         FAIL=$((FAIL + 1))
         continue
     fi
@@ -211,3 +237,7 @@ elif [ "$HERMES" = true ]; then
     echo "        hermes skills install github:verzth/skills/skills/<name>"
 fi
 echo "════════════════════════════════════"
+
+if [ "$FAIL" -gt 0 ]; then
+    exit 1
+fi

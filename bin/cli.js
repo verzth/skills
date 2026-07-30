@@ -109,6 +109,18 @@ function getOpenClawProjectDir() {
   return path.join(process.cwd(), ".openclaw", "skills");
 }
 
+function getHermesGlobalDir() {
+  return path.join(
+    process.env.HOME || process.env.USERPROFILE || "~",
+    ".hermes",
+    "skills"
+  );
+}
+
+function getHermesProjectDir() {
+  return path.join(process.cwd(), ".hermes", "skills");
+}
+
 // ── OpenClaw content transformer ────────────────────────
 
 // Applied longest-first to avoid partial replacements.
@@ -194,11 +206,23 @@ function transformForOpenClaw(content, version) {
 
 // ── Directory resolution ─────────────────────────────────
 
-function resolveTargetDir(args, isOpenClaw) {
-  const globalDir = isOpenClaw ? getOpenClawGlobalDir() : getGlobalDir();
-  const projectDir = isOpenClaw ? getOpenClawProjectDir() : getProjectDir();
-  const host = isOpenClaw ? "OpenClaw" : "Claude";
-  const dotDir = isOpenClaw ? ".openclaw" : ".claude";
+function resolveTargetDir(args, hostMode) {
+  let globalDir = getGlobalDir();
+  let projectDir = getProjectDir();
+  let host = "Claude";
+  let dotDir = ".claude";
+
+  if (hostMode === "openclaw") {
+    globalDir = getOpenClawGlobalDir();
+    projectDir = getOpenClawProjectDir();
+    host = "OpenClaw";
+    dotDir = ".openclaw";
+  } else if (hostMode === "hermes") {
+    globalDir = getHermesGlobalDir();
+    projectDir = getHermesProjectDir();
+    host = "Hermes";
+    dotDir = ".hermes";
+  }
 
   if (args.includes("-g") || args.includes("--global")) {
     return { target: globalDir, scope: "global" };
@@ -287,7 +311,20 @@ function restorePersonality(targetSkillDir, backupPath) {
 
 async function cmdInstall(args) {
   const isOpenClaw = args.includes("--openclaw") || args.includes("-o");
-  const cleanArgs = args.filter((a) => a !== "--openclaw" && a !== "-o");
+  const isHermes = args.includes("--hermes") || args.includes("-H");
+
+  if (isOpenClaw && isHermes) {
+    throw new Error("--openclaw and --hermes are mutually exclusive");
+  }
+
+  const cleanArgs = args.filter(
+    (a) =>
+      a !== "--openclaw" &&
+      a !== "-o" &&
+      a !== "--hermes" &&
+      a !== "-H"
+  );
+  const hostMode = isOpenClaw ? "openclaw" : isHermes ? "hermes" : "claude";
 
   const available = getAvailableSkills();
   const skillArgs = cleanArgs.filter((a) => !a.startsWith("-"));
@@ -315,9 +352,11 @@ async function cmdInstall(args) {
 
   if (isOpenClaw) {
     console.log(`${c.magenta}${c.bold}   Host: OpenClaw${c.reset} ${c.dim}(content will be adapted for openclaw)${c.reset}`);
+  } else if (isHermes) {
+    console.log(`${c.magenta}${c.bold}   Host: Hermes${c.reset} ${c.dim}(skill content is copied without adaptation)${c.reset}`);
   }
 
-  const result = await resolveTargetDir(cleanArgs, isOpenClaw);
+  const result = await resolveTargetDir(cleanArgs, hostMode);
   const targetBase = result.target;
   const scope = result.scope;
 
@@ -359,7 +398,13 @@ async function cmdInstall(args) {
     }
   }
 
-  const hostLabel = isOpenClaw ? "OpenClaw" : (scope === "global" ? "Global" : "Project");
+  const hostLabel = isOpenClaw
+    ? "OpenClaw"
+    : isHermes
+      ? "Hermes"
+      : scope === "global"
+        ? "Global"
+        : "Project";
   console.log(`\n${"═".repeat(40)}`);
   console.log(`  ${c.green}✅ Installed: ${success}${c.reset}`);
   if (fail > 0) console.log(`  ${c.red}❌ Failed: ${fail}${c.reset}`);
@@ -390,7 +435,7 @@ function cmdList() {
 function cmdHelp() {
   console.log(`
 ${c.cyan}${c.bold}@verzth/skills${c.reset} v${VERSION}
-Custom skills for Claude Code and OpenClaw
+Custom skills for Claude Code, OpenClaw, and Hermes Agent
 
 ${c.bold}USAGE${c.reset}
   npx @verzth/skills <command> [options]
@@ -398,6 +443,7 @@ ${c.bold}USAGE${c.reset}
 ${c.bold}COMMANDS${c.reset}
   install [skill...]    Install skills (interactive scope picker)
   install --all         Install all available skills
+  update [skill...]     Reinstall one or all skills from this package
   list                  Show available skills
   help                  Show this help
 
@@ -405,7 +451,9 @@ ${c.bold}FLAGS${c.reset}
   -g, --global          Install to ~/.claude/skills/ (all projects)
   -p, --project         Install to ./.claude/skills/ (current project)
   -o, --openclaw        Install for OpenClaw (~/.openclaw/skills/)
-  ${c.dim}Combine: --openclaw --global or --openclaw --project${c.reset}
+  -H, --hermes          Install for Hermes (~/.hermes/skills/)
+  ${c.dim}Combine a host flag with --global or --project${c.reset}
+  ${c.dim}--openclaw and --hermes are mutually exclusive${c.reset}
   ${c.dim}If no scope flag given, you'll be prompted to choose.${c.reset}
 
 ${c.bold}EXAMPLES${c.reset}
@@ -413,6 +461,8 @@ ${c.bold}EXAMPLES${c.reset}
   npx @verzth/skills install public-awareness --global
   npx @verzth/skills install public-awareness --openclaw
   npx @verzth/skills install public-awareness --openclaw --global
+  npx @verzth/skills install public-awareness --hermes --global
+  npx @verzth/skills update public-awareness --global
   npx @verzth/skills install --all --project
   npx @verzth/skills list
 
@@ -422,6 +472,11 @@ ${c.bold}OPENCLAW${c.reset}
   • Rewrites tool names (Bash→exec, Write→write, Agent→sessions_spawn)
   • Rewrites paths (.claude/→.openclaw/)
   • Normalizes frontmatter (name + description + version only)
+
+${c.bold}HERMES${c.reset}
+  The --hermes flag copies skill content without adaptation:
+  • Installs to ~/.hermes/skills/ or .hermes/skills/
+  • Supports the same global and project scopes
 
 ${c.bold}NOTES${c.reset}
   - Personality settings are preserved on upgrade
@@ -438,6 +493,9 @@ async function main() {
     case "install":
     case "i":
     case "add":
+      await cmdInstall(args);
+      break;
+    case "update":
       await cmdInstall(args);
       break;
     case "list":

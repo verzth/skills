@@ -1,6 +1,6 @@
 {
   "name": "pm-thinking",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "AI-First Product Management — opinionated skill bundle untuk tech-literate Product PM. Includes /pm-discover (synthesize user research), /pm-works (write PRD with strict tech-implications), and /pm-decide (multi-mode: --prio, --review, --stakeholder, --retro).",
   "author": {
     "name": "Dodi (Verzth)",

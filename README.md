@@ -23,7 +23,7 @@ A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/d
 - **npm CLI** — `npx @verzth/skills install <name>`
 - **Claude Code plugin marketplace** — `/plugin install <name>@verzth-skills`
 - **OpenClaw** — `npx @verzth/skills install <name> --openclaw`
-- **Hermes Agent** — `hermes skills install github:verzth/skills/skills/<name>` *(native)* or `bash install.sh --hermes <name>`
+- **Hermes Agent** — `npx @verzth/skills install <name> --hermes`, `hermes skills install github:verzth/skills/skills/<name>` *(native)*, or `bash install.sh --hermes <name>`
 
 ## Available skills
 
@@ -34,8 +34,9 @@ A plug-and-play skill registry for [Claude Code](https://docs.anthropic.com/en/d
 | `pm-thinking` | bundle | AI-First Product Management — pm-discover, pm-works, pm-decide |
 | `em-thinking` | bundle | AI-First Engineering Management — em-plan, em-works, em-review |
 | `public-awareness` | single | Artifact integrity guardrail — keeps internal working context out of public-facing artifacts |
-| `board-thinking` | single | Board Thinking idea diagnostic — convene a virtual board of 5-7 advisors (`/onboard`) to stress-test an idea before PRD or architecture |
-| `cso-thinking` | single | CSO mindset security audit — single command (`/cso-audit`) covers frontend / backend / infra / db / Android / iOS / generic; emits SECURITY_AUDIT.md + .html with score, audit list, and fix-ready remediation prompts |
+| `board-thinking` | bundle | Board Thinking idea diagnostic — convene a virtual board of 5-7 advisors (`/onboard`) to stress-test an idea before PRD or architecture |
+| `cso-thinking` | bundle | CSO mindset security audit — single command (`/cso-audit`) covers frontend / backend / infra / db / Android / iOS / generic; emits SECURITY_AUDIT.md + .html with score, audit list, and fix-ready remediation prompts |
+| `mockerize` | single | Mockup-to-production UI — visual fidelity at the reference viewport, responsive constraints elsewhere, and real frontend-backend integration |
 
 > Want something else? [Request a skill →](https://github.com/verzth/skills/issues/new)
 
@@ -74,6 +75,10 @@ npx @verzth/skills install humanoid-thinking <other-skill>
 # Install all available skills
 npx @verzth/skills install --all
 
+# Update one or all installed skills
+npx @verzth/skills update <skill-name>
+npx @verzth/skills update
+
 # List available skills
 npx @verzth/skills list
 ```
@@ -104,8 +109,10 @@ If you prefer the native plugin marketplace mechanism in Claude Code:
 /plugin install golang-developer@verzth-skills
 /plugin install pm-thinking@verzth-skills
 /plugin install em-thinking@verzth-skills
+/plugin install public-awareness@verzth-skills
 /plugin install board-thinking@verzth-skills
 /plugin install cso-thinking@verzth-skills
+/plugin install mockerize@verzth-skills
 ```
 
 Update later:
@@ -171,7 +178,7 @@ If you've already installed these skills into `~/.claude/skills/` and want to us
 ```bash
 # Per-skill
 mkdir -p ~/.hermes/skills
-for skill in humanoid-thinking golang-developer pm-thinking em-thinking public-awareness board-thinking cso-thinking; do
+for skill in humanoid-thinking golang-developer pm-thinking em-thinking public-awareness board-thinking cso-thinking mockerize; do
   [ -d ~/.claude/skills/$skill ] && ln -sfn ~/.claude/skills/$skill ~/.hermes/skills/$skill
 done
 ```
@@ -233,7 +240,7 @@ curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bas
 curl -fsSL https://raw.githubusercontent.com/verzth/skills/main/install.sh | bash -s -- --hermes
 ```
 
-> Hermes reads `SKILL.md` natively, so curl and the npm CLI produce identical results — no content adaptation step. Or use the Hermes-native CLI: `hermes skills install github:verzth/skills/skills/<name>`.
+> Hermes reads `SKILL.md` natively, so both curl and the npm CLI install skill content without an adaptation step. Or use the Hermes-native CLI: `hermes skills install github:verzth/skills/skills/<name>`.
 </details>
 
 <details>
@@ -247,7 +254,7 @@ cp -r /tmp/verzth-skills/skills/humanoid-thinking .claude/skills/humanoid-thinki
 
 ## How Skills Work
 
-Each skill is a folder containing a `SKILL.md` with YAML frontmatter (name, description, version) plus optional `references/`, `scripts/`, `assets/` and `templates/` directories. The runtime loads SKILL.md into context whenever the description matches the user's request.
+Each skill contains YAML frontmatter with the required `name` and `description` fields; runtimes or installers may add an optional `version`. A skill may also include `references/`, `scripts/`, `assets/`, `templates/`, or evaluation files. The runtime loads `SKILL.md` when its description matches the user's request.
 
 | Runtime | Skill directory | Loader |
 |---|---|---|
@@ -379,10 +386,29 @@ A Chief Security Officer in a single command. **One install → one skill**: `/c
 
 [Read full documentation →](./skills/cso-thinking/README.md)
 
+## Skill: mockerize
+
+A mockup-to-production implementation workflow for turning visual references into responsive, fully integrated product UI.
+
+**What it does:**
+- **High visual fidelity without brittle positioning** — matches the reference viewport closely, then preserves layout constraints, hierarchy, and usability across other device sizes
+- **Explicit implementation mapping** — traces every visible element and action through UI components, frontend state, API contracts, backend services, and persistence
+- **Correct-layer adjustments** — separates visual, layout, data, interaction, and domain mismatches so each problem is fixed at its owning layer instead of hidden with frontend workarounds
+- **Minimal backend evolution** — adds only the contracts, validation, authorization, service, schema, or migration changes the real UI needs while protecting existing consumers and flows
+- **Visual adjustment loop** — renders, compares, prioritizes high-impact differences, adjusts, and rechecks responsive sizes instead of declaring success from code inspection
+- **End-to-end definition of done** — includes loading, empty, error, permission, validation, submission, long-data, build, contract, and regression verification
+- **Benchmark coverage** — 10 execution-quality scenarios plus 20 balanced trigger cases covering visual fidelity, responsive inference, mapping, backend evolution, protected flows, authorization, and rendered verification
+
+**Core rule:** pixel-faithful at the reference viewport, constraint-faithful everywhere else.
+
+**When to use:** "implement this mockup", "make this screen match Figma", "follow this Pencil design", "turn this screenshot into responsive UI", "map this design to the API/backend", or "adjust the backend to support this mockup."
+
+[Read full documentation →](./skills/mockerize/SKILL.md)
+
 ## Requirements
 
-- **Node.js** 14+ (for `npx`)
-- **Claude Code** or **Cowork** by Anthropic, or **OpenClaw**
+- **Node.js** 14.14+ (for `npx`)
+- **Claude Code** or **Cowork** by Anthropic, **OpenClaw**, or **Hermes Agent**
 
 ## FAQ
 
