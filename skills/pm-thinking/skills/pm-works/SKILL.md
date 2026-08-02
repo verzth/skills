@@ -8,6 +8,8 @@ argument-hint: "<feature topic or path to discovery.md>"
 
 Write a complete PRD from a discovery output or hypothesis. Output is ready to hand off to the `engineer-manager` skill (or directly to the eng team).
 
+> **Reference resolution.** `../../references/*.md` paths resolve inside the `pm-thinking` bundle. If a referenced file does not exist (standalone/flattened install), **say so explicitly** and continue with the rules inlined in this SKILL.md — never improvise the missing file's content; recommend reinstalling the full `pm-thinking` bundle.
+
 This skill is **draft-only**. For audit / red-team, run `/pm-decide --review` after the PRD is done.
 
 ## ⚠ Question Format Rule (mandatory for every skill in pm-thinking)

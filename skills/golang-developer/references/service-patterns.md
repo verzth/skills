@@ -335,7 +335,7 @@ func IsOrderItemsValid(items []OrderItemParams) (valid bool) {
 
 ### File Structure
 
-Each domain entity gets three files:
+Each domain entity gets **three files** — never combined, even for a one-method service:
 
 ```
 src/service/
@@ -345,6 +345,8 @@ src/service/
 ```
 
 Shared types live in `src/service/service_params.go` (Params interface, ParamError, Limited, Paginated).
+
+**Adding a method touches all relevant files:** the method signature goes in `x_service.go`, the body in `x_service_impl.go`, and any new Params struct (with its three validation methods) in `x_service_params.go`. Never declare a Params struct or an interface inline in the impl file.
 
 ### Struct & Constructor
 
@@ -971,6 +973,7 @@ func (s *OrderServiceImpl) Gets(
 
 | Anti-pattern | Why it breaks | Fix |
 |---|---|---|
+| Interface, impl, and Params combined in one file | Breaks the team layout (§3); Wire providers and reviewers expect the split; merge conflicts multiply on hot domains | Split into `x_service.go` / `x_service_impl.go` / `x_service_params.go` |
 | Returning `(result, error)` instead of `(result, error, []ParamError)` | Controllers must handle validation separately from system errors; mismatching caller expectations | Always use the triple return; consolidate in `error-handling.md §1` |
 | Wrapping validation errors in `error` (not `[]ParamError`) | Controller can't extract field-level detail; response code won't include field info | Return param errors as `[]ParamError`; system errors as `error` |
 | Missing `defer helpers.LogAndCatchPanic()` at top of exported methods | Unrecovered panics crash the process; Supervisord restarts but you lose the stack trace | Add as the **first line** of every exported service method |

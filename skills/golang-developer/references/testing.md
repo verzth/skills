@@ -22,6 +22,14 @@
 
 Tests live in a **separate `test/` directory** to avoid import cycles with internal packages.
 
+> **Placement rule — this intentionally overrides the Go idiom.** In generic Go projects, `order_service_test.go` sits next to `order_service.go`. **Not in this stack.** Never create `*_test.go` adjacent to source in `src/` or `engine/` — ALL tests (unit, integration, benchmark) go under `test/{layer}/`. Why the team chose centralized:
+>
+> 1. **Black-box by construction** — `package service_test` in `test/service/` can only touch exported API, so tests exercise the same surface controllers and Wire see. Unexported helpers get covered through the exported methods that use them; if one can't be reached that way, it's dead code or belongs in the interface.
+> 2. **Shared fixtures without cycles** — `test/fixtures/` is imported by every layer's tests; adjacent tests would each need their own copies or create `src/ → fixtures → src/` cycles.
+> 3. **Clean `src/`** — production tree stays free of mocks and test noise; reviewers diff business logic without test churn mixed in.
+>
+> **Consequence you must remember:** coverage needs `-coverpkg`. A plain `go test -cover ./test/...` measures the test packages themselves (≈0%). Use `go test -coverpkg=./src/... -coverprofile=coverage.out ./test/...`.
+
 ```
 test/
 ├── grpc/                    # Controller-layer tests (gRPC)
@@ -558,8 +566,8 @@ go test -tags=integration ./test/...
 # Race detector (mandatory in CI — see concurrency-patterns.md §14)
 go test -race ./test/...
 
-# With coverage
-go test -cover -coverprofile=coverage.out ./test/...
+# With coverage — MUST use -coverpkg (plain -cover on test/ packages reports ~0%)
+go test -coverpkg=./src/... -coverprofile=coverage.out ./test/...
 go tool cover -html=coverage.out
 ```
 
@@ -569,6 +577,7 @@ go tool cover -html=coverage.out
 
 | Anti-pattern | Why it breaks | Fix |
 |---|---|---|
+| Placing `_test.go` next to the source file (`src/service/order_service_test.go`) | Violates the team layout (§1); grants white-box access to layers meant to be tested black-box; fixtures get duplicated per package | Move to `test/{layer}/` with `package *_test`; import the package under test; share fixtures via `test/fixtures/` |
 | Using gomock or mockery generated mocks | Generated mocks drift silently when interface changes; compiler won't catch it if the mock file isn't regenerated | Hand-write mock structs; compiler enforces interface match |
 | Mocking GORM directly in service tests | GORM's `*gorm.DB` interface is huge; mock diverges from real behavior quickly | Mock the **repository interface**, not GORM |
 | Testing all layers in one test | One test tests nothing specifically; failure root cause is unclear | One test per layer; mock the layer below |

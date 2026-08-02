@@ -8,6 +8,8 @@ argument-hint: "--prio | --review <prd-path> | --stakeholder <audience> | --retr
 
 Multi-mode skill for the **deliberate reflection layer** — prio, review, stakeholder, retro. Each mode uses the forcing-question pattern, not an empty template.
 
+> **Reference resolution.** `../../references/*.md` paths resolve inside the `pm-thinking` bundle. If a referenced file does not exist (standalone/flattened install), **say so explicitly** and continue with the rules inlined in this SKILL.md — never improvise the missing file's content; recommend reinstalling the full `pm-thinking` bundle.
+
 ## ⚠ Question Format Rule (mandatory for every skill in pm-thinking)
 
 **Every question to the user must be tagged with a unique label** (1/2/3 or a/b/c) so the user can respond by pointing — anti-ambiguous, saves user effort.

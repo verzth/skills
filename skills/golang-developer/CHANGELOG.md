@@ -4,6 +4,28 @@ All notable changes to the `golang-developer` skill are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 
+## [1.5.0] — 2026-08-03
+
+### Added
+
+- **`### File Placement Rules (non-negotiable)` table in `SKILL.md`** — always-in-context rules for where files go: tests only under `test/{layer}/` (never adjacent to source), service = 3 files (`x_service.go` / `x_service_impl.go` / `x_service_params.go`), repository = 2 files, transformer = 2 files, controller single-file exception. Includes the "adding a method touches interface + impl (+ params)" rule.
+- **"Tests ride along" router note in `SKILL.md`** — any scaffold task that also produces tests must additionally load `testing.md`, because test placement in this stack is not the Go default and the scaffold references don't cover it.
+- **`repository-patterns.md §3` File Structure section** — the two-file layout (`x_repository.go` interface + `x_repository_impl.go` impl) was previously documented **nowhere** in the reference; added with the "update both files" rule and a matching anti-pattern entry.
+- **`testing.md §1` placement callout** — explicit "this overrides the Go idiom" block with the three reasons for the centralized `test/` layout (black-box surface, shared fixtures, clean `src/`) and the `-coverpkg=./src/...` coverage consequence; §11 coverage command corrected; §12 gains a "test file adjacent to source" anti-pattern (first row).
+- **Two new "Important" review checklist items in `SKILL.md`** — test file adjacent to source, and interface/impl/Params combined in one file — so violations get caught at review even when they slip through generation.
+
+### Changed
+
+- `SKILL.md` scaffold checklists for Service and Repository now open with the file-split rule (previously the split was only mentioned in the low-priority Idiomatic review tier).
+- `SKILL.md` Idiomatic review item "Interface in consumer file, implementation separate" reworded — the old phrasing read like the generic Go "define interfaces where consumed" idiom, which contradicts the team's actual `x_service.go` / `x_service_impl.go` layout.
+- `service-patterns.md §3` File Structure strengthened: "never combined, even for a one-method service" + explicit adding-a-method file checklist; §8 gains a combined-file anti-pattern (first row).
+- `SKILL.md §4 Testing` now states the `test/{layer}/` placement rule inline instead of only deferring to `testing.md`.
+
+### Fixed
+
+- **Adjacent-test-file root cause**: the `test/`-only rule lived exclusively in lazy-loaded `testing.md §1`, which the Task Router only loads for test-centric prompts — so "scaffold X + tests" flows never saw it and the model regressed to the idiomatic-Go adjacent `_test.go` convention. The rule is now in always-loaded `SKILL.md` (layout table + §4 + review checklist) and the router loads `testing.md` whenever tests are a side deliverable.
+- **Combined-file root cause**: the service 3-file split was buried mid-file in `service-patterns.md §3`, the repository split was undocumented, and `SKILL.md` only referenced file naming in the lowest-priority review tier with ambiguous phrasing. The split is now stated at generation time (scaffold checklists + File Placement Rules) and at review time (Important tier).
+
 ## [1.4.2] — 2026-06-09
 
 ### Added

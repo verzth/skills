@@ -1,6 +1,6 @@
 {
   "name": "golang-developer",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Go microservices development with Clean Architecture, GORM, gRPC + grpc-gateway, Google Wire DI, NATS JetStream, Redis, MySQL. Covers scaffolding, code review, debugging, testing, restructuring, proto workflow (buf + protoc-go-inject-tag), context propagation, concurrency (sync primitives, errgroup, singleflight, goroutine leaks), observability (Zap + OTel), security (HMAC/TOTP/Vault), performance (pprof), and error handling (ParamError + samber/oops).",
   "author": {
     "name": "Dodi (Verzth)",

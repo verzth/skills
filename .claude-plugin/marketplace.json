@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Verzth's curated Claude Code skills \u2014 humanoid-thinking framework, Go microservices, AI-First Product Management, AI-First Engineering Management, and more. Available via npm and Claude Code plugin marketplace.",
-    "version": "1.12.0"
+    "version": "1.13.0"
   },
   "plugins": [
     {
@@ -32,7 +32,7 @@
       "name": "golang-developer",
       "source": "./skills/golang-developer",
       "description": "Go microservices development with Clean Architecture, GORM, gRPC + grpc-gateway, Wire DI, NATS JetStream, Redis, MySQL. Covers scaffolding, code review, debugging, testing, restructuring existing projects into the target layout (inventory → mapping → git mv → regenerate → verify), and a strict proto workflow — buf mandatory (lint as blocking pre-commit gate, breaking-change detection vs main), protoc-go-inject-tag for validate/json struct tags via // @gotags magic comments, make protogen always over raw buf generate so validation tags don't get wiped.",
-      "version": "1.4.2",
+      "version": "1.5.0",
       "author": {
         "name": "Dodi (Verzth)"
       },
@@ -50,7 +50,7 @@
       "name": "pm-thinking",
       "source": "./skills/pm-thinking",
       "description": "AI-First Product Management bundle \u2014 pm-discover (synthesize research), pm-works (write PRD with Tech Implications), pm-decide (multi-mode: prio/review/stakeholder/retro). Tech-literate, with explicit handoff to engineer-manager. English-only since v1.5.0.",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "author": {
         "name": "Dodi (Verzth)"
       },
@@ -70,7 +70,7 @@
       "name": "em-thinking",
       "source": "./skills/em-thinking",
       "description": "AI-First Engineering Management bundle \u2014 em-plan (architectural plan with risk tier T0-T3, scope challenge, invariants, failure modes, test strategy, dual output edd.md + edd.html), em-works (execution-ready handoff: atomic tickets with AI compute class + token estimates, worktree lanes, env/secrets spec, deploy plan artifact, dual eng-works.md + eng-works.html), em-review (Mode A code review + Mode B hypothesis-driven debug, dual .md + .html for all modes). Companion to pm-thinking. Role-based handoff (engineer/security-reviewer/qa-reviewer/release-engineer/devops). English-only since v1.5.0.",
-      "version": "0.4.0",
+      "version": "0.4.1",
       "author": {
         "name": "Dodi (Verzth)"
       },

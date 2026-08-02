@@ -284,6 +284,18 @@ func (r OrderRepositoryImpl) ForStatus(status string) OrderRepository {
 
 ## 3. Implementation Pattern
 
+### File Structure
+
+Each domain entity gets **two files** — interface and implementation are never combined:
+
+```
+src/repository/
+├── order_repository.go        # Interface: embedded base generics + For* builders + execution methods
+└── order_repository_impl.go   # Implementation: struct, constructor, all methods
+```
+
+Shared generic bases (`BaseRepository[T]`, `DBTransaction[T]`, `SearchableRepository[T]`) live in `src/repository/repository.go`. When adding a query builder or execution method, update **both** files — never declare a new interface method only on the impl, and never inline the interface into `*_impl.go`.
+
 Every repository implementation follows the same three-field structure.
 
 ### Struct Definition
@@ -818,6 +830,18 @@ orders, total, err := orderRepo.
 | Generics | `[T]` | `BaseRepository[T]` |
 
 ## Anti-Patterns
+
+❌ **DON'T:** Combine interface and implementation in one file
+```go
+// Wrong — order_repository.go containing both the interface AND OrderRepositoryImpl
+```
+
+✅ **DO:** Split per the file structure (§3)
+```go
+// Correct — order_repository.go (interface) + order_repository_impl.go (impl)
+```
+
+---
 
 ❌ **DON'T:** Access `db` or `tx` directly
 ```go

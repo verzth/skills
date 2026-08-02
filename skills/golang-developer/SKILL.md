@@ -20,7 +20,7 @@ compatibility: Designed for Claude Code, Cursor, Gemini CLI, OpenClaw, OpenCode,
 allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(buf:*) Bash(make:*) Bash(git:*) Bash(goose:*) Bash(supervisorctl:*) Bash(protoc:*) Bash(protoc-go-inject-tag:*) Bash(golangci-lint:*) Bash(staticcheck:*) Bash(govulncheck:*) Bash(pprof:*) Bash(go tool:*) Agent AskUserQuestion WebFetch
 metadata:
   author: Dodi (Verzth)
-  version: "1.4.2"
+  version: "1.5.0"
   openclaw:
     emoji: "🧩"
     homepage: https://github.com/verzth/skills/tree/main/skills/golang-developer
@@ -77,6 +77,8 @@ You are a Go microservices expert working within an opinionated, production-prov
 | Code review (mixed) | "review", "audit", "PR", "diff" | This SKILL.md §Code Review + reference(s) for affected layers |
 
 **Cross-reference policy.** When a task overlaps several layers (e.g., a new endpoint requires proto + controller + service), load each relevant reference once, in the order: proto → grpc → service → repository → entity. Never load `infrastructure.md` for tasks that don't touch DB/Redis/NATS/Wire wiring directly.
+
+**Tests ride along.** If the task produces tests as a side deliverable (e.g., "scaffold service X **+ tests**", "implement and test"), additionally load `testing.md` — test placement and mock style in this stack are NOT the Go defaults, and the scaffold references don't cover them.
 
 ---
 
@@ -166,6 +168,20 @@ Key rules:
 - Each API tier (admin/insider/public) has its own gRPC server, REST gateway, controllers, and proto package
 - `injector/inject/` is the single source of truth for dependency wiring
 
+### File Placement Rules (non-negotiable)
+
+These **override default Go habits**. Apply them on every scaffold and every "add a method" task — do not wait for the reference file to remind you:
+
+| Artifact | Files | Rule |
+|---|---|---|
+| Tests (ALL layers) | `test/{grpc,service,repository,integration}/*_test.go` | **NEVER** create `*_test.go` next to source in `src/` or `engine/`. The idiomatic-Go adjacent `_test.go` convention does NOT apply in this stack — tests are black-box and live only under `test/` (→ `testing.md §1`) |
+| Service | `x_service.go` (interface) + `x_service_impl.go` (impl) + `x_service_params.go` (Params + validation) | Three separate files, always — even for a one-method service. Never combine interface, impl, and Params in one file |
+| Repository | `x_repository.go` (interface) + `x_repository_impl.go` (impl) | Two separate files, always |
+| Transformer | `x_transformer.go` (interface) + `x_transformer_impl.go` (impl) | Two separate files |
+| Controller | `x_controller_impl.go` only | Documented exception: the proto-generated server interface IS the contract — no separate interface file |
+
+When **adding a method** to an existing service/repository: update the interface file AND the impl file (and the params file for any new Params struct) — never inline a new interface or Params into the impl file. If an existing file already combines layers, flag it; don't extend the violation.
+
 For restructuring an **existing** Go service into this layout, this is a *convergence* task — read `references/restructuring.md` and follow the `inventory → mapping → git mv → regenerate → verify` flow. Non-negotiables: `git mv` (never `cp`), build green after every batch, regenerate `*.pb.go`/`*.pb.gw.go`/`wire_gen.go` (never move them).
 
 ---
@@ -201,6 +217,7 @@ Apply checklists in this order. The deep detail lives in the matched reference f
 - Add Sign interface for financial entities (→ `security.md` for HMAC details)
 
 **Service** — see `service-patterns.md` + `error-handling.md`
+- Three files per domain: `x_service.go` (interface) / `x_service_impl.go` / `x_service_params.go` — never combined (→ File Placement Rules)
 - Triple return `(result, error, []ParamError)` — variants in §1 of service-patterns
 - Method names: `Get()` not `GetOrder()`, `Gets()` not `GetOrders()`
 - Pointer receivers on impl and Params
@@ -211,6 +228,7 @@ Apply checklists in this order. The deep detail lives in the matched reference f
 - Multi-repo tx: `s.OtherRepo.WithTx(repo.GetTx())`
 
 **Repository** — see `repository-patterns.md`
+- Two files per domain: `x_repository.go` (interface) / `x_repository_impl.go` — never combined (→ File Placement Rules)
 - Fluent `For*` filters returning self
 - `defer r.clean()` in every execution method
 - `buildQuery()` helper for tx/db selection
@@ -255,10 +273,12 @@ Use this priority order. Load the reference file for the affected layer to verif
 - Controller not wrapping response in envelope format
 - Missing health check proto in new API tier
 - Log without trace fields (`trace_id`, `span_id`) — observability gap (→ `observability.md`)
+- Test file placed next to source (`src/**/*_test.go`) instead of `test/{layer}/` — violates black-box test layout
+- Service/repository interface, impl, or Params combined in one file — violates File Placement Rules
 
 **Idiomatic (team standards)**
 - File naming: `*_impl.go` for implementations, `*_params.go` for parameters
-- Interface in consumer file, implementation separate
+- Interface file (`x_service.go` / `x_repository.go`) separate from implementation (`*_impl.go`) and Params (`*_params.go`) — see File Placement Rules table
 - `For*` prefix for repository query builders
 - `New*` constructor returning interface
 - `uint64` for tenant/partner IDs, `uint` for entity IDs (or `int64` for snowflake)
@@ -285,7 +305,7 @@ Reproduce → Isolate → Fix → Verify.
 
 ### 4. Testing
 
-Use testify/mock with manual mock structs. Table-driven tests are mandatory. See `references/testing.md`.
+Use testify/mock with manual mock structs. Table-driven tests are mandatory. **ALL test files live under `test/{layer}/` — never next to the source file** (the adjacent `_test.go` Go idiom does not apply in this stack). See `references/testing.md`.
 
 ### 5. Deployment
 

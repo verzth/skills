@@ -5,6 +5,8 @@ description: Review what comes back from engineers — Mode A code review (PR re
 
 # /em-review
 
+> **Reference resolution.** All `../../references/*.md` and `../../ETHOS.md` paths resolve inside the `em-thinking` bundle. If a referenced file does not exist (standalone/flattened install), **say so explicitly** and continue using only the rules inlined in this SKILL.md — never improvise the missing file's content. If `../../references/html-template.md` is missing, deliver the `.md` output only, state that the `.html` artifact was skipped because the template is unavailable, and recommend reinstalling the full `em-thinking` bundle.
+
 Review what comes back. This skill is multi-mode:
 
 - **Mode A — Review:** PR code review, bug-first, grounded in `edd.md` + `eng-works.md`

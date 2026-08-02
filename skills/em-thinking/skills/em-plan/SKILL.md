@@ -9,6 +9,8 @@ Take raw input (PRD, design doc, bug repro, ad-hoc request) → produce `edd.md`
 
 Not execution detail (task breakdown, env, deploy) — that's `/em-works`. Not code review — that's `/em-review`. **em-plan = think before you work.**
 
+> **Reference resolution.** All `../../references/*.md` and `../../ETHOS.md` paths resolve inside the `em-thinking` bundle. If a referenced file does not exist (standalone/flattened install), **say so explicitly** and continue using only the rules inlined in this SKILL.md — never improvise the missing file's content. If `../../references/html-template.md` is missing, deliver `edd.md` only, state that `edd.html` was skipped because the template is unavailable, and recommend reinstalling the full `em-thinking` bundle.
+
 ## ⚠ Question Format Rule (required for all em-thinking skills)
 
 **Every question to the user must be tagged with a unique label** (1/2/3 or a/b/c) so the user can respond by pointing — anti-ambiguity, saves user effort.

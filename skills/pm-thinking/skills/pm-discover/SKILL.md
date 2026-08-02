@@ -7,6 +7,8 @@ description: Synthesize raw user input (interviews, support tickets, NPS, feedba
 
 Synthesize raw user research → theme map. Then reframe: reported pain vs actual pain.
 
+> **Reference resolution.** `../../references/*.md` paths resolve inside the `pm-thinking` bundle. If a referenced file does not exist (standalone/flattened install), **say so explicitly** and continue with the rules inlined in this SKILL.md — never improvise the missing file's content; recommend reinstalling the full `pm-thinking` bundle.
+
 Output: `discovery.md` ready to feed into `/pm-works` for writing the PRD.
 
 ## ⚠ Question Format Rule (mandatory for every skill in pm-thinking)
@@ -192,7 +194,7 @@ Write `discovery.md` in the working dir, or push to Notion via MCP if connected.
 
 ## Tech Implications (For Eng Kickoff)
 
-> Must use the **7-section format** from `references/tech-literacy-checklist.md`. Not freeform observation. This is for the engineer-manager skill to consume directly.
+> Must use the **7-section format** from [`../../references/tech-literacy-checklist.md`](../../references/tech-literacy-checklist.md). Not freeform observation. This is for the engineer-manager skill to consume directly.
 
 ### 1. Data layer
 - Schema impact: [None / New table X / Add column Y to table Z]

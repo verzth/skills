@@ -7,6 +7,8 @@ description: Translate edd.md into execution-ready handoff package — atomic ti
 
 Translate `edd.md` → execution-ready handoff package. Output `eng-works.md` ready to distribute to the `engineer` role for implementation, plus a deployment plan artifact ready to be picked up by the `release-engineer` / `devops` role.
 
+> **Reference resolution.** All `../../references/*.md` and `../../ETHOS.md` paths resolve inside the `em-thinking` bundle. If a referenced file does not exist (standalone/flattened install), **say so explicitly** and continue using only the rules inlined in this SKILL.md — never improvise the missing file's content. If `../../references/html-template.md` is missing, deliver `eng-works.md` only, state that `eng-works.html` was skipped because the template is unavailable, and recommend reinstalling the full `em-thinking` bundle.
+
 Important scope: **em-works prepares artifact, doesn't execute deployment.** Provisioning secrets, creating feature flags, applying migrations, running rollout — that's devops territory.
 
 ## ⚠ Question Format Rule
