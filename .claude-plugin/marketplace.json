@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Verzth's curated Claude Code skills \u2014 humanoid-thinking framework, Go microservices, AI-First Product Management, AI-First Engineering Management, and more. Available via npm and Claude Code plugin marketplace.",
-    "version": "1.13.0"
+    "version": "1.14.0"
   },
   "plugins": [
     {
@@ -134,8 +134,8 @@
     {
       "name": "cso-thinking",
       "source": "./skills/cso-thinking",
-      "description": "Chief Security Officer mindset \u2014 single-command security audit (/cso-audit) that adapts to any target: frontend, backend (any language), infrastructure, databases, Android, iOS, or generic software. Auto-detects relevant profiles from the working directory, runs a hybrid scan (external tools where installed + checklist review where not), enriches Critical/High findings with live exploitability signals from free public APIs (OSV.dev, EPSS, CISA KEV, NVD), and emits a composite security score (0\u2013100 + letter grade) plus dual output: SECURITY_AUDIT.md (agent handoff) and SECURITY_AUDIT.html (human review). Grounded in OWASP Top 10 / API Top 10 / ASVS / MASVS, CIS benchmarks, NIST SSDF, SLSA.",
-      "version": "0.2.0",
+      "description": "Chief Security Officer mindset \u2014 single-command security audit (/cso-audit) that adapts to any target: frontend, backend (any language), infrastructure, databases, Android, iOS, or generic software. Auto-detects relevant profiles from the working directory, runs a hybrid scan (external tools where installed + checklist review where not), enriches Critical/High findings with live exploitability signals from free public APIs (OSV.dev, EPSS, CISA KEV, NVD), and emits a composite security score (0\u2013100 + letter grade) scored from confirmed findings only: every Critical/High is independently verified (fresh-context disproof) and carries an explicit exploit path, unresolved leads stay unscored as needs-validation, and output is SECURITY_AUDIT.json (validated), SECURITY_AUDIT.md (agent handoff) and SECURITY_AUDIT.html (human review). Grounded in OWASP Top 10 / API Top 10 / ASVS / MASVS, CIS benchmarks, NIST SSDF, SLSA.",
+      "version": "0.3.0",
       "author": {
         "name": "Dodi (Verzth)"
       },

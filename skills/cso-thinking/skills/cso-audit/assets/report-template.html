@@ -106,7 +106,7 @@
   .score-meta-row .value { color: var(--fg); }
   .severity-summary {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 12px;
     margin-bottom: 32px;
   }
@@ -136,6 +136,8 @@
   .sev-pill.low { border-color: var(--low); }
   .sev-pill.low .count { color: var(--low); }
   .sev-pill.info .count { color: var(--info); }
+  .sev-pill.needs_validation { border-style: dashed; border-color: var(--accent); }
+  .sev-pill.needs_validation .count { color: var(--accent); }
   h2 {
     margin: 32px 0 16px 0;
     font-size: 18px;
@@ -166,6 +168,7 @@
   .finding[data-severity="medium"]   { border-left: 3px solid var(--medium); }
   .finding[data-severity="low"]      { border-left: 3px solid var(--low); }
   .finding[data-severity="info"]     { border-left: 3px solid var(--info); }
+  .finding[data-severity="needs_validation"] { border-left: 3px dashed var(--accent); }
   .sev-tag {
     display: inline-block;
     padding: 2px 8px;
@@ -183,6 +186,7 @@
   .sev-tag.medium   { background: var(--medium); }
   .sev-tag.low      { background: var(--low); }
   .sev-tag.info     { background: var(--info); }
+  .sev-tag.needs_validation { background: var(--accent); }
   .finding-id {
     font-family: ui-monospace, 'SF Mono', Menlo, monospace;
     font-size: 12px;
@@ -375,6 +379,7 @@
     <button class="filter-btn" data-filter="medium">Medium</button>
     <button class="filter-btn" data-filter="low">Low</button>
     <button class="filter-btn" data-filter="info">Info</button>
+    <button class="filter-btn" data-filter="needs_validation">Needs validation</button>
   </div>
 
   <section id="findings-container"></section>
@@ -402,12 +407,19 @@
     circle.classList.add('grade-' + gradeLetter);
   })();
 
+  // Records are grouped by severity; needs_validation records have no severity
+  // and get their own group. `rejected` records are never rendered here.
+  const GROUPS = ['critical', 'high', 'medium', 'low', 'info', 'needs_validation'];
+  const GROUP_LABELS = {
+    critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low', info: 'Info',
+    needs_validation: 'Needs validation'
+  };
+  const groupOf = f => f.status === 'needs_validation' ? 'needs_validation' : f.severity;
+
   // Render severity summary
   (function() {
-    const order = ['critical', 'high', 'medium', 'low', 'info'];
-    const labels = {
-      critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low', info: 'Info'
-    };
+    const order = GROUPS;
+    const labels = GROUP_LABELS;
     const html = order.map(s => `
       <div class="sev-pill ${s}">
         <div class="count">${COUNTS[s] || 0}</div>
@@ -449,11 +461,44 @@
     const remediationPrompt = (f.remediation && f.remediation.prompt) ? f.remediation.prompt : '';
     const remediationSummary = (f.remediation && f.remediation.summary) ? esc(f.remediation.summary) : '';
     const effort = f.fix_effort ? `<span class="standard-chip">effort: ${esc(f.fix_effort)}</span>` : '';
+    const group = groupOf(f);
+    const isPending = group === 'needs_validation';
+    const ep = f.exploit_path;
+    const exploitHtml = ep ? `
+          <div class="field">
+            <div class="field-label">Exploit path</div>
+            <div class="field-value">
+              <strong>Actor:</strong> ${esc(ep.actor)}<br>
+              <strong>Input:</strong> ${esc(ep.input)}<br>
+              <strong>Control:</strong> ${esc(ep.control)}<br>
+              <strong>Boundary:</strong> ${esc(ep.boundary)}<br>
+              <strong>Affected:</strong> ${esc(ep.affected)}<br>
+              <strong>Result:</strong> ${esc(ep.result)}
+            </div>
+          </div>` : '';
+    const verifyHtml = f.verification ? `
+          <div class="field">
+            <div class="field-label">Verification</div>
+            <div class="field-value">${f.verification.mode === 'independent' ? 'Independently verified (fresh-context disproof attempt)' : 'Self-verified (no independent verifier available)'}${f.verification.notes ? ' &mdash; ' + esc(f.verification.notes) : ''}</div>
+          </div>` : '';
+    const pendingHtml = isPending ? `
+          <div class="field">
+            <div class="field-label">Unresolved fact</div>
+            <div class="field-value">${esc(f.unresolved_fact)}</div>
+          </div>
+          <div class="field">
+            <div class="field-label">If confirmed</div>
+            <div class="field-value">${esc(f.if_confirmed)}</div>
+          </div>
+          <div class="field">
+            <div class="field-label">Validation plan (owner-runnable)</div>
+            <div class="field-value">${esc(f.validation_plan)}</div>
+          </div>` : '';
 
     return `
-      <article class="finding" data-severity="${esc(f.severity)}" data-profile="${esc(f.profile || '')}">
+      <article class="finding" data-severity="${esc(group)}" data-profile="${esc(f.profile || '')}">
         <div class="finding-header" onclick="this.parentElement.classList.toggle('open')">
-          <span class="sev-tag ${esc(f.severity)}">${esc(f.severity)}</span>
+          <span class="sev-tag ${esc(group)}">${isPending ? 'needs validation' : esc(f.severity)}</span>
           <span class="finding-id">${esc(f.id)}</span>
           <span class="finding-title">${esc(f.title)}</span>
           <span class="finding-profile">${esc(f.profile || '')}</span>
@@ -473,22 +518,27 @@
             <div class="field-label">Standard / mapping</div>
             <div class="field-value standards">${standards || '<em style="color: var(--fg-muted);">none</em>'}</div>
           </div>
+          ${pendingHtml}
+          ${isPending ? '' : `
           <div class="field">
             <div class="field-label">Why it matters</div>
             <div class="field-value">${esc(f.why_it_matters || '')}</div>
-          </div>
-          ${remediationSummary ? `
+          </div>`}
+          ${exploitHtml}
+          ${verifyHtml}
+          ${(!isPending && remediationSummary) ? `
             <div class="field">
               <div class="field-label">Remediation</div>
               <div class="field-value">${remediationSummary} ${effort}</div>
             </div>` : ''}
+          ${isPending ? '' : `
           <div class="field">
             <div class="field-label">Remediation prompt — paste into a fresh Claude session</div>
             <div class="remediation-block">
               <button class="copy-btn" onclick="copyPrompt(this)">Copy</button>
               <pre class="remediation-prompt">${esc(remediationPrompt)}</pre>
             </div>
-          </div>
+          </div>`}
           <div class="field">
             <div class="field-label">References</div>
             <div class="field-value">${refsHtml}</div>
@@ -498,16 +548,16 @@
     `;
   }
 
-  // Render findings grouped by severity
+  // Render findings grouped by severity (+ needs_validation)
   (function() {
-    const order = ['critical', 'high', 'medium', 'low', 'info'];
-    const labels = {
-      critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low', info: 'Info'
-    };
+    const order = GROUPS;
+    const labels = GROUP_LABELS;
     const byGroup = {};
     order.forEach(s => byGroup[s] = []);
     FINDINGS.forEach(f => {
-      if (byGroup[f.severity]) byGroup[f.severity].push(f);
+      if (f.status === 'rejected') return;
+      const g = groupOf(f);
+      if (byGroup[g]) byGroup[g].push(f);
     });
     const html = order.map(s => {
       const list = byGroup[s];
@@ -562,8 +612,7 @@
         f.style.display = (filter === 'all' || f.dataset.severity === filter) ? '' : 'none';
       });
       // Hide empty severity headers
-      const order = ['critical', 'high', 'medium', 'low', 'info'];
-      order.forEach(s => {
+      GROUPS.forEach(s => {
         const h = document.getElementById('sev-' + s);
         if (h) h.style.display = (filter === 'all' || filter === s) ? '' : 'none';
       });

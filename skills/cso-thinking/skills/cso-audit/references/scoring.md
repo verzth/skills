@@ -9,6 +9,18 @@ score = 100 − Σ(severity_weight × finding_count)
 score = max(0, score)
 ```
 
+### What is counted
+
+Only records with `status: confirmed` count. `needs_validation` records carry no severity and never move the score; `rejected` records are not findings at all. Report the pending count next to the score so a clean number can't hide open questions:
+
+```
+Score: 88 / B+  · 0 Critical · 1 High · 2 Medium · 1 Low  ·  3 pending validation
+```
+
+If any `needs_validation` record's `if_confirmed` would plausibly be Critical or High, say so in the headline: the score is a ceiling until it is settled. Only `confirmed` Critical findings trigger the grade cap below.
+
+A `critical` or `high` finding counts only if it passed Phase 4.2 (independently or `self`-verified). The validator enforces this. A `self`-verified one counts the same, but the headline must say so.
+
 ### Severity weights
 
 | Severity | Weight | Examples |
@@ -20,6 +32,10 @@ score = max(0, score)
 | Info | 0 | Hygiene / consistency / future hardening (e.g., "consider adopting SBOM generation") |
 
 **Why these weights:** the Critical : Low ratio is 15:1 — a single Critical wipes out 15 Lows. This intentionally prevents grade inflation from finding many trivial issues, and prevents grade deflation from being thorough about minor stuff.
+
+### Rounding
+
+`score = max(0, round(100 − multiplier × Σ(weight × count)))`, rounded to the nearest integer (half up). `score.value` in `SECURITY_AUDIT.json` is that integer, `score.penalty_multiplier` is the scope-size multiplier below (1 when baseline), and `score.grade` is the *displayed* grade after any Critical cap (`score.capped` says whether the cap changed it). The validator recomputes all of these.
 
 ## Letter grade bands
 
@@ -116,6 +132,8 @@ Critical: 4 → 2 (−2) ✓
 High:     8 → 5 (−3) ✓
 Medium:   6 → 8 (+2) ✗
 Low:      3 → 3 (0)
+
+Pending validation: 3 → 2 (−1)   · F-014 settled by owner → rejected
 
 Resolved (5):
   - F-001 (prev) — SQL injection in /search → fixed

@@ -37,14 +37,15 @@ This makes the audit → fix loop trivial: open the report, scan severities, cop
 ✅ Good: remediation prompt = "Replace `crypto.createCipher('aes-256-cbc', key)` at `src/crypto.ts:18` with `crypto.createCipheriv(...)` and a per-message random IV; add `iv` to the ciphertext envelope. Verify by running `npm test -- crypto.test.ts`."
 ❌ Bad: remediation = "Use a more secure encryption method." (no file, no API, no verification — useless to hand to anyone)
 
-## 5. Dual output — agent handoff and human review
+## 5. One set of records, three renderings
 
-Every run produces two artifacts:
+Every run produces three artifacts from the same records:
 
+- **`SECURITY_AUDIT.json`** — the records of truth, checked by a validator before anything else is written. If prose and JSON ever disagree, the JSON wins and the prose is wrong.
 - **`SECURITY_AUDIT.md`** — agent handoff. Stable structure, deterministic ordering, parseable headings. Other Claude sessions consume this to act on findings.
 - **`SECURITY_AUDIT.html`** — human review. Same data, presented with score banner, severity grouping, expandable remediation blocks, copy-to-clipboard buttons, and printable styling for sharing.
 
-Same source data, two audiences. Don't try to make the markdown pretty for humans — that's the HTML's job. Don't try to make the HTML parseable — that's the markdown's job.
+Same source data, three audiences (a validator, another agent, a person). Don't try to make the markdown pretty for humans — that's the HTML's job. Don't try to make the HTML parseable — that's the markdown's job.
 
 ## 6. Lean SKILL.md, fat references
 
@@ -58,6 +59,15 @@ The skill is graded on whether it would catch a real attacker, not whether it ti
 
 This is why the checklists are organized by **threat outcome** (RCE, data exfil, auth bypass, supply-chain compromise) before being mapped to standard IDs. Standards are how we communicate; threats are what we defend against.
 
-## 8. Honest about what we didn't check
+## 8. A finding must survive an attempt to kill it
+
+The agent that found a problem is the worst judge of whether it is real. Before a Critical or High is scored, a fresh agent that has not seen the finder's reasoning tries to *disprove* it. A claim has to name who crosses which boundary, through which failed control, and what concretely happens — otherwise it is a lead, and leads are kept apart from findings: `needs_validation` when the decisive fact lives outside the repo, `rejected` when it was disproved. Neither moves the score. A score built from unchallenged claims is a guess with a number on it.
+
+✅ Good: "F-001 High — `/search` concatenates `q` into SQL (`search.go:47`). Verifier traced the route: no validator, no ORM binding; result is every `users` row. Independently verified."
+❌ Bad: "Possible injection risk in search." (no actor, no result, nobody tried to refute it)
+
+The same discipline covers what the repo cannot show. A proxy rule, an IAM policy, a provider setting that lives outside source is *unknown* — not absent, not present. Say what you would need to see.
+
+## 9. Honest about what we didn't check
 
 The audit ends with a `## Scope & limitations` section that lists what the skill **could not** assess — runtime behavior on production traffic, business-logic flaws that need domain context, social-engineering risk, physical security. A report that pretends to be exhaustive is dangerous; a report that names its blind spots is useful.

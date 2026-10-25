@@ -7,6 +7,7 @@ skills/cso-audit/assets/report-template.html
 skills/cso-audit/references/android.md
 skills/cso-audit/references/backend.md
 skills/cso-audit/references/databases.md
+skills/cso-audit/references/finding-contract.md
 skills/cso-audit/references/frontend.md
 skills/cso-audit/references/generic.md
 skills/cso-audit/references/infrastructure.md
@@ -16,3 +17,4 @@ skills/cso-audit/references/scoring.md
 skills/cso-audit/references/threat-intel.md
 skills/cso-audit/references/tools.md
 skills/cso-audit/scripts/fetch_intel.sh
+skills/cso-audit/scripts/validate_findings.cjs
